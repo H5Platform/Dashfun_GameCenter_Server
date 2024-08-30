@@ -1,0 +1,13 @@
+base:
+  #  env: Dev or Test or Prod
+  env: Dev
+
+web:
+  port: 8088
+
+mongo:
+  source: mongodb://localhost:27017/?maxPoolSize=20
+  data_base: DBDashFun
+
+telegram:
+  token: ${telegram_bot_token}

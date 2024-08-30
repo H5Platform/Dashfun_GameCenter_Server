@@ -1,0 +1,58 @@
+package data
+
+type DashFunTaskType int          //任务类型
+type DashFunTaskConditionType int //任务条件类型
+type DashFunTaskCategory int      //任务分类
+type DashFunTaskRewardType int    //任务奖励类型
+
+const (
+	TaskType_Normal DashFunTaskType = iota + 1 //普通类型任务，只能完成1次
+	TaskType_Daily                             //每日任务，每日重置
+	TaskType_2Days                             //2日任务，不知道用得上不...
+)
+
+const (
+	TaskCondition_Subscribe DashFunTaskConditionType = iota + 1 //订阅型任务，例如follow twitter, join tg channel...
+	TaskCondition_PlayGame                                      //玩指定游戏指定次数
+	TaskCondition_LevelUp                                       //在指定游戏中升级到指定等级
+)
+
+const (
+	TaskCategory_Challenges DashFunTaskCategory = iota + 1
+)
+
+const (
+	TaskRewardType_DashFunToken DashFunTaskRewardType = iota + 1 //奖励DashFunToken
+)
+
+type DashFunTaskReward struct {
+	RewardType DashFunTaskRewardType `json:"reward_type" bson:"reward_type"` //奖励类型
+	Amount     int                   `json:"amount" bson:"amount"`           //奖励数量
+}
+
+type DashFunTaskCondition struct {
+	Type      DashFunTaskConditionType `json:"type" bson:"type"`           //任务条件类型，不同类型任务完成方式不同
+	Count     int                      `json:"count" bson:"count"`         //任务要求满足条件的次数
+	Condition string                   `json:"condition" bson:"condition"` //任务条件，不同类型条件不同
+}
+
+// DashFunTaskData 任务数据
+type DashFunTaskData struct {
+	Id        string               `json:"id" bson:"_id"`              //任务ID
+	Name      string               `json:"name" bson:"name"`           //任务名称
+	Open      bool                 `json:"open" bson:"open"`           //任务是否开启
+	GameId    string               `json:"game_id" bson:"game_id"`     //绑定游戏id，-1或""表示不限制游戏
+	Type      DashFunTaskType      `json:"task_type" bson:"task_type"` //任务类型
+	Category  DashFunTaskCategory  `json:"category" bson:"category"`   //任务分类
+	Condition DashFunTaskCondition `json:"require" bson:"require"`     //任务条件
+	Reward    DashFunTaskReward    `json:"reward" bson:"reward"`       //任务奖励
+}
+
+// DashFunTaskUserData 用户任务数据
+type DashFunTaskUserData struct {
+	UserId   string `json:"user_id" bson:"_id"`         //user id
+	TaskId   string `json:"task_id" bson:"task_id"`     //task id
+	Progress int    `json:"progress" bson:"progress"`   //任务进度，max是任务对应的Condition.Count
+	SaveData string `json:"save_data" bson:"save_data"` //任务进度相关数据
+	Time     int64  `json:"time" bson:"time"`           //任务最新一次的进度变化时间
+}

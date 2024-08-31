@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "dashfun_gamecenter/_test"
 	_ "dashfun_gamecenter/api"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/taskcenter"

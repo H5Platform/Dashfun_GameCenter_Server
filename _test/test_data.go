@@ -1,4 +1,4 @@
-package _test
+package _test1
 
 import (
 	"dashfun_gamecenter/datasource/dao"
@@ -10,17 +10,32 @@ import (
 )
 
 func init() {
-	makeTestTask()
 	makeTestGame()
+	makeTestTask()
 }
 
 func makeTestTask() {
 	t := taskcenter.Get()
-	taskId := "8bzpjrva7ls"
+	//taskId := "8bzpjrva7ls"
+	taskId := "LocalTestTask"
 	task := t.GetTaskById(taskId)
 	if task == nil {
 		//创建测试任务
-		t.CreateTask(taskId, "Play \"War Three Kingdoms\"", "For Test")
+		taskc, err := t.CreateTask(taskId, "Play \"LocalTest\"", "LocalTest", data.TaskType_Daily, data.TaskCategory_Daily,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_PlayGame,
+				Count:     1,
+				Condition: "",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunToken,
+				Amount:     5,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
 	}
 }
 

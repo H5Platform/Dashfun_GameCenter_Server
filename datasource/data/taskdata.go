@@ -12,17 +12,20 @@ const (
 )
 
 const (
-	TaskCondition_Subscribe DashFunTaskConditionType = iota + 1 //订阅型任务，例如follow twitter, join tg channel...
-	TaskCondition_PlayGame                                      //玩指定游戏指定次数
-	TaskCondition_LevelUp                                       //在指定游戏中升级到指定等级
+	TaskCondition_Subscribe      DashFunTaskConditionType = iota + 1 //订阅型任务，例如follow twitter, join tg channel...
+	TaskCondition_PlayRandomGame                                     //玩任意游戏指定次数
+	TaskCondition_PlayGame                                           //玩指定游戏指定次数，游戏id在task中指定
+	TaskCondition_LevelUp                                            //在指定游戏中升级到指定等级
 )
 
 const (
 	TaskCategory_Challenges DashFunTaskCategory = iota + 1
+	TaskCategory_Daily                          //每日
 )
 
 const (
-	TaskRewardType_DashFunToken DashFunTaskRewardType = iota + 1 //奖励DashFunToken
+	TaskRewardType_DashFunToken      DashFunTaskRewardType = iota + 1 //奖励DashFunToken
+	TaskRewardType_DashFunChainToken                                  //奖励dashfun的链上token
 )
 
 type DashFunTaskReward struct {

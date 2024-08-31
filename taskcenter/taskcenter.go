@@ -113,7 +113,7 @@ func (t *TaskCenter) GetAllTaskUserData(userId string) ([]*data.DashFunTaskUserD
 	return tasksData, nil
 }
 
-// GetTaskUserData 获取用户对应任务的进度记录，如果没有则新建
+// GetTaskUserData 获取用户对应任务的进度记录，如果没有则新建，同时检测是否需要重置
 func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUserData, error) {
 	userData, err := dao.GetTaskUserDao().FindTaskUserData(taskId, userId)
 	if err != nil {
@@ -129,6 +129,41 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 		}
 		dao.GetTaskUserDao().SaveOrUpdate(userData)
 	}
+
+	task := t.GetTaskById(taskId)
+	taskTime := time.UnixMilli(userData.Time)
+	nowTime := time.Now()
+	td := taskTime.YearDay()
+	ty := taskTime.Year()
+
+	nd := nowTime.YearDay()
+	ny := nowTime.Year()
+
+	reset := false
+
+	if task != nil {
+		switch task.Type {
+		case data.TaskType_Daily:
+			//不是同一天则重置进度
+			reset = ty != ny || td != nd
+			break
+
+		case data.TaskType_2Days:
+			reset = nd-td >= 2
+			break
+		}
+	}
+
+	if reset {
+		userData = &data.DashFunTaskUserData{
+			UserId:   userId,
+			TaskId:   taskId,
+			Progress: 0,
+			Time:     time.Now().UnixMilli(),
+		}
+		dao.GetTaskUserDao().SaveOrUpdate(userData)
+	}
+
 	return userData, nil
 }
 

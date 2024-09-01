@@ -9,15 +9,20 @@ import (
 // taskProcessorPlayGame
 func (t *TaskCenter) taskProcessorPlayGame(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
 	//玩指定游戏
+	ret := false
 	if task.Condition.Type == data.TaskCondition_PlayGame {
-		if task.GameId == gameId {
+		if task.GameId == gameId && userData.Status == data.TaskStatus_InProgress {
 			if userData.Progress < task.Condition.Count {
 				userData.Progress = userData.Progress + 1
-				return true
+				ret = true
+			}
+			if userData.Progress >= task.Condition.Count {
+				userData.Status = data.TaskStatus_Completed
+				ret = true
 			}
 		}
 	}
-	return false
+	return ret
 }
 
 // taskProcessorPlayRandomGame
@@ -39,6 +44,8 @@ func (t *TaskCenter) taskProcessorPlayRandomGame(user *data.DashFunUser, task *d
 			}
 		}
 
+		ret := false
+
 		if userData.Progress < task.Condition.Count {
 			save.Games = append(save.Games, gameId)
 			userData.Progress = userData.Progress + 1
@@ -48,9 +55,14 @@ func (t *TaskCenter) taskProcessorPlayRandomGame(user *data.DashFunUser, task *d
 			} else {
 				userData.SaveData = string(bytes)
 			}
-			return true
+			ret = true
 		}
-		return false
+		if userData.Progress >= task.Condition.Count {
+			userData.Status = data.TaskStatus_Completed
+			ret = true
+		}
+
+		return ret
 	}
 	return false
 }

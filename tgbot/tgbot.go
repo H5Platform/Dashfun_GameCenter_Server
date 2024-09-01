@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"go.uber.org/zap"
 	"log"
 	"net/url"
 	"os"
@@ -51,6 +52,7 @@ func Get() *TGBot {
 		}
 
 		go b.Start(context.Background())
+
 	})
 	return inst
 }
@@ -60,7 +62,11 @@ func Bot() *bot.Bot {
 }
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	if update.Message != nil {
+	if update.MyChatMember != nil {
+		if update.MyChatMember.NewChatMember.Administrator != nil {
+			zap.S().Infow("DashFun Joined into ", "Chat", update.MyChatMember.Chat)
+		}
+	} else if update.Message != nil {
 		if update.Message.SuccessfulPayment != nil {
 			//log.Printf("Payment Received: %s", update.Message.SuccessfulPayment)
 			//b.SendMessage(ctx, &bot.SendMessageParams{
@@ -70,10 +76,12 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 			events.TGSuccessfulPaymentEvents.Emit(update.Message)
 			return
 		}
-		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: update.Message.Chat.ID,
-			Text:   "Say /start",
-		})
+		if update.Message.Chat.Type == "private" {
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: update.Message.Chat.ID,
+				Text:   "Say /start",
+			})
+		}
 	} else if update.PreCheckoutQuery != nil {
 		//paymentId := update.PreCheckoutQuery.InvoicePayload
 		//payment, err := paymentcenter.Get().FindPayment(paymentId)
@@ -143,6 +151,20 @@ func testHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 }
 
 func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.Message == nil || update.Message.Chat.Type != "private" {
+		return
+	}
+
+	//member, err := b.GetChatMember(context.TODO(), &bot.GetChatMemberParams{
+	//	ChatID: "-1002198592933",
+	//	UserID: 1484579418,
+	//})
+	//
+	//if err != nil {
+	//	return
+	//}
+
+	//zap.S().Infow("member info", "", member)
 
 	buttons := [][]models.KeyboardButton{
 		{

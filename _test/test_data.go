@@ -37,6 +37,31 @@ func makeTestTask() {
 		}
 		task = taskc
 	}
+
+	taskId = "LocalTestChannelTask"
+	task = nil
+	task = t.GetTaskById(taskId)
+	if task == nil {
+		//创建测试任务
+		chatId := "-1002198592933"
+		taskc, err := t.CreateTask(taskId, "Join DashFun channel", "", data.TaskType_Normal, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_JoinTGChannel,
+				Count:     1,
+				Condition: chatId,
+				Link:      "https://t.me/+h79TJSlUaO03ZDdh",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunChainToken,
+				Amount:     10,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
+
 }
 
 func makeTestGame() {

@@ -121,12 +121,7 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 	}
 	if userData == nil {
 		//create new userdata
-		userData = &data.DashFunTaskUserData{
-			UserId:   userId,
-			TaskId:   taskId,
-			Progress: 0,
-			Time:     time.Now().UnixMilli(),
-		}
+		userData = newTaskUserData(userId, taskId)
 		dao.GetTaskUserDao().SaveOrUpdate(userData)
 	}
 
@@ -155,12 +150,7 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 	}
 
 	if reset {
-		userData = &data.DashFunTaskUserData{
-			UserId:   userId,
-			TaskId:   taskId,
-			Progress: 0,
-			Time:     time.Now().UnixMilli(),
-		}
+		userData = newTaskUserData(userId, taskId)
 		dao.GetTaskUserDao().SaveOrUpdate(userData)
 	}
 

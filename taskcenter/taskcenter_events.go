@@ -23,7 +23,7 @@ func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
 
 func (t *TaskCenter) processTasks(user *data.DashFunUser, game *data.DashFunGame) {
 	for _, task := range t.tasks {
-		if task.Open {
+		if task.Open && (task.GameId == "" || task.GameId == "-1" || task.GameId == game.Id) {
 			changed := false
 			userData, err := t.GetTaskUserData(user.Id, task.Id)
 			if err != nil {
@@ -32,8 +32,9 @@ func (t *TaskCenter) processTasks(user *data.DashFunUser, game *data.DashFunGame
 			}
 
 			switch task.Condition.Type {
-			case data.TaskCondition_Subscribe:
-				//订阅型任务 TODO
+			case data.TaskCondition_JoinTGChannel:
+				//加入tg channel
+
 				break
 			case data.TaskCondition_PlayGame:
 				//进行指定游戏

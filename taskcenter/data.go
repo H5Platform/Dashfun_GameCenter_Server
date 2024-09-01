@@ -4,6 +4,7 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/utils"
 	"sync"
+	"time"
 )
 
 type TaskUserDataList struct {
@@ -23,10 +24,21 @@ func NewTaskUserDataList() *TaskUserDataList {
 	}
 }
 
-func newTaskUserData(userId string) *TasksUserData {
+func newTasksUserData(userId string) *TasksUserData {
 	return &TasksUserData{
 		userId:       userId,
 		taskDataList: utils.NewList[*data.DashFunTaskUserData](),
+	}
+}
+
+func newTaskUserData(userId, taskId string) *data.DashFunTaskUserData {
+	return &data.DashFunTaskUserData{
+		UserId:   userId,
+		TaskId:   taskId,
+		Progress: 0,
+		SaveData: "",
+		Status:   data.TaskStatus_InProgress,
+		Time:     time.Now().UnixMilli(),
 	}
 }
 
@@ -43,7 +55,7 @@ func (t *TaskUserDataList) getUserDataList(userId string) *TasksUserData {
 	d, exist := t.usersTaskData[userId]
 	if !exist {
 		//不存在则创建
-		d = newTaskUserData(userId)
+		d = newTasksUserData(userId)
 		t.usersTaskData[userId] = d
 	}
 	return d

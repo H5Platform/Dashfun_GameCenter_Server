@@ -6,7 +6,7 @@ web:
   port: 8088
 
 mongo:
-  source: mongodb://49.51.244.56:27017/?maxPoolSize=20
+  source: mongodb://127.0.0.1:27017/?maxPoolSize=20
   data_base: DBDashFun
 
 telegram:

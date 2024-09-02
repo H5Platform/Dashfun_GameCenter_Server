@@ -87,35 +87,39 @@ func (t *TaskCenter) UpdateTaskOpenState(taskId string, open bool) {
 	}
 }
 
-func (t *TaskCenter) LoadAllTaskUserData(userId string) error {
-	if t.taskUserDataList.HasRecord(userId) {
+func (t *TaskCenter) loadAllTaskUserData(userId string) (*TasksUserData, error) {
+	d, ok := t.taskUserDataList.HasRecord(userId)
+	if ok {
 		//已经加载过了
-		return nil
+		return d, nil
 	}
 
-	tasksData, err := dao.GetTaskUserDao().FindAllTaskUserData(userId)
-	if err != nil {
-		return err
-	}
-
-	for _, task := range tasksData {
-		t.taskUserDataList.AddUserData(task)
-	}
-	return nil
-}
-
-// GetAllTaskUserData 获取用户所有任务的进度数据
-func (t *TaskCenter) GetAllTaskUserData(userId string) ([]*data.DashFunTaskUserData, error) {
 	tasksData, err := dao.GetTaskUserDao().FindAllTaskUserData(userId)
 	if err != nil {
 		return nil, err
 	}
-	return tasksData, nil
+
+	tud := t.taskUserDataList.GetTasksUserData(userId)
+	for _, td := range tasksData {
+		tud.AddUserData(td)
+	}
+	return tud, nil
+}
+
+// loadTaskUserData 获取用户对应任务的进度数据
+func (t *TaskCenter) loadTaskUserData(userId, taskId string) (*data.DashFunTaskUserData, error) {
+	d, err := t.loadAllTaskUserData(userId)
+	if err != nil {
+		return nil, err
+	}
+	taskUserData := d.GetTaskUserData(taskId)
+	return taskUserData, nil
 }
 
 // GetTaskUserData 获取用户对应任务的进度记录，如果没有则新建，同时检测是否需要重置
+// 同时针对加入TG Channel的任务，会在获取进度时进行验证是否完成
 func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUserData, error) {
-	userData, err := dao.GetTaskUserDao().FindTaskUserData(taskId, userId)
+	userData, err := t.loadTaskUserData(userId, taskId)
 	if err != nil {
 		return nil, err
 	}
@@ -145,6 +149,12 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 
 		case data.TaskType_2Days:
 			reset = nd-td >= 2
+			break
+		}
+
+		switch task.Condition.Type {
+		case data.TaskCondition_JoinTGChannel:
+			//针对tg channel类型进行验证
 			break
 		}
 	}

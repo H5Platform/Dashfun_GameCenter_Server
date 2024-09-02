@@ -10,7 +10,7 @@ import (
 
 func (t *TaskCenter) onUserLogin(user *data.OnlineUser) {
 	//用户登录，检查并读取用户的任务进度数据
-	err := t.LoadAllTaskUserData(user.User.Id)
+	_, err := t.loadAllTaskUserData(user.User.Id)
 	if err != nil {
 		zap.S().Errorw("LoadAllTaskUserData Error", "user", user.User.Id, "err", err)
 	}

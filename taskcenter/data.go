@@ -42,16 +42,16 @@ func newTaskUserData(userId, taskId string) *data.DashFunTaskUserData {
 	}
 }
 
-func (t *TaskUserDataList) HasRecord(userId string) bool {
+func (t *TaskUserDataList) HasRecord(userId string) (*TasksUserData, bool) {
 	t.RLock()
 	defer t.RUnlock()
-	_, ok := t.usersTaskData[userId]
-	return ok
+	d, ok := t.usersTaskData[userId]
+	return d, ok
 }
 
-// getUserDataList 获取用户的任务进度数据，如果不存在则创建
-// 注意调用前需要lock
-func (t *TaskUserDataList) getUserDataList(userId string) *TasksUserData {
+func (t *TaskUserDataList) GetTasksUserData(userId string) *TasksUserData {
+	t.Lock()
+	defer t.Unlock()
 	d, exist := t.usersTaskData[userId]
 	if !exist {
 		//不存在则创建
@@ -61,16 +61,33 @@ func (t *TaskUserDataList) getUserDataList(userId string) *TasksUserData {
 	return d
 }
 
-func (t *TaskUserDataList) AddUserData(taskData *data.DashFunTaskUserData) {
+func (t *TaskUserDataList) RemoveTasksUserData(userId string) {
 	t.Lock()
 	defer t.Unlock()
-	l := t.getUserDataList(taskData.UserId)
-	for idx, item := range l.taskDataList.Items() {
+	_, exist := t.usersTaskData[userId]
+	if exist {
+		t.usersTaskData[userId] = nil
+		delete(t.usersTaskData, userId)
+	}
+}
+
+func (tud *TasksUserData) AddUserData(taskData *data.DashFunTaskUserData) {
+	for idx, item := range tud.taskDataList.Items() {
 		if item.TaskId == taskData.TaskId {
 			//当前记录中包含这个任务的进度数据，做更新
-			l.taskDataList.RemoveAt(idx)
-			l.taskDataList.Add(taskData)
+			tud.taskDataList.RemoveAt(idx)
+			tud.taskDataList.Add(taskData)
 			return
 		}
 	}
+	tud.taskDataList.Add(taskData)
+}
+
+func (tud *TasksUserData) GetTaskUserData(taskId string) *data.DashFunTaskUserData {
+	for _, userData := range tud.taskDataList.Items() {
+		if userData.TaskId == taskId {
+			return userData
+		}
+	}
+	return nil
 }

@@ -1,13 +1,70 @@
 package taskcenter
 
 import (
+	"context"
+	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/tgbot"
 	"encoding/json"
+	"errors"
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"go.uber.org/zap"
+	"strconv"
+	"time"
 )
 
-// taskProcessorPlayGame
-func (t *TaskCenter) taskProcessorPlayGame(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
+func (t *TaskCenter) UserVerifyTGChannel(user *data.DashFunUser, taskId string, gameId string) (*data.DashFunTaskUserData, error) {
+	task := t.GetTaskById(taskId)
+	if task == nil {
+		return nil, errors.New("task not found")
+	}
+	userData, err := t.GetTaskUserData(user.Id, taskId)
+	if err != nil {
+		return nil, err
+	}
+	changed := t.taskVerifyTGChannel(user, task, userData, gameId)
+	if changed {
+		dao.GetTaskUserDao().SaveOrUpdate(userData)
+	}
+	tasks := t.taskUserDataList.GetTasksUserData(user.Id)
+	tasks.AddUserData(userData)
+	return userData, nil
+}
+
+// taskVerifyTGChannel 验证用户是否加入了tg channel
+func (t *TaskCenter) taskVerifyTGChannel(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
+	ret := false
+	if task.Condition.Type == data.TaskCondition_JoinTGChannel {
+		if (isDashFunTask(task) || task.GameId == gameId) && userData.Status == data.TaskStatus_InProgress {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+			defer cancel()
+			tgUserId, err := strconv.ParseInt(user.ChannelId, 10, 64)
+			if err != nil {
+				zap.S().Errorw("user telegram id error", "user", user)
+				return false
+			}
+			member, err := tgbot.Bot().GetChatMember(ctx, &bot.GetChatMemberParams{
+				ChatID: task.Condition.Condition,
+				UserID: tgUserId,
+			})
+			if err != nil {
+				zap.S().Errorw("tgbot GetChatMember error", "user", user, "error", err)
+				return false
+			}
+
+			if member.Type == models.ChatMemberTypeOwner || member.Type == models.ChatMemberTypeAdministrator || member.Type == models.ChatMemberTypeMember {
+				userData.Progress = task.Condition.Count
+				userData.Status = data.TaskStatus_Completed
+				ret = true
+			}
+		}
+	}
+	return ret
+}
+
+// taskRecordPlayGame 给玩家记录一次指定游戏的次数
+func (t *TaskCenter) taskRecordPlayGame(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
 	//玩指定游戏
 	ret := false
 	if task.Condition.Type == data.TaskCondition_PlayGame {
@@ -25,8 +82,8 @@ func (t *TaskCenter) taskProcessorPlayGame(user *data.DashFunUser, task *data.Da
 	return ret
 }
 
-// taskProcessorPlayRandomGame
-func (t *TaskCenter) taskProcessorPlayRandomGame(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
+// taskRecordPlayRandomGame 给玩家记录一次游戏次数
+func (t *TaskCenter) taskRecordPlayRandomGame(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
 	//玩指定游戏
 	if task.Condition.Type == data.TaskCondition_PlayGame {
 		var save = &data.TaskSaveDataPlayRandomGame{}

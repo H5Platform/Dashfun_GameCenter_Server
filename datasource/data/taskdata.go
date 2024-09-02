@@ -69,3 +69,10 @@ type DashFunTaskUserData struct {
 	SaveData string            `json:"save_data" bson:"save_data"` //任务进度相关数据
 	Time     int64             `json:"time" bson:"time"`           //任务最新一次的进度变化时间
 }
+
+// UserTaskInfo 用户任务信息
+// 存放用户当前可用的任务列表，以及任务对应的进度
+type UserTaskInfo struct {
+	Tasks    []*DashFunTaskData              `json:"tasks"`     //任务列表
+	UserData map[string]*DashFunTaskUserData `json:"user_data"` //任务id对应的用户进度数据
+}

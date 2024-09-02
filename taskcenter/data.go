@@ -18,7 +18,7 @@ type TasksUserData struct {
 	taskDataList utils.List[*data.DashFunTaskUserData]
 }
 
-func NewTaskUserDataList() *TaskUserDataList {
+func newTaskUserDataList() *TaskUserDataList {
 	return &TaskUserDataList{
 		usersTaskData: make(map[string]*TasksUserData),
 	}

@@ -5,6 +5,7 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/snowflake"
+	"go.uber.org/zap"
 	"log"
 	"strconv"
 	"sync"
@@ -31,7 +32,7 @@ func Get() *TaskCenter {
 func (t *TaskCenter) init() {
 	t.idGen = snowflake.Must(snowflake.GetWorker(data.WorkerTaskId))
 	t.tasks = make(map[string]*data.DashFunTaskData)
-	t.taskUserDataList = NewTaskUserDataList()
+	t.taskUserDataList = newTaskUserDataList()
 
 	//Load all tasks from db
 	tasks := dao.GetTaskDao().FindAllTasks()
@@ -106,7 +107,7 @@ func (t *TaskCenter) loadAllTaskUserData(userId string) (*TasksUserData, error) 
 	return tud, nil
 }
 
-// loadTaskUserData 获取用户对应任务的进度数据
+// loadTaskUserData 获取用户对应任务的进度数据，没有进度返回nil
 func (t *TaskCenter) loadTaskUserData(userId, taskId string) (*data.DashFunTaskUserData, error) {
 	d, err := t.loadAllTaskUserData(userId)
 	if err != nil {
@@ -151,12 +152,6 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 			reset = nd-td >= 2
 			break
 		}
-
-		switch task.Condition.Type {
-		case data.TaskCondition_JoinTGChannel:
-			//针对tg channel类型进行验证
-			break
-		}
 	}
 
 	if reset {
@@ -165,6 +160,36 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 	}
 
 	return userData, nil
+}
+
+// GetUserTaskInfo 获取用户的任务信息
+// 返回用户在对应游戏中可用的任务列表，以及任务对应的进度
+func (t *TaskCenter) GetUserTaskInfo(userId, gameId string) *data.UserTaskInfo {
+	tasks := make([]*data.DashFunTaskData, 0)             //可用任务列表
+	dataMap := make(map[string]*data.DashFunTaskUserData) //用户任务数据
+	for _, task := range t.tasks {
+		if isDashFunTask(task) || task.GameId == gameId {
+			userData, err := t.GetTaskUserData(userId, task.Id)
+			if err != nil {
+				zap.S().Errorw("get user task data error", "user", userId, "task", task)
+				continue
+			}
+			tasks = append(tasks, task)
+			dataMap[task.Id] = userData
+		}
+	}
+	ret := &data.UserTaskInfo{
+		Tasks:    tasks,
+		UserData: dataMap,
+	}
+	return ret
+}
+
+func isDashFunTask(task *data.DashFunTaskData) bool {
+	if task.GameId == "" || task.GameId == "-1" {
+		return true
+	}
+	return false
 }
 
 func init() {

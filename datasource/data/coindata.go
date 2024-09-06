@@ -1,0 +1,27 @@
+package data
+
+type CoinData struct {
+	Id          string            `json:"id" bson:"_id"`
+	Name        string            `json:"name" bson:"name"`
+	Symbol      string            `json:"symbol" bson:"symbol"`
+	Desc        string            `json:"desc" bson:"desc"`
+	CanWithdraw bool              `json:"can_withdraw" bson:"can_withdraw"` //是否可以提取
+	MinWithdraw float32           `json:"min_withdraw" bson:"min_withdraw"` //最低提取金额
+	ChainAddr   map[string]string `json:"chain_addr" bson:"chain_addr"`     //链上地址，chainName->address
+	CreateTime  int64             `json:"-" bson:"create_time"`
+}
+
+type CoinUserData struct {
+	UserId     string  `json:"user_id" bson:"user_id"`
+	CoinId     string  `json:"coin_id" bson:"coin_id"`
+	Amount     float32 `json:"amount" bson:"amount"`
+	CreateTime int64   `json:"create_time" bson:"create_time"`
+}
+
+// CoinUserRecordData 用户coin变化记录
+type CoinUserRecordData struct {
+	UserId string  `json:"user_id" bson:"user_id"`
+	CoinId string  `json:"coin_id" bson:"coin_id"`
+	Change float32 `json:"change" bson:"change"`
+	Time   int64   `json:"time" bson:"time"`
+}

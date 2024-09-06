@@ -14,31 +14,39 @@ var dbDashFun *mongo.Database
 
 // DaoImplMongo implements types.DaoImpl
 type DaoImplMongo struct {
-	userDao     types.UserDao
-	gameDao     types.GameDao
-	paymentDao  types.PaymentDao
-	taskDao     types.TaskDao
-	taskUserDao types.TaskUserDao
+	userDao       types.UserDao
+	gameDao       types.GameDao
+	paymentDao    types.PaymentDao
+	taskDao       types.TaskDao
+	taskUserDao   types.TaskUserDao
+	coinDao       types.CoinDao
+	coinUserDao   types.CoinUserDao
+	coinRecordDao types.CoinRecordDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
 	return &DaoImplMongo{
-		userDao:     GetUserDaoMongo(),
-		gameDao:     GetGameDaoMongo(),
-		paymentDao:  GetPaymentDaoMongo(),
-		taskDao:     GetTaskDaoMongo(),
-		taskUserDao: GetTaskUserDaoMongo(),
+		userDao:       GetUserDaoMongo(),
+		gameDao:       GetGameDaoMongo(),
+		paymentDao:    GetPaymentDaoMongo(),
+		taskDao:       GetTaskDaoMongo(),
+		taskUserDao:   GetTaskUserDaoMongo(),
+		coinDao:       GetCoinDaoMongo(),
+		coinUserDao:   GetCoinUserDaoMongo(),
+		coinRecordDao: GetCoinRecordDaoMongo(),
 	}
 }
 
 func (d *DaoImplMongo) GetUserDao() types.UserDao {
 	return d.userDao
 }
-
-func (d *DaoImplMongo) GetGameDao() types.GameDao         { return d.gameDao }
-func (d *DaoImplMongo) GetPaymentDao() types.PaymentDao   { return d.paymentDao }
-func (d *DaoImplMongo) GetTaskDao() types.TaskDao         { return d.taskDao }
-func (d *DaoImplMongo) GetTaskUserDao() types.TaskUserDao { return d.taskUserDao }
+func (d *DaoImplMongo) GetGameDao() types.GameDao             { return d.gameDao }
+func (d *DaoImplMongo) GetPaymentDao() types.PaymentDao       { return d.paymentDao }
+func (d *DaoImplMongo) GetTaskDao() types.TaskDao             { return d.taskDao }
+func (d *DaoImplMongo) GetTaskUserDao() types.TaskUserDao     { return d.taskUserDao }
+func (d *DaoImplMongo) GetCoinDao() types.CoinDao             { return d.coinDao }
+func (d *DaoImplMongo) GetCoinUserDao() types.CoinUserDao     { return d.coinUserDao }
+func (d *DaoImplMongo) GetCoinRecordDao() types.CoinRecordDao { return d.coinRecordDao }
 
 func GetMongoDatabase() *mongo.Database {
 	mongoCfg := config.GetConfig().Mongo

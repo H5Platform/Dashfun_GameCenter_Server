@@ -1,7 +1,6 @@
 package taskcenter
 
 import (
-	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
 	"go.uber.org/zap"
@@ -50,7 +49,7 @@ func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
 
 			if changed {
 				userData.Time = time.Now().UnixMilli()
-				dao.GetTaskUserDao().SaveOrUpdate(userData)
+				t.saveTaskUserData(userData)
 			}
 		}
 	}

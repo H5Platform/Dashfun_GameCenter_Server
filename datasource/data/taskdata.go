@@ -17,6 +17,7 @@ const (
 	TaskCondition_PlayGame                                           //玩指定游戏指定次数，游戏id在task中指定
 	TaskCondition_LevelUp                                            //在指定游戏中升级到指定等级
 	TaskCondition_JoinTGChannel                                      //加入指定的tg channel
+	TaskCondition_FollowX                                            //Follow X
 )
 
 const (
@@ -26,19 +27,30 @@ const (
 
 const (
 	TaskRewardType_DashFunToken      DashFunTaskRewardType = iota + 1 //奖励DashFunToken
-	TaskRewardType_DashFunChainToken                                  //奖励dashfun的链上token
+	TaskRewardType_DashFunChainToken                                  //奖励dashfun的链上token，需要在数据库中存在名为DashFunCoin的coin数据
 )
+
+func TaskRewardType2CoinName(rewardType DashFunTaskRewardType) string {
+	switch rewardType {
+	case TaskRewardType_DashFunToken:
+		return "DashFunCoin"
+	case TaskRewardType_DashFunChainToken:
+		return "DashFunCoin"
+	default:
+		return "DashFunCoin"
+	}
+}
 
 const (
 	TaskStatus_InProgress     DashFunTaskStatus = iota + 1 //任务正在进行中
-	TaskStatus_Completed                                   //任务完成
 	TaskStatus_Verify_Pending                              //任务需要验证
-	TaskStatus_Claimed                                     //任务奖励已领取
+	TaskStatus_Completed
+	TaskStatus_Claimed //任务奖励已领取
 )
 
 type DashFunTaskReward struct {
 	RewardType DashFunTaskRewardType `json:"reward_type" bson:"reward_type"` //奖励类型
-	Amount     int                   `json:"amount" bson:"amount"`           //奖励数量
+	Amount     float32               `json:"amount" bson:"amount"`           //奖励数量
 }
 
 type DashFunTaskCondition struct {
@@ -50,19 +62,20 @@ type DashFunTaskCondition struct {
 
 // DashFunTaskData 任务数据
 type DashFunTaskData struct {
-	Id        string               `json:"id" bson:"_id"`              //任务ID
-	Name      string               `json:"name" bson:"name"`           //任务名称
-	Open      bool                 `json:"open" bson:"open"`           //任务是否开启
-	GameId    string               `json:"game_id" bson:"game_id"`     //绑定游戏id，-1或""表示不限制游戏
-	Type      DashFunTaskType      `json:"task_type" bson:"task_type"` //任务类型
-	Category  DashFunTaskCategory  `json:"category" bson:"category"`   //任务分类
-	Condition DashFunTaskCondition `json:"require" bson:"require"`     //任务条件
-	Reward    DashFunTaskReward    `json:"reward" bson:"reward"`       //任务奖励
+	Id         string               `json:"id" bson:"_id"`                  //任务ID
+	Name       string               `json:"name" bson:"name"`               //任务名称
+	Open       bool                 `json:"open" bson:"open"`               //任务是否开启
+	GameId     string               `json:"game_id" bson:"game_id"`         //绑定游戏id，-1或""表示不限制游戏
+	Type       DashFunTaskType      `json:"task_type" bson:"task_type"`     //任务类型
+	Category   DashFunTaskCategory  `json:"category" bson:"category"`       //任务分类
+	Condition  DashFunTaskCondition `json:"require" bson:"require"`         //任务条件
+	Reward     DashFunTaskReward    `json:"reward" bson:"reward"`           //任务奖励
+	CreateTime int64                `json:"create_time" bson:"create_time"` //任务创建时间
 }
 
 // DashFunTaskUserData 用户任务数据
 type DashFunTaskUserData struct {
-	UserId   string            `json:"user_id" bson:"_id"`         //user id
+	UserId   string            `json:"user_id" bson:"user_id"`     //user id
 	TaskId   string            `json:"task_id" bson:"task_id"`     //task id
 	Progress int               `json:"progress" bson:"progress"`   //任务进度，max是任务对应的Condition.Count
 	Status   DashFunTaskStatus `json:"status" bson:"status"`       //任务状态，0=in progress,1=

@@ -1,12 +1,15 @@
 package taskcenter
 
 import (
+	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/snowflake"
+	"errors"
 	"go.uber.org/zap"
 	"log"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -61,6 +64,15 @@ func (t *TaskCenter) GetTaskById(taskId string) *data.DashFunTaskData {
 	return task
 }
 
+// GetTaskByName 直接读取数据库，慎用
+func (t *TaskCenter) GetTaskByName(taskName string) *data.DashFunTaskData {
+	task, err := dao.GetTaskDao().FindTaskByName(taskName)
+	if err != nil {
+		return nil
+	}
+	return task
+}
+
 func (t *TaskCenter) CreateTaskAutoId(name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
 	condition data.DashFunTaskCondition, reward data.DashFunTaskReward) (*data.DashFunTaskData, error) {
 	return t.CreateTask(t.newTasId(), name, gameId, taskType, category, condition, reward)
@@ -102,7 +114,7 @@ func (t *TaskCenter) loadAllTaskUserData(userId string) (*TasksUserData, error) 
 
 	tud := t.taskUserDataList.GetTasksUserData(userId)
 	for _, td := range tasksData {
-		tud.AddUserData(td)
+		tud.AddOrUpdateUserData(td)
 	}
 	return tud, nil
 }
@@ -117,6 +129,13 @@ func (t *TaskCenter) loadTaskUserData(userId, taskId string) (*data.DashFunTaskU
 	return taskUserData, nil
 }
 
+func (t *TaskCenter) saveTaskUserData(data *data.DashFunTaskUserData) {
+	tud := t.taskUserDataList.GetTasksUserData(data.UserId)
+	data.Time = time.Now().UnixMilli()
+	tud.AddOrUpdateUserData(data)
+	dao.GetTaskUserDao().SaveOrUpdate(data)
+}
+
 // GetTaskUserData 获取用户对应任务的进度记录，如果没有则新建，同时检测是否需要重置
 // 同时针对加入TG Channel的任务，会在获取进度时进行验证是否完成
 func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUserData, error) {
@@ -127,7 +146,7 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 	if userData == nil {
 		//create new userdata
 		userData = newTaskUserData(userId, taskId)
-		dao.GetTaskUserDao().SaveOrUpdate(userData)
+		t.saveTaskUserData(userData)
 	}
 
 	task := t.GetTaskById(taskId)
@@ -156,15 +175,74 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 
 	if reset {
 		userData = newTaskUserData(userId, taskId)
-		dao.GetTaskUserDao().SaveOrUpdate(userData)
+		t.saveTaskUserData(userData)
 	}
 
 	return userData, nil
 }
 
+// 检查用户的任务进度，对某些任务进行验证，
+// 如果修改了用户的数据，返回true，否则返回false
+func (t *TaskCenter) checkTaskProgress(task *data.DashFunTaskData, user *data.DashFunUser, userData *data.DashFunTaskUserData, gameId string) bool {
+	changed := false
+	if task != nil && task.Condition.Type == data.TaskCondition_JoinTGChannel && userData.Status == data.TaskStatus_Verify_Pending {
+		//加入tg channel的任务，如果任务状态为verify_pending，则在获取列表时进行验证
+		changed = t.taskVerifyTGChannel(user, task, userData, gameId)
+
+	}
+	return changed
+}
+
+// UserClaimReward 用户请求获取任务奖励
+func (t *TaskCenter) UserClaimReward(user *data.DashFunUser, taskId string) (*data.DashFunTaskUserData, error) {
+	task := t.GetTaskById(taskId)
+	if task == nil {
+		zap.S().Errorw("User Claim Reward Error", "user", user.Id, "taskId", taskId, "error", "task not found")
+		return nil, errors.New("task not found")
+	}
+
+	userData, err := t.GetTaskUserData(user.Id, taskId)
+	if err != nil {
+		zap.S().Errorw("User Claim Reward Error", "user", user.Id, "taskId", taskId, "error", err)
+		return nil, err
+	}
+
+	if userData.Status == data.TaskStatus_Completed {
+		//可领取奖励
+		t.addTaskReward(task, userData)
+		return userData, nil
+	} else {
+		err = errors.New("task status error")
+		zap.S().Errorw("User Claim Reward Error", "user", user.Id, "task", task, "error", err)
+		return nil, err
+	}
+}
+
+func (t *TaskCenter) addTaskReward(task *data.DashFunTaskData, userData *data.DashFunTaskUserData) {
+	//add reward
+	coin, exist := coincenter.Get().GetCoinByName(data.TaskRewardType2CoinName(task.Reward.RewardType))
+	if !exist {
+		zap.S().Errorw("task reward type coin not found", "task", task)
+		return
+	}
+
+	_, err := coincenter.Get().AddUserCoinAmount(userData.UserId, coin.Id, task.Reward.Amount)
+	if err != nil {
+		zap.S().Errorw("AddUserCoinAmount err", "task", task, "error", err)
+		return
+	}
+
+	zap.S().Infow("User Claimed Task Reward", "task", task.Id+"-"+task.Name, "reward", task.Reward.Amount, "coin", coin.Name)
+
+	//change user data
+	userData.Status = data.TaskStatus_Claimed
+	t.saveTaskUserData(userData)
+}
+
 // GetUserTaskInfo 获取用户的任务信息
 // 返回用户在对应游戏中可用的任务列表，以及任务对应的进度
-func (t *TaskCenter) GetUserTaskInfo(userId, gameId string) *data.UserTaskInfo {
+func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *data.UserTaskInfo {
+	userId := user.Id
 	tasks := make([]*data.DashFunTaskData, 0)             //可用任务列表
 	dataMap := make(map[string]*data.DashFunTaskUserData) //用户任务数据
 	for _, task := range t.tasks {
@@ -175,9 +253,32 @@ func (t *TaskCenter) GetUserTaskInfo(userId, gameId string) *data.UserTaskInfo {
 				continue
 			}
 			tasks = append(tasks, task)
+			if t.checkTaskProgress(task, user, userData, gameId) {
+				//用户数据被修改
+				t.saveTaskUserData(userData)
+			}
 			dataMap[task.Id] = userData
 		}
 	}
+
+	slices.SortFunc(tasks, func(a, b *data.DashFunTaskData) int {
+		if a.Category != b.Category {
+			return int(a.Category - b.Category)
+		} else {
+			saveA := dataMap[a.Id]
+			saveB := dataMap[b.Id]
+			if saveA == nil || saveB == nil {
+				return int(a.CreateTime - b.CreateTime)
+			} else {
+				if (saveA.Status != saveB.Status) && (saveA.Status == data.TaskStatus_Claimed || saveB.Status == data.TaskStatus_Claimed) {
+					return int(saveA.Status - saveB.Status)
+				} else {
+					return int(a.CreateTime - b.CreateTime)
+				}
+			}
+		}
+	})
+
 	ret := &data.UserTaskInfo{
 		Tasks:    tasks,
 		UserData: dataMap,

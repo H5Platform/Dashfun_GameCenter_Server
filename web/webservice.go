@@ -28,6 +28,7 @@ const (
 	ApiModuleGame    = "game"
 	ApiModulePayment = "payment"
 	ApiModuleTask    = "task"
+	ApiModuleCoin    = "coin"
 )
 
 type ApiNode struct {

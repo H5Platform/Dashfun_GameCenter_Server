@@ -71,7 +71,7 @@ func (t *TaskUserDataList) RemoveTasksUserData(userId string) {
 	}
 }
 
-func (tud *TasksUserData) AddUserData(taskData *data.DashFunTaskUserData) {
+func (tud *TasksUserData) AddOrUpdateUserData(taskData *data.DashFunTaskUserData) {
 	for idx, item := range tud.taskDataList.Items() {
 		if item.TaskId == taskData.TaskId {
 			//当前记录中包含这个任务的进度数据，做更新

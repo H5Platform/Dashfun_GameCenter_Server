@@ -36,6 +36,12 @@ func (p *TaskDaoMongo) initDB() {
 			IndexName: "index_game_id",
 		},
 		{
+			FieldName: "name",
+			Unique:    true,
+			Sort:      1,
+			IndexName: "index_name",
+		},
+		{
 			FieldName: "task_type",
 			Unique:    false,
 			Sort:      1,
@@ -87,6 +93,17 @@ func (p *TaskDaoMongo) FindTaskById(id string) (*data.DashFunTaskData, error) {
 	return ret, nil
 }
 
+func (p *TaskDaoMongo) FindTaskByName(name string) (*data.DashFunTaskData, error) {
+	var ret *data.DashFunTaskData
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := p.c.FindOne(ctx, bson.M{"name": name}).Decode(&ret)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
 func (p *TaskDaoMongo) SaveOrUpdate(task *data.DashFunTaskData) (*data.DashFunTaskData, error) {
 	update := bson.M{
 		"$set": task,
@@ -105,14 +122,15 @@ func (p *TaskDaoMongo) SaveOrUpdate(task *data.DashFunTaskData) (*data.DashFunTa
 func (p *TaskDaoMongo) CreateTask(id, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
 	condition data.DashFunTaskCondition, reward data.DashFunTaskReward) (*data.DashFunTaskData, error) {
 	task := &data.DashFunTaskData{
-		Id:        id,
-		Name:      name,
-		Open:      true,
-		GameId:    gameId,
-		Type:      taskType,
-		Category:  category,
-		Condition: condition,
-		Reward:    reward,
+		Id:         id,
+		Name:       name,
+		Open:       true,
+		GameId:     gameId,
+		Type:       taskType,
+		Category:   category,
+		Condition:  condition,
+		Reward:     reward,
+		CreateTime: time.Now().UnixMilli(),
 	}
 	task, err := p.SaveOrUpdate(task)
 	if err != nil {

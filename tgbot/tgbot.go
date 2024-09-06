@@ -1,10 +1,10 @@
 package tgbot
 
 import (
-	"bytes"
 	"context"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/events"
+	"dashfun_gamecenter/gamecenter"
 	"encoding/base64"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -166,55 +166,84 @@ func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	//zap.S().Infow("member info", "", member)
 
-	buttons := [][]models.KeyboardButton{
-		{
-			//{
-			//	Text: "\U0001F44FGame Center123",
-			//	WebApp: &models.WebAppInfo{
-			//		URL: "https://t.me/DashFunBot/Center",
-			//	},
-			//}, {
-			//	Text: "\U0001F3E6Wallet132",
-			//	WebApp: &models.WebAppInfo{
-			//		URL: "https://t.me/DashFunBot/Games",
-			//	},
-			//},
-		},
-	}
+	//buttons := [][]models.KeyboardButton{
+	//	{
+	//		//{
+	//		//	Text: "\U0001F44FGame Center123",
+	//		//	WebApp: &models.WebAppInfo{
+	//		//		URL: "https://t.me/DashFunBot/Center",
+	//		//	},
+	//		//}, {
+	//		//	Text: "\U0001F3E6Wallet132",
+	//		//	WebApp: &models.WebAppInfo{
+	//		//		URL: "https://t.me/DashFunBot/Games",
+	//		//	},
+	//		//},
+	//	},
+	//}
 
-	msg := &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
-		Text:   "Welcome to DashFun Game Center!",
-		ReplyMarkup: &models.ReplyKeyboardMarkup{
-			Keyboard:       buttons,
-			ResizeKeyboard: true,
-		},
-	}
-	b.SendMessage(ctx, msg)
+	//msg := &bot.SendMessageParams{
+	//	ChatID: update.Message.Chat.ID,
+	//	Text:   "Welcome to DashFun Game Center!",
+	//	ReplyMarkup: &models.ReplyKeyboardMarkup{
+	//		Keyboard:       buttons,
+	//		ResizeKeyboard: true,
+	//	},
+	//}
+	//b.SendMessage(ctx, msg)
+	//
+	//buttons1 := [][]models.InlineKeyboardButton{
+	//	{
+	//		{
+	//			Text: "Open Game Center",
+	//			WebApp: &models.WebAppInfo{
+	//				URL: appLink(),
+	//			},
+	//		},
+	//	},
+	//}
+	//msg1 := &bot.SendPhotoParams{
+	//	ChatID: update.Message.Chat.ID,
+	//	Photo: &models.InputFileUpload{
+	//		Filename: "dashfun.jpg",
+	//		Data:     bytes.NewReader(logoData),
+	//	},
+	//	Caption: "Play lots of games in DashFun Game Center!\nEarn $TON & $NEXU rewards",
+	//	ReplyMarkup: &models.InlineKeyboardMarkup{
+	//		InlineKeyboard: buttons1,
+	//	},
+	//}
+	//
+	//b.SendPhoto(ctx, msg1)
 
-	buttons1 := [][]models.InlineKeyboardButton{
+	game, err := gamecenter.Get().FindGameByName("War Three Kingdoms")
+
+	buttons2 := [][]models.InlineKeyboardButton{
 		{
 			{
-				Text: "Open Game Center",
-				WebApp: &models.WebAppInfo{
-					URL: appLink(),
-				},
+				Text: "Open " + game.Name,
+				URL:  gameLink(game.Id),
 			},
 		},
 	}
-	msg1 := &bot.SendPhotoParams{
-		ChatID: update.Message.Chat.ID,
-		Photo: &models.InputFileUpload{
-			Filename: "dashfun.jpg",
-			Data:     bytes.NewReader(logoData),
-		},
-		Caption: "Play lots of games in DashFun Game Center!\nEarn $TON & $NEXU rewards",
-		ReplyMarkup: &models.InlineKeyboardMarkup{
-			InlineKeyboard: buttons1,
-		},
+	if err == nil {
+		msg2 := &bot.SendPhotoParams{
+			ChatID: update.Message.Chat.ID,
+			Photo: &models.InputFileString{
+				Data: game.MainPicUrl,
+			},
+			Caption: game.Desc,
+			ReplyMarkup: &models.InlineKeyboardMarkup{
+				InlineKeyboard: buttons2,
+			},
+		}
+
+		_, err := b.SendPhoto(ctx, msg2)
+		if err != nil {
+			log.Printf("SendPhoto: %v  ", err)
+		}
 	}
 
-	b.SendPhoto(ctx, msg1)
 }
 
 func appLink() string {
@@ -235,4 +264,8 @@ func botLink() string {
 	} else {
 		return "https://t.me/DashFunBot"
 	}
+}
+
+func gameLink(gameId string) string {
+	return botLink() + "/Games?startapp=" + gameId
 }

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="74e05ec9-da91-420a-8811-21917ffb2552" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/_initdata/dev_data.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_test/test_data.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/api_task.go" beforeDir="false" afterPath="$PROJECT_DIR$/api/api_task.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/dao/dao_define.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/dao/dao_define.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/data/data_worker_id_define.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/data/data_worker_id_define.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/data/gamedata.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/data/gamedata.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/data/taskdata.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/data/taskdata.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/mongoimpl/gamedao_mongo.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/mongoimpl/gamedao_mongo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/mongoimpl/mongo_dao_impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/mongoimpl/mongo_dao_impl.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/mongoimpl/task_dao_impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/mongoimpl/task_dao_impl.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/mongoimpl/task_user_dao_impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/mongoimpl/task_user_dao_impl.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasource/types/dao_types.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/types/dao_types.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gamecenter/gamecenter.go" beforeDir="false" afterPath="$PROJECT_DIR$/gamecenter/gamecenter.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcenter/data.go" beforeDir="false" afterPath="$PROJECT_DIR$/taskcenter/data.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcenter/taskcenter.go" beforeDir="false" afterPath="$PROJECT_DIR$/taskcenter/taskcenter.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcenter/taskcenter_events.go" beforeDir="false" afterPath="$PROJECT_DIR$/taskcenter/taskcenter_events.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcenter/taskcenter_processor.go" beforeDir="false" afterPath="$PROJECT_DIR$/taskcenter/taskcenter_processor.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tgbot/tgbot.go" beforeDir="false" afterPath="$PROJECT_DIR$/tgbot/tgbot.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/webservice.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/webservice.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" url="file://$PROJECT_DIR$/../../../../Env/go/go1.22.2" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="2lfuy1yAVw5v0Wh5uKjnv3Hjc7N" />
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="autoscrollToSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Go Build.go build dashfun_gamecenter.executor": "Debug",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "git-widget-placeholder": "main",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "/Users/marco/Dev/Projects/Project/DashFunPlatform/dashfun_gamecenter/assets",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "go"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/assets" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="go build dashfun_gamecenter" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="dashfun_gamecenter" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="dashfun_gamecenter" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/main.go" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Build.go build dashfun_gamecenter" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-5df93f7ad4aa-df9ad98b711f-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-242.21829.165" />
+        <option value="bundled-js-predefined-d6986cc7102b-7c0b70fcd90d-JavaScript-GO-242.21829.165" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>

@@ -1,14 +1,16 @@
 package data
 
 type DashFunGame struct {
-	Id        string `json:"id" bson:"_id"`
-	Name      string `json:"name" bson:"name"`
-	Desc      string `json:"desc" bson:"desc"`
-	Url       string `json:"url" bson:"url"`          //H5游戏部署地址
-	Genre     []int  `json:"genre" bson:"genre"`      //游戏类型Id
-	IconUrl   string `json:"iconUrl" bson:"icon_url"` //游戏图标地址
-	Time      int64  `json:"time" bson:"time"`        //游戏入库时间
-	ApiSecret string `json:"-" bson:"api_secret"`
+	Id         string `json:"id" bson:"_id"`
+	Name       string `json:"name" bson:"name"`
+	Desc       string `json:"desc" bson:"desc"`
+	Url        string `json:"url" bson:"url"`                 //H5游戏部署地址
+	Genre      []int  `json:"genre" bson:"genre"`             //游戏类型Id
+	IconUrl    string `json:"iconUrl" bson:"icon_url"`        //游戏图标地址
+	LogoUrl    string `json:"logoUrl" bson:"logo_url"`        //游戏logo
+	MainPicUrl string `json:"mainPicUrl" bson:"main_pic_url"` //游戏主图地址 横向比例
+	Time       int64  `json:"time" bson:"time"`               //游戏入库时间
+	ApiSecret  string `json:"-" bson:"api_secret"`
 }
 
 type DashFunGameGenre struct {

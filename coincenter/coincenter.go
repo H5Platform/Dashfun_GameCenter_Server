@@ -1,0 +1,225 @@
+package coincenter
+
+import (
+	"dashfun_gamecenter/datasource/dao"
+	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/events"
+	"dashfun_gamecenter/snowflake"
+	"errors"
+	"go.uber.org/zap"
+	"log"
+	"strconv"
+	"sync"
+)
+
+var once sync.Once
+var instance *CoinCenter
+
+// CoinCenter 操作用户的coin
+type CoinCenter struct {
+	idGen       *snowflake.Worker
+	coins       map[string]*data.CoinData
+	coinsByName map[string]*data.CoinData
+	users       *CoinUserDataList
+}
+
+func Get() *CoinCenter {
+	once.Do(func() {
+		instance = &CoinCenter{}
+		instance.init()
+	})
+	return instance
+}
+
+func (c *CoinCenter) init() {
+	c.idGen = snowflake.Must(snowflake.GetWorker(data.WorkerCoinId))
+	c.coins = make(map[string]*data.CoinData)
+	c.coinsByName = make(map[string]*data.CoinData)
+
+	c.users = newCoinUserDataList()
+
+	coins, err := dao.GetCoinDao().GetAllCoins()
+	if err != nil {
+		log.Fatalf("GetCoinDao.GetAllCoins err:%v", err)
+	}
+
+	for _, coin := range coins {
+		c.coins[coin.Id] = coin
+		c.coinsByName[coin.Name] = coin
+	}
+	events.UserLoginEvents.On(c.onUserLogin)
+}
+
+func (c *CoinCenter) loadUserCoins(userId string) (*CoinsUserData, error) {
+	d, ok := c.users.Has(userId)
+	if ok {
+		return d, nil
+	}
+
+	coinsData, err := dao.GetCoinUserDao().GetAllUserCoins(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	cud := c.users.GetCoinsUserData(userId)
+	cud.Lock()
+	defer cud.Unlock()
+	for _, coin := range coinsData {
+		cud.AddOrUpdateUserData(coin)
+		records, err := dao.GetCoinRecordDao().GetAllUserCoinRecords(userId, coin.CoinId)
+		if err != nil {
+			zap.S().Errorw("GetCoinRecordDao.GetAllUserCoinRecords err", "userId", userId, "coin", coin, "err", err)
+			continue
+		}
+
+		for i := len(records) - 1; i > 0; i-- {
+			cud.AddUserCoinChangeRecord(records[i])
+		}
+
+	}
+
+	return cud, nil
+}
+
+// recordUserCoinChange 记录用户coin数量变化，amount>0为增加 <0为扣减
+func (c *CoinCenter) recordUserCoinChange(cud *CoinsUserData, coinId string, amount float32) {
+	r := newCoinUserRecordData(cud.userId, coinId, amount)
+	_, err := dao.GetCoinRecordDao().AddRecord(r)
+	if err != nil {
+		zap.S().Errorw("save user coin change record error", "userId", cud.userId, "coinId", coinId, "amount", amount, "err", err)
+	}
+	cud.AddUserCoinChangeRecord(r)
+}
+
+func (c *CoinCenter) newCoinId() string {
+	id := c.idGen.NextId()
+	return strconv.FormatInt(id, 36)
+}
+
+func (c *CoinCenter) GetAllCoins() []*data.CoinData {
+	ret := make([]*data.CoinData, 0)
+	for _, coin := range c.coins {
+		ret = append(ret, coin)
+	}
+	return ret
+}
+
+func (c *CoinCenter) GetCoinById(coinId string) (*data.CoinData, bool) {
+	coin, ok := c.coins[coinId]
+	return coin, ok
+}
+
+func (c *CoinCenter) GetCoinByName(coinName string) (*data.CoinData, bool) {
+	coin, ok := c.coinsByName[coinName]
+	return coin, ok
+}
+
+func (c *CoinCenter) CreateCoin(id, name, symbol, desc string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error) {
+	if id == "" {
+		id = c.newCoinId()
+	}
+
+	coin, err := dao.GetCoinDao().CreateCoin(id, name, symbol, desc, canWithdraw, minWithdraw, chainAddr)
+	if err != nil {
+		return nil, err
+	}
+	c.coins[coin.Id] = coin
+	c.coinsByName[coin.Name] = coin
+	return coin, nil
+}
+
+func (c *CoinCenter) UpdateCoin(name, desc string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error) {
+	coin, exist := c.GetCoinByName(name)
+	if !exist {
+		return nil, errors.New("coin " + name + " not found")
+	}
+	if desc != "" {
+		coin.Desc = desc
+	}
+	coin.CanWithdraw = canWithdraw
+	if minWithdraw > 0 {
+		coin.MinWithdraw = minWithdraw
+	}
+	if chainAddr != nil {
+		coin.ChainAddr = chainAddr
+	}
+	dao.GetCoinDao().SaveOrUpdate(coin)
+	return coin, nil
+}
+
+// AddUserCoinAmount 给用户增加指定数量的coin
+func (c *CoinCenter) AddUserCoinAmount(userId, coinId string, amount float32) (*data.CoinUserData, error) {
+	cud := c.users.GetCoinsUserData(userId)
+	cud.Lock()
+	defer cud.Unlock()
+	coin, ok := c.GetCoinById(coinId)
+	if !ok {
+		zap.S().Errorw("add user coin error, coin not found", "userId", userId, "coinId", coinId, "amount", amount)
+		return nil, errors.New("coin not found")
+	}
+	coinData := c.GetCoinUserData(userId, coinId)
+	if amount > 0 {
+		coinData.Amount += amount
+		cud.AddOrUpdateUserData(coinData)
+		dao.GetCoinUserDao().SaveOrUpdate(coinData)
+		c.recordUserCoinChange(cud, coinId, amount)
+		zap.S().Infow("add user coin amount", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount)
+	}
+	return coinData, nil
+}
+
+// DecUserCoinAmount 给用户减少指定数量的coin
+func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount float32) (*data.CoinUserData, error) {
+	cud := c.users.GetCoinsUserData(userId)
+	cud.Lock()
+	defer cud.Unlock()
+	coin, ok := c.GetCoinById(coinId)
+	if !ok {
+		zap.S().Errorw("dec user coin error, coin not found", "userId", userId, "coinId", coinId, "amount", amount)
+		return nil, errors.New("coin not found")
+	}
+	coinData := c.GetCoinUserData(userId, coinId)
+	if amount > 0 {
+		if coinData.Amount < amount {
+			err := errors.New("not enough balance")
+			zap.S().Errorw("dec user coin amount error", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount, "err", err)
+			return nil, err
+		}
+		coinData.Amount -= amount
+		cud.AddOrUpdateUserData(coinData)
+		dao.GetCoinUserDao().SaveOrUpdate(coinData)
+		c.recordUserCoinChange(cud, coinId, amount)
+		zap.S().Infow("dec user coin amount", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount)
+	}
+	return coinData, nil
+}
+
+func (c *CoinCenter) GetCoinUserData(userId, coinId string) *data.CoinUserData {
+	cud := c.users.GetCoinsUserData(userId)
+	cd := cud.GetCoinUserData(coinId)
+	if cd == nil {
+		cd = newCoinUserData(userId, coinId)
+		dao.GetCoinUserDao().SaveOrUpdate(cd)
+	}
+	return cd
+}
+
+// GetUserCoinRecords 获取用户指定coin的交易记录
+func (c *CoinCenter) GetUserCoinRecords(userId, coinId string, count int) []*data.CoinUserRecordData {
+	cud := c.users.GetCoinsUserData(userId)
+	cud.RLock()
+	defer cud.RUnlock()
+
+	items := cud.records[coinId].Items()
+	l := len(items)
+
+	ret := make([]*data.CoinUserRecordData, 0)
+
+	for i := l - 1; i >= 0; i-- {
+		ret = append(ret, items[i])
+		if count > 0 && len(ret) >= count {
+			break
+		}
+	}
+	return ret
+}

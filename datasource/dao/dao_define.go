@@ -23,3 +23,15 @@ func GetTaskDao() types.TaskDao {
 func GetTaskUserDao() types.TaskUserDao {
 	return daoImpl.GetTaskUserDao()
 }
+
+func GetCoinDao() types.CoinDao {
+	return daoImpl.GetCoinDao()
+}
+
+func GetCoinUserDao() types.CoinUserDao {
+	return daoImpl.GetCoinUserDao()
+}
+
+func GetCoinRecordDao() types.CoinRecordDao {
+	return daoImpl.GetCoinRecordDao()
+}

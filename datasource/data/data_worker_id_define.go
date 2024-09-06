@@ -6,4 +6,5 @@ const (
 	WorkerApiSecret = 25
 	WorkerPaymentId = 30
 	WorkerTaskId    = 40
+	WorkerCoinId    = 50
 )

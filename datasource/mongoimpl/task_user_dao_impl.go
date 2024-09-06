@@ -28,13 +28,18 @@ func (p *TaskUserDaoMongo) initDB() {
 	c := p.db.Collection("task_user_data")
 	p.c = c
 
-	err := CreateIndexes(c, []IndexInfo{
-		{
-			FieldName: "task_id",
-			Unique:    true,
-			Sort:      1,
-			IndexName: "index_task_id",
-		},
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{"user_id", 1}, {"task_id", 1}},
+		Options: options.Index().SetUnique(true),
+	}
+
+	_, err := c.Indexes().CreateOne(context.TODO(), indexModel)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = CreateIndexes(c, []IndexInfo{
 		{
 			FieldName: "time",
 			Unique:    false,
@@ -52,7 +57,7 @@ func (p *TaskUserDaoMongo) FindTaskUserData(taskId string, userId string) (*data
 	var ret *data.DashFunTaskUserData
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err := p.c.FindOne(ctx, bson.M{"_id": userId, "task_id": taskId}).Decode(&ret)
+	err := p.c.FindOne(ctx, bson.M{"user_id": userId, "task_id": taskId}).Decode(&ret)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, nil
 	}
@@ -66,14 +71,14 @@ func (p *TaskUserDaoMongo) FindAllTaskUserData(userId string) ([]*data.DashFunTa
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	ret := make([]*data.DashFunTaskUserData, 0)
-	cursor, err := p.c.Find(ctx, bson.M{"_id": userId})
+	cursor, err := p.c.Find(ctx, bson.M{"user_id": userId})
+	defer cursor.Close(ctx)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return ret, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
 
 	for cursor.Next(ctx) {
 		var d data.DashFunTaskUserData
@@ -95,7 +100,11 @@ func (p *TaskUserDaoMongo) SaveOrUpdate(userData *data.DashFunTaskUserData) (*da
 		"$set": userData,
 	}
 	opts := options.Update().SetUpsert(true)
-	_, err := p.c.UpdateByID(context.TODO(), userData.UserId, update, opts)
+	filter := bson.M{"user_id": userData.UserId, "task_id": userData.TaskId}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	_, err := p.c.UpdateOne(ctx, filter, update, opts)
+	//_, err := p.c.UpdateByID(context.TODO(), userData.UserId, update, opts)
 	if err != nil {
 		return nil, err
 	}

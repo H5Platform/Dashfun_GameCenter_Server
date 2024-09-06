@@ -23,6 +23,15 @@ func (g *GameDaoMongo) GetGameById(gameId string) (*data.DashFunGame, error) {
 	return ret, nil
 }
 
+func (g *GameDaoMongo) GetGameByName(gameName string) (*data.DashFunGame, error) {
+	var ret *data.DashFunGame
+	err := g.c.FindOne(context.TODO(), bson.M{"name": gameName}).Decode(&ret)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
 func (g *GameDaoMongo) SaveOrUpdate(game *data.DashFunGame) (*data.DashFunGame, error) {
 	update := bson.M{
 		"$set": game,
@@ -49,6 +58,12 @@ func (g *GameDaoMongo) initDB() {
 	g.c = c
 
 	err := CreateIndexes(c, []IndexInfo{
+		{
+			FieldName: "name",
+			Unique:    true,
+			Sort:      -1,
+			IndexName: "index_name",
+		},
 		{
 			FieldName: "time",
 			Unique:    false,

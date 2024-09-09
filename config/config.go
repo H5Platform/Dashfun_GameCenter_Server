@@ -24,11 +24,16 @@ type MongoConfig struct {
 	DataBase string `yaml:"data_base"`
 }
 
+type Log struct {
+	Path string `yaml:"path"`
+}
+
 type Config struct {
 	Base  *BaseConfig     `yaml:"base"`
 	Mongo *MongoConfig    `yaml:"mongo"`
 	Web   *WebConfig      `yaml:"web"`
 	TG    *TelegramConfig `yaml:"telegram"`
+	Log   *Log            `yaml:"log"`
 }
 
 var config *Config

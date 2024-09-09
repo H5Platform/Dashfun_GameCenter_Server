@@ -103,6 +103,19 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		//	OK:                 true,
 		//	ErrorMessage:       "",
 		//})
+	} else if update.CallbackQuery != nil {
+		//game := update.CallbackQuery.GameShortName
+		//game, err := dao.GetGameDao().GetGameByName("War Three Kingdoms")
+		_, err := b.AnswerCallbackQuery(context.TODO(), &bot.AnswerCallbackQueryParams{
+			CallbackQueryID: update.CallbackQuery.ID,
+			Text:            update.CallbackQuery.GameShortName,
+			ShowAlert:       false,
+			URL:             "https://entry-tma.3kweb3.com",
+			CacheTime:       0,
+		})
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -244,6 +257,11 @@ func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		}
 	}
 
+	//b.SendGame(context.TODO(), &bot.SendGameParams{
+	//	ChatID:       update.Message.Chat.ID,
+	//	GameShorName: "threekweb3",
+	//})
+
 }
 
 func appLink() string {
@@ -252,7 +270,7 @@ func appLink() string {
 	} else if config.IsDev() {
 		return "https://tma-test.nexgami.com/"
 	} else {
-		return "https://dashfun.nexgami.com"
+		return "https://tma.dashfun.games"
 	}
 }
 
@@ -260,7 +278,7 @@ func botLink() string {
 	if config.IsTest() {
 		return "https://t.me/DashFunTestBot"
 	} else if config.IsDev() {
-		return "https://t.me/DashFunBot"
+		return "https://t.me/LocalTestBot"
 	} else {
 		return "https://t.me/DashFunBot"
 	}

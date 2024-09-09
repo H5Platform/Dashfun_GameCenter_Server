@@ -5,28 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="74e05ec9-da91-420a-8811-21917ffb2552" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/_initdata/dev_data.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_test/test_data.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/api_task.go" beforeDir="false" afterPath="$PROJECT_DIR$/api/api_task.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/dao/dao_define.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/dao/dao_define.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/data/data_worker_id_define.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/data/data_worker_id_define.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/data/gamedata.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/data/gamedata.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/data/taskdata.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/data/taskdata.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/mongoimpl/gamedao_mongo.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/mongoimpl/gamedao_mongo.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/mongoimpl/mongo_dao_impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/mongoimpl/mongo_dao_impl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/mongoimpl/task_dao_impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/mongoimpl/task_dao_impl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/mongoimpl/task_user_dao_impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/mongoimpl/task_user_dao_impl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasource/types/dao_types.go" beforeDir="false" afterPath="$PROJECT_DIR$/datasource/types/dao_types.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gamecenter/gamecenter.go" beforeDir="false" afterPath="$PROJECT_DIR$/gamecenter/gamecenter.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/conf/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcenter/data.go" beforeDir="false" afterPath="$PROJECT_DIR$/taskcenter/data.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcenter/taskcenter.go" beforeDir="false" afterPath="$PROJECT_DIR$/taskcenter/taskcenter.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcenter/taskcenter_events.go" beforeDir="false" afterPath="$PROJECT_DIR$/taskcenter/taskcenter_events.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcenter/taskcenter_processor.go" beforeDir="false" afterPath="$PROJECT_DIR$/taskcenter/taskcenter_processor.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tgbot/tgbot.go" beforeDir="false" afterPath="$PROJECT_DIR$/tgbot/tgbot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/webservice.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/webservice.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

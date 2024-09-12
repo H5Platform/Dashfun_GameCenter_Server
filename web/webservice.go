@@ -4,8 +4,6 @@ import (
 	"dashfun_gamecenter/config"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"sync"
@@ -158,8 +156,4 @@ func (s *Service) Run() error {
 	err := r.Run(fmt.Sprintf(":%d", config.GetConfig().Web.Port))
 	//err := r.RunTLS(fmt.Sprintf(":%d", config.GetConfig().Web.Port), "./conf/server.crt", "./conf/server.key")
 	return err
-}
-
-func (s *Service) configSwagger(r *gin.Engine) {
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

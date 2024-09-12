@@ -9,14 +9,14 @@ import (
 	"net/http"
 )
 
-// @Summary 用户请求任务奖励
-// @Tags		Task API
-// @Produce	json
-// @Param	game_id query string true "游戏Id"
-// @Param	task_id query string true "任务Id"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=data.DashFunTaskUserData}	"DashFunTaskUserData"
-// @Router		/api/v1/task/claim [get]
+//	@Summary	用户请求任务奖励
+//	@Tags		Task API
+//	@Produce	json
+//	@Param		game_id	query	string	true	"游戏Id"
+//	@Param		task_id	query	string	true	"任务Id"
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"DashFunTaskUserData"
+//	@Router		/api/v1/task/claim [get]
 func apiUserClaimTaskReward(c *gin.Context) {
 	taskId, exist := c.GetQuery("task_id")
 	if !exist {
@@ -52,13 +52,13 @@ func apiUserClaimTaskReward(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(r))
 }
 
-// @Summary 获取用户各个状态的任务数量
-// @Tags		Task API
-// @Produce	json
-// @Param	game_id query string true "游戏Id"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=map[int]int}	"UserTaskCount"
-// @Router		/api/v1/task/count [get]
+//	@Summary	获取用户各个状态的任务数量
+//	@Tags		Task API
+//	@Produce	json
+//	@Param		game_id	query	string	true	"游戏Id"
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=map[int]int}	"UserTaskCount"
+//	@Router		/api/v1/task/count [get]
 func apiGetUserTaskCount(c *gin.Context) {
 	gameId, exist := c.GetQuery("game_id")
 	if !exist {
@@ -98,13 +98,13 @@ func apiGetUserTaskCount(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(r))
 }
 
-// @Summary 获取用户的任务信息
-// @Tags		Task API
-// @Produce	json
-// @Param	game_id query string true "游戏Id"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=data.UserTaskInfo}	"UserTaskInfo"
-// @Router		/api/v1/task/list [get]
+//	@Summary	获取用户的任务信息
+//	@Tags		Task API
+//	@Produce	json
+//	@Param		game_id	query	string	true	"游戏Id"
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=data.UserTaskInfo}	"UserTaskInfo"
+//	@Router		/api/v1/task/list [get]
 func apiGetUserTaskInfo(c *gin.Context) {
 	gameId, exist := c.GetQuery("game_id")
 	if !exist {
@@ -126,14 +126,14 @@ func apiGetUserTaskInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(info))
 }
 
-// @Summary 任务条目被点击
-// @Tags		Task API
-// @Produce	json
-// @Param	game_id query string true "游戏Id"
-// @Param	task_id query string true "任务Id"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
-// @Router		/api/v1/task/clicked [get]
+//	@Summary	任务条目被点击
+//	@Tags		Task API
+//	@Produce	json
+//	@Param		game_id	query	string	true	"游戏Id"
+//	@Param		task_id	query	string	true	"任务Id"
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
+//	@Router		/api/v1/task/clicked [get]
 func apiOnTaskClicked(c *gin.Context) {
 	taskId, exist := c.GetQuery("task_id")
 	if !exist {
@@ -167,14 +167,14 @@ func apiOnTaskClicked(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(userData))
 }
 
-// @Summary 加入tg任务验证
-// @Tags		Task API
-// @Produce	json
-// @Param	game_id query string true "游戏Id"
-// @Param	task_id query string true "任务Id"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
-// @Router		/api/v1/task/tg_verify [get]
+//	@Summary	加入tg任务验证
+//	@Tags		Task API
+//	@Produce	json
+//	@Param		game_id	query	string	true	"游戏Id"
+//	@Param		task_id	query	string	true	"任务Id"
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
+//	@Router		/api/v1/task/tg_verify [get]
 func apiVerifyUserTGChannelTask(c *gin.Context) {
 	taskId, exist := c.GetQuery("task_id")
 	if !exist {

@@ -4,6 +4,8 @@ import (
 	"dashfun_gamecenter/config"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"sync"
@@ -159,5 +161,5 @@ func (s *Service) Run() error {
 }
 
 func (s *Service) configSwagger(r *gin.Engine) {
-	//r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

@@ -9,7 +9,7 @@ import (
 )
 
 // @Summary	telegram用户开启游戏
-// @Tags		Telegram API
+// @Tags		Games API
 // @Produce	json
 // @Param	id path string true "开启的游戏Id"
 // @Authorize "tma {token}"

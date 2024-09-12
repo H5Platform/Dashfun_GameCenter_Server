@@ -1,0 +1,676 @@
+definitions:
+  api.GetCoinsResult:
+    properties:
+      coins:
+        items:
+          $ref: '#/definitions/data.CoinData'
+        type: array
+      user_data:
+        additionalProperties:
+          $ref: '#/definitions/data.CoinUserData'
+        type: object
+    type: object
+  api.JSONResult:
+    properties:
+      code:
+        $ref: '#/definitions/api.ResultCode'
+      data: {}
+      msg:
+        type: string
+    type: object
+  api.PaymentResponse:
+    properties:
+      invoiceLink:
+        type: string
+      paymentId:
+        type: string
+    type: object
+  api.ResultCode:
+    enum:
+    - 0
+    - -1
+    type: integer
+    x-enum-varnames:
+    - Success
+    - Error
+  data.CoinData:
+    properties:
+      can_withdraw:
+        description: 是否可以提取
+        type: boolean
+      chain_addr:
+        additionalProperties:
+          type: string
+        description: 链上地址，chainName->address
+        type: object
+      desc:
+        type: string
+      id:
+        type: string
+      min_withdraw:
+        description: 最低提取金额
+        type: number
+      name:
+        type: string
+      symbol:
+        type: string
+    type: object
+  data.CoinUserData:
+    properties:
+      amount:
+        type: number
+      coin_id:
+        type: string
+      create_time:
+        type: integer
+      user_id:
+        type: string
+    type: object
+  data.DashFunGame:
+    properties:
+      desc:
+        type: string
+      genre:
+        description: 游戏类型Id
+        items:
+          type: integer
+        type: array
+      iconUrl:
+        description: 游戏图标地址
+        type: string
+      id:
+        type: string
+      logoUrl:
+        description: 游戏logo
+        type: string
+      mainPicUrl:
+        description: 游戏主图地址 横向比例
+        type: string
+      name:
+        type: string
+      time:
+        description: 游戏入库时间
+        type: integer
+      url:
+        description: H5游戏部署地址
+        type: string
+    type: object
+  data.DashFunPaymentData:
+    properties:
+      created_at:
+        description: 订单创建时间
+        type: integer
+      currency:
+        description: 付款货币
+        type: string
+      description:
+        description: 商品介绍
+        type: string
+      extraData:
+        description: 附加信息
+        type: string
+      from:
+        allOf:
+        - $ref: '#/definitions/data.PaymentFrom'
+        description: 付款来源渠道
+      game_id:
+        description: 订单所属GameId
+        type: string
+      id:
+        description: 订单ID
+        type: string
+      message:
+        description: 支付信息，例如失败信息等
+        type: string
+      pay_at:
+        description: 订单支付时间
+        type: integer
+      payload:
+        description: 携带的自定义数据
+        type: string
+      payment_id:
+        description: 渠道方的支付Id
+        type: string
+      price:
+        description: 付款金额
+        type: integer
+      status:
+        allOf:
+        - $ref: '#/definitions/data.PaymentStatus'
+        description: 订单状态
+      title:
+        description: 商品名称
+        type: string
+      userId:
+        description: 请求订单的用户Id
+        type: string
+    type: object
+  data.DashFunTaskCategory:
+    enum:
+    - 1
+    - 2
+    type: integer
+    x-enum-comments:
+      TaskCategory_Daily: 每日
+    x-enum-varnames:
+    - TaskCategory_Challenges
+    - TaskCategory_Daily
+  data.DashFunTaskCondition:
+    properties:
+      condition:
+        description: 任务条件，不同类型条件不同
+        type: string
+      count:
+        description: 任务要求满足条件的次数
+        type: integer
+      link:
+        description: 任务条件相关链接
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/data.DashFunTaskConditionType'
+        description: 任务条件类型，不同类型任务完成方式不同
+    type: object
+  data.DashFunTaskConditionType:
+    enum:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    type: integer
+    x-enum-comments:
+      TaskCondition_FollowX: Follow X
+      TaskCondition_JoinTGChannel: 加入指定的tg channel
+      TaskCondition_LevelUp: 在指定游戏中升级到指定等级
+      TaskCondition_PlayGame: 玩指定游戏指定次数，游戏id在task中指定
+      TaskCondition_PlayRandomGame: 订阅型任务，例如follow twitter, join tg channel...
+    x-enum-varnames:
+    - TaskCondition_PlayRandomGame
+    - TaskCondition_PlayGame
+    - TaskCondition_LevelUp
+    - TaskCondition_JoinTGChannel
+    - TaskCondition_FollowX
+  data.DashFunTaskData:
+    properties:
+      category:
+        allOf:
+        - $ref: '#/definitions/data.DashFunTaskCategory'
+        description: 任务分类
+      create_time:
+        description: 任务创建时间
+        type: integer
+      game_id:
+        description: 绑定游戏id，-1或""表示不限制游戏
+        type: string
+      id:
+        description: 任务ID
+        type: string
+      name:
+        description: 任务名称
+        type: string
+      open:
+        description: 任务是否开启
+        type: boolean
+      require:
+        allOf:
+        - $ref: '#/definitions/data.DashFunTaskCondition'
+        description: 任务条件
+      reward:
+        allOf:
+        - $ref: '#/definitions/data.DashFunTaskReward'
+        description: 任务奖励
+      task_type:
+        allOf:
+        - $ref: '#/definitions/data.DashFunTaskType'
+        description: 任务类型
+    type: object
+  data.DashFunTaskReward:
+    properties:
+      amount:
+        description: 奖励数量
+        type: number
+      reward_type:
+        allOf:
+        - $ref: '#/definitions/data.DashFunTaskRewardType'
+        description: 奖励类型
+    type: object
+  data.DashFunTaskRewardType:
+    enum:
+    - 1
+    - 2
+    type: integer
+    x-enum-comments:
+      TaskRewardType_DashFunChainToken: 奖励dashfun的链上token，需要在数据库中存在名为DashFunCoin的coin数据
+      TaskRewardType_DashFunToken: 奖励DashFunToken
+    x-enum-varnames:
+    - TaskRewardType_DashFunToken
+    - TaskRewardType_DashFunChainToken
+  data.DashFunTaskStatus:
+    enum:
+    - 1
+    - 2
+    - 3
+    - 4
+    type: integer
+    x-enum-comments:
+      TaskStatus_Claimed: 任务奖励已领取
+      TaskStatus_InProgress: 任务正在进行中
+      TaskStatus_Verify_Pending: 任务需要验证
+    x-enum-varnames:
+    - TaskStatus_InProgress
+    - TaskStatus_Verify_Pending
+    - TaskStatus_Completed
+    - TaskStatus_Claimed
+  data.DashFunTaskType:
+    enum:
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-comments:
+      TaskType_2Days: 2日任务，不知道用得上不...
+      TaskType_Daily: 每日任务，每日重置
+      TaskType_Normal: 普通类型任务，只能完成1次
+    x-enum-varnames:
+    - TaskType_Normal
+    - TaskType_Daily
+    - TaskType_2Days
+  data.DashFunTaskUserData:
+    properties:
+      progress:
+        description: 任务进度，max是任务对应的Condition.Count
+        type: integer
+      save_data:
+        description: 任务进度相关数据
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/data.DashFunTaskStatus'
+        description: 任务状态，0=in progress,1=
+      task_id:
+        description: task id
+        type: string
+      time:
+        description: 任务最新一次的进度变化时间
+        type: integer
+      user_id:
+        description: user id
+        type: string
+    type: object
+  data.DashFunUser:
+    properties:
+      avatar_url:
+        description: avatar地址
+        type: string
+      channel_id:
+        description: 渠道方id
+        type: string
+      create_data:
+        description: 创建时间
+        type: integer
+      display_name:
+        description: 显示名称
+        type: string
+      from:
+        allOf:
+        - $ref: '#/definitions/data.DashFunUserFrom'
+        description: 用户来源
+      id:
+        description: 全局userId
+        type: string
+      login_time:
+        description: 登录时间
+        type: integer
+      logoff_time:
+        description: 登出时间
+        type: integer
+      user_name:
+        description: 用户名
+        type: string
+    type: object
+  data.DashFunUserFrom:
+    enum:
+    - 1
+    type: integer
+    x-enum-comments:
+      DF_UserFrom_TG: telegram 用户
+    x-enum-varnames:
+    - DF_UserFrom_TG
+  data.PaymentFrom:
+    enum:
+    - 1
+    type: integer
+    x-enum-varnames:
+    - DashFunPaymentFrom_TG
+  data.PaymentStatus:
+    enum:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    type: integer
+    x-enum-comments:
+      DashFunPaymentStatus_Canceled: 订单已取消
+      DashFunPaymentStatus_Created: 订单已创建
+      DashFunPaymentStatus_Failed: 订单失败
+      DashFunPaymentStatus_Paid: 订单已支付
+      DashFunPaymentStatus_Pending: 等待支付
+    x-enum-varnames:
+    - DashFunPaymentStatus_Created
+    - DashFunPaymentStatus_Pending
+    - DashFunPaymentStatus_Paid
+    - DashFunPaymentStatus_Canceled
+    - DashFunPaymentStatus_Failed
+  data.UserTaskInfo:
+    properties:
+      tasks:
+        description: 任务列表
+        items:
+          $ref: '#/definitions/data.DashFunTaskData'
+        type: array
+      user_data:
+        additionalProperties:
+          $ref: '#/definitions/data.DashFunTaskUserData'
+        description: 任务id对应的用户进度数据
+        type: object
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/coin/get:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: coins
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.GetCoinsResult'
+              type: object
+      summary: 获取可用的coins以及用户coin相关数据
+      tags:
+      - Coin API
+  /api/v1/game/{id}:
+    get:
+      parameters:
+      - description: 开启的游戏Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DashFunGame
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/data.DashFunGame'
+                  type: array
+              type: object
+      summary: telegram用户开启游戏
+      tags:
+      - Games API
+  /api/v1/payment/get:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      - description: 用户Id
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: 订单ID
+        in: query
+        name: payment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DashFunPaymentData
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/data.DashFunPaymentData'
+                  type: array
+              type: object
+      summary: 获取用户的支付订单
+      tags:
+      - Payment API
+  /api/v1/payment/request:
+    get:
+      parameters:
+      - description: 请求支付的游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      - description: 支付项目名称
+        in: query
+        name: title
+        required: true
+        type: string
+      - description: 支付项目描述
+        in: query
+        name: desc
+        required: true
+        type: string
+      - description: 自定义数据
+        in: query
+        name: payload
+        required: true
+        type: string
+      - description: 支付金额
+        in: query
+        name: price
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: payment info
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.PaymentResponse'
+              type: object
+      summary: telegram用户请求支付订单
+      tags:
+      - Payment API
+  /api/v1/task/claim:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      - description: 任务Id
+        in: query
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DashFunTaskUserData
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/data.DashFunTaskUserData'
+              type: object
+      summary: 用户请求任务奖励
+      tags:
+      - Task API
+  /api/v1/task/clicked:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      - description: 任务Id
+        in: query
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserTaskInfo
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/data.DashFunTaskUserData'
+              type: object
+      summary: 任务条目被点击
+      tags:
+      - Task API
+  /api/v1/task/count:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserTaskCount
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: integer
+                  type: object
+              type: object
+      summary: 获取用户各个状态的任务数量
+      tags:
+      - Task API
+  /api/v1/task/list:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserTaskInfo
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/data.UserTaskInfo'
+              type: object
+      summary: 获取用户的任务信息
+      tags:
+      - Task API
+  /api/v1/task/tg_verify:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      - description: 任务Id
+        in: query
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserTaskInfo
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/data.DashFunTaskUserData'
+              type: object
+      summary: 加入tg任务验证
+      tags:
+      - Task API
+  /api/v1/user/enter_game:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DashFunUserId
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 用户点击了play
+      tags:
+      - User API
+  /api/v1/user/tg_login:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DashFunUser
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/data.DashFunUser'
+                  type: array
+              type: object
+      summary: telegram用户登录
+      tags:
+      - User API
+swagger: "2.0"

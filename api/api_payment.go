@@ -23,16 +23,21 @@ type GetPaymentRequest struct {
 	PaymentId string `form:"payment_id" binding:"required"`
 }
 
+type PaymentResponse struct {
+	PaymentId   string `json:"paymentId"`
+	InvoiceLink string `json:"invoiceLink"`
+}
+
 // @Summary	telegram用户请求支付订单
 // @Tags		Payment API
 // @Produce	json
-// @Param	game_id query string true "请求支付的游戏Id"
-// @Param	title query string true "支付项目名称"
-// @Param	desc query string true "支付项目描述"
-// @Param	payload query string true "自定义数据"
-// @Param	price query int true "支付金额"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{paymentId:string, invoiceLink:string}	"payment info"
+// @Param		game_id	query	string	true	"请求支付的游戏Id"
+// @Param		title	query	string	true	"支付项目名称"
+// @Param		desc	query	string	true	"支付项目描述"
+// @Param		payload	query	string	true	"自定义数据"
+// @Param		price	query	int		true	"支付金额"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=api.PaymentResponse}	"payment info"
 // @Router		/api/v1/payment/request [get]
 func apiUserRequestPayment(c *gin.Context) {
 	req := &PaymentRequest{}
@@ -61,19 +66,19 @@ func apiUserRequestPayment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, RSuccess(gin.H{
-		"paymentId":   payment.Id,
-		"invoiceLink": payment.ExtraData,
+	c.JSON(http.StatusOK, RSuccess(PaymentResponse{
+		PaymentId:   payment.Id,
+		InvoiceLink: payment.ExtraData,
 	}))
 }
 
 // @Summary	获取用户的支付订单
 // @Tags		Payment API
 // @Produce	json
-// @Param	game_id query string true "游戏Id"
-// @Param	user_id query string true "用户Id"
-// @Param	payment_id query string true "订单ID"
-// @Success	200		{object}	api.JSONResult{data=[]data.DashFunPaymentData}	"DashFunPaymentData"
+// @Param		game_id		query		string											true	"游戏Id"
+// @Param		user_id		query		string											true	"用户Id"
+// @Param		payment_id	query		string											true	"订单ID"
+// @Success	200			{object}	api.JSONResult{data=[]data.DashFunPaymentData}	"DashFunPaymentData"
 // @Router		/api/v1/payment/get [get]
 func apiGetPayment(c *gin.Context) {
 	req := &GetPaymentRequest{}

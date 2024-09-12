@@ -14,11 +14,11 @@ type GetCoinsResult struct {
 	UserData map[string]*data.CoinUserData `json:"user_data"`
 }
 
-// @Summary 获取可用的coins以及用户coin相关数据
+// @Summary	获取可用的coins以及用户coin相关数据
 // @Tags		Coin API
 // @Produce	json
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data={coins:[]data.CoinData, user_data:map[string]data.CoinUserData}}	"coins"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=api.GetCoinsResult}	"coins"
 // @Router		/api/v1/coin/get [get]
 func apiGetCoins(c *gin.Context) {
 	auth, err := CheckAuthorize(c)

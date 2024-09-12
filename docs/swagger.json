@@ -1,0 +1,1053 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/v1/coin/get": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Coin API"
+                ],
+                "summary": "获取可用的coins以及用户coin相关数据",
+                "responses": {
+                    "200": {
+                        "description": "coins",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.GetCoinsResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/game/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Games API"
+                ],
+                "summary": "telegram用户开启游戏",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "开启的游戏Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DashFunGame",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunGame"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/payment/get": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment API"
+                ],
+                "summary": "获取用户的支付订单",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户Id",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "订单ID",
+                        "name": "payment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DashFunPaymentData",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunPaymentData"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/payment/request": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment API"
+                ],
+                "summary": "telegram用户请求支付订单",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "请求支付的游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "支付项目名称",
+                        "name": "title",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "支付项目描述",
+                        "name": "desc",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "自定义数据",
+                        "name": "payload",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "支付金额",
+                        "name": "price",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "payment info",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.PaymentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task/claim": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Task API"
+                ],
+                "summary": "用户请求任务奖励",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "任务Id",
+                        "name": "task_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DashFunTaskUserData",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.DashFunTaskUserData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task/clicked": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Task API"
+                ],
+                "summary": "任务条目被点击",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "任务Id",
+                        "name": "task_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "UserTaskInfo",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.DashFunTaskUserData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task/count": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Task API"
+                ],
+                "summary": "获取用户各个状态的任务数量",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "UserTaskCount",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task/list": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Task API"
+                ],
+                "summary": "获取用户的任务信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "UserTaskInfo",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.UserTaskInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/task/tg_verify": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Task API"
+                ],
+                "summary": "加入tg任务验证",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "任务Id",
+                        "name": "task_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "UserTaskInfo",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.DashFunTaskUserData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/enter_game": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User API"
+                ],
+                "summary": "用户点击了play",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DashFunUserId",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/tg_login": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User API"
+                ],
+                "summary": "telegram用户登录",
+                "responses": {
+                    "200": {
+                        "description": "DashFunUser",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunUser"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.GetCoinsResult": {
+            "type": "object",
+            "properties": {
+                "coins": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.CoinData"
+                    }
+                },
+                "user_data": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/data.CoinUserData"
+                    }
+                }
+            }
+        },
+        "api.JSONResult": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "$ref": "#/definitions/api.ResultCode"
+                },
+                "data": {},
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.PaymentResponse": {
+            "type": "object",
+            "properties": {
+                "invoiceLink": {
+                    "type": "string"
+                },
+                "paymentId": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ResultCode": {
+            "type": "integer",
+            "enum": [
+                0,
+                -1
+            ],
+            "x-enum-varnames": [
+                "Success",
+                "Error"
+            ]
+        },
+        "data.CoinData": {
+            "type": "object",
+            "properties": {
+                "can_withdraw": {
+                    "description": "是否可以提取",
+                    "type": "boolean"
+                },
+                "chain_addr": {
+                    "description": "链上地址，chainName-\u003eaddress",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "min_withdraw": {
+                    "description": "最低提取金额",
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.CoinUserData": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "coin_id": {
+                    "type": "string"
+                },
+                "create_time": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.DashFunGame": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "genre": {
+                    "description": "游戏类型Id",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "iconUrl": {
+                    "description": "游戏图标地址",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "logoUrl": {
+                    "description": "游戏logo",
+                    "type": "string"
+                },
+                "mainPicUrl": {
+                    "description": "游戏主图地址 横向比例",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "time": {
+                    "description": "游戏入库时间",
+                    "type": "integer"
+                },
+                "url": {
+                    "description": "H5游戏部署地址",
+                    "type": "string"
+                }
+            }
+        },
+        "data.DashFunPaymentData": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "订单创建时间",
+                    "type": "integer"
+                },
+                "currency": {
+                    "description": "付款货币",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "商品介绍",
+                    "type": "string"
+                },
+                "extraData": {
+                    "description": "附加信息",
+                    "type": "string"
+                },
+                "from": {
+                    "description": "付款来源渠道",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.PaymentFrom"
+                        }
+                    ]
+                },
+                "game_id": {
+                    "description": "订单所属GameId",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "订单ID",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "支付信息，例如失败信息等",
+                    "type": "string"
+                },
+                "pay_at": {
+                    "description": "订单支付时间",
+                    "type": "integer"
+                },
+                "payload": {
+                    "description": "携带的自定义数据",
+                    "type": "string"
+                },
+                "payment_id": {
+                    "description": "渠道方的支付Id",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "付款金额",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "订单状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.PaymentStatus"
+                        }
+                    ]
+                },
+                "title": {
+                    "description": "商品名称",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "请求订单的用户Id",
+                    "type": "string"
+                }
+            }
+        },
+        "data.DashFunTaskCategory": {
+            "type": "integer",
+            "enum": [
+                1,
+                2
+            ],
+            "x-enum-comments": {
+                "TaskCategory_Daily": "每日"
+            },
+            "x-enum-varnames": [
+                "TaskCategory_Challenges",
+                "TaskCategory_Daily"
+            ]
+        },
+        "data.DashFunTaskCondition": {
+            "type": "object",
+            "properties": {
+                "condition": {
+                    "description": "任务条件，不同类型条件不同",
+                    "type": "string"
+                },
+                "count": {
+                    "description": "任务要求满足条件的次数",
+                    "type": "integer"
+                },
+                "link": {
+                    "description": "任务条件相关链接",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "任务条件类型，不同类型任务完成方式不同",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunTaskConditionType"
+                        }
+                    ]
+                }
+            }
+        },
+        "data.DashFunTaskConditionType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "x-enum-comments": {
+                "TaskCondition_FollowX": "Follow X",
+                "TaskCondition_JoinTGChannel": "加入指定的tg channel",
+                "TaskCondition_LevelUp": "在指定游戏中升级到指定等级",
+                "TaskCondition_PlayGame": "玩指定游戏指定次数，游戏id在task中指定",
+                "TaskCondition_PlayRandomGame": "订阅型任务，例如follow twitter, join tg channel..."
+            },
+            "x-enum-varnames": [
+                "TaskCondition_PlayRandomGame",
+                "TaskCondition_PlayGame",
+                "TaskCondition_LevelUp",
+                "TaskCondition_JoinTGChannel",
+                "TaskCondition_FollowX"
+            ]
+        },
+        "data.DashFunTaskData": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "任务分类",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunTaskCategory"
+                        }
+                    ]
+                },
+                "create_time": {
+                    "description": "任务创建时间",
+                    "type": "integer"
+                },
+                "game_id": {
+                    "description": "绑定游戏id，-1或\"\"表示不限制游戏",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "任务ID",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "任务名称",
+                    "type": "string"
+                },
+                "open": {
+                    "description": "任务是否开启",
+                    "type": "boolean"
+                },
+                "require": {
+                    "description": "任务条件",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunTaskCondition"
+                        }
+                    ]
+                },
+                "reward": {
+                    "description": "任务奖励",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunTaskReward"
+                        }
+                    ]
+                },
+                "task_type": {
+                    "description": "任务类型",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunTaskType"
+                        }
+                    ]
+                }
+            }
+        },
+        "data.DashFunTaskReward": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "奖励数量",
+                    "type": "number"
+                },
+                "reward_type": {
+                    "description": "奖励类型",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunTaskRewardType"
+                        }
+                    ]
+                }
+            }
+        },
+        "data.DashFunTaskRewardType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2
+            ],
+            "x-enum-comments": {
+                "TaskRewardType_DashFunChainToken": "奖励dashfun的链上token，需要在数据库中存在名为DashFunCoin的coin数据",
+                "TaskRewardType_DashFunToken": "奖励DashFunToken"
+            },
+            "x-enum-varnames": [
+                "TaskRewardType_DashFunToken",
+                "TaskRewardType_DashFunChainToken"
+            ]
+        },
+        "data.DashFunTaskStatus": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "x-enum-comments": {
+                "TaskStatus_Claimed": "任务奖励已领取",
+                "TaskStatus_InProgress": "任务正在进行中",
+                "TaskStatus_Verify_Pending": "任务需要验证"
+            },
+            "x-enum-varnames": [
+                "TaskStatus_InProgress",
+                "TaskStatus_Verify_Pending",
+                "TaskStatus_Completed",
+                "TaskStatus_Claimed"
+            ]
+        },
+        "data.DashFunTaskType": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3
+            ],
+            "x-enum-comments": {
+                "TaskType_2Days": "2日任务，不知道用得上不...",
+                "TaskType_Daily": "每日任务，每日重置",
+                "TaskType_Normal": "普通类型任务，只能完成1次"
+            },
+            "x-enum-varnames": [
+                "TaskType_Normal",
+                "TaskType_Daily",
+                "TaskType_2Days"
+            ]
+        },
+        "data.DashFunTaskUserData": {
+            "type": "object",
+            "properties": {
+                "progress": {
+                    "description": "任务进度，max是任务对应的Condition.Count",
+                    "type": "integer"
+                },
+                "save_data": {
+                    "description": "任务进度相关数据",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "任务状态，0=in progress,1=",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunTaskStatus"
+                        }
+                    ]
+                },
+                "task_id": {
+                    "description": "task id",
+                    "type": "string"
+                },
+                "time": {
+                    "description": "任务最新一次的进度变化时间",
+                    "type": "integer"
+                },
+                "user_id": {
+                    "description": "user id",
+                    "type": "string"
+                }
+            }
+        },
+        "data.DashFunUser": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "description": "avatar地址",
+                    "type": "string"
+                },
+                "channel_id": {
+                    "description": "渠道方id",
+                    "type": "string"
+                },
+                "create_data": {
+                    "description": "创建时间",
+                    "type": "integer"
+                },
+                "display_name": {
+                    "description": "显示名称",
+                    "type": "string"
+                },
+                "from": {
+                    "description": "用户来源",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunUserFrom"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "全局userId",
+                    "type": "string"
+                },
+                "login_time": {
+                    "description": "登录时间",
+                    "type": "integer"
+                },
+                "logoff_time": {
+                    "description": "登出时间",
+                    "type": "integer"
+                },
+                "user_name": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "data.DashFunUserFrom": {
+            "type": "integer",
+            "enum": [
+                1
+            ],
+            "x-enum-comments": {
+                "DF_UserFrom_TG": "telegram 用户"
+            },
+            "x-enum-varnames": [
+                "DF_UserFrom_TG"
+            ]
+        },
+        "data.PaymentFrom": {
+            "type": "integer",
+            "enum": [
+                1
+            ],
+            "x-enum-varnames": [
+                "DashFunPaymentFrom_TG"
+            ]
+        },
+        "data.PaymentStatus": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "x-enum-comments": {
+                "DashFunPaymentStatus_Canceled": "订单已取消",
+                "DashFunPaymentStatus_Created": "订单已创建",
+                "DashFunPaymentStatus_Failed": "订单失败",
+                "DashFunPaymentStatus_Paid": "订单已支付",
+                "DashFunPaymentStatus_Pending": "等待支付"
+            },
+            "x-enum-varnames": [
+                "DashFunPaymentStatus_Created",
+                "DashFunPaymentStatus_Pending",
+                "DashFunPaymentStatus_Paid",
+                "DashFunPaymentStatus_Canceled",
+                "DashFunPaymentStatus_Failed"
+            ]
+        },
+        "data.UserTaskInfo": {
+            "type": "object",
+            "properties": {
+                "tasks": {
+                    "description": "任务列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.DashFunTaskData"
+                    }
+                },
+                "user_data": {
+                    "description": "任务id对应的用户进度数据",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/data.DashFunTaskUserData"
+                    }
+                }
+            }
+        }
+    }
+}

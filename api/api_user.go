@@ -8,10 +8,10 @@ import (
 )
 
 // @Summary	telegram用户登录
-// @Tags		Telegram API
+// @Tags		User API
 // @Produce	json
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=[]data.DashFunUser}	"DashFunUser"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=[]data.DashFunUser}	"DashFunUser"
 // @Router		/api/v1/user/tg_login [get]
 func apiTgUserLogin(c *gin.Context) {
 	//idStr, ok := c.GetQuery("id")
@@ -43,9 +43,9 @@ func apiTgUserLogin(c *gin.Context) {
 // @Summary	用户点击了play
 // @Tags		User API
 // @Produce	json
-// @Param	game_id query string true "游戏Id"
-// @Authorize "tma {token}"
-// @Success	200		{string} "DashFunUserId"
+// @Param		game_id	query	string	true	"游戏Id"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=string}	"DashFunUserId"
 // @Router		/api/v1/user/enter_game [get]
 func apiEnterGame(c *gin.Context) {
 	auth, err := CheckAuthorize(c)

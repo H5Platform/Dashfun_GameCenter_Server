@@ -14,26 +14,30 @@ var dbDashFun *mongo.Database
 
 // DaoImplMongo implements types.DaoImpl
 type DaoImplMongo struct {
-	userDao       types.UserDao
-	gameDao       types.GameDao
-	paymentDao    types.PaymentDao
-	taskDao       types.TaskDao
-	taskUserDao   types.TaskUserDao
-	coinDao       types.CoinDao
-	coinUserDao   types.CoinUserDao
-	coinRecordDao types.CoinRecordDao
+	userDao               types.UserDao
+	gameDao               types.GameDao
+	paymentDao            types.PaymentDao
+	taskDao               types.TaskDao
+	taskUserDao           types.TaskUserDao
+	coinDao               types.CoinDao
+	coinUserDao           types.CoinUserDao
+	coinRecordDao         types.CoinRecordDao
+	adminUserDao          types.AdminUserDao
+	adminUserLoginInfoDao types.AdminUserLoginInfoDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
 	return &DaoImplMongo{
-		userDao:       GetUserDaoMongo(),
-		gameDao:       GetGameDaoMongo(),
-		paymentDao:    GetPaymentDaoMongo(),
-		taskDao:       GetTaskDaoMongo(),
-		taskUserDao:   GetTaskUserDaoMongo(),
-		coinDao:       GetCoinDaoMongo(),
-		coinUserDao:   GetCoinUserDaoMongo(),
-		coinRecordDao: GetCoinRecordDaoMongo(),
+		userDao:               GetUserDaoMongo(),
+		gameDao:               GetGameDaoMongo(),
+		paymentDao:            GetPaymentDaoMongo(),
+		taskDao:               GetTaskDaoMongo(),
+		taskUserDao:           GetTaskUserDaoMongo(),
+		coinDao:               GetCoinDaoMongo(),
+		coinUserDao:           GetCoinUserDaoMongo(),
+		coinRecordDao:         GetCoinRecordDaoMongo(),
+		adminUserDao:          GetAdminUserDaoMongo(),
+		adminUserLoginInfoDao: GetAdminUserLoginInfoDaoMongo(),
 	}
 }
 
@@ -47,6 +51,12 @@ func (d *DaoImplMongo) GetTaskUserDao() types.TaskUserDao     { return d.taskUse
 func (d *DaoImplMongo) GetCoinDao() types.CoinDao             { return d.coinDao }
 func (d *DaoImplMongo) GetCoinUserDao() types.CoinUserDao     { return d.coinUserDao }
 func (d *DaoImplMongo) GetCoinRecordDao() types.CoinRecordDao { return d.coinRecordDao }
+func (d *DaoImplMongo) GetAdminUserDao() types.AdminUserDao {
+	return d.adminUserDao
+}
+func (d *DaoImplMongo) GetAdminUserLoginInfoDao() types.AdminUserLoginInfoDao {
+	return d.adminUserLoginInfoDao
+}
 
 func GetMongoDatabase() *mongo.Database {
 	mongoCfg := config.GetConfig().Mongo

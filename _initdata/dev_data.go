@@ -44,7 +44,7 @@ func makeTestTask() {
 				Condition: "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     0.5,
 			},
 		)
@@ -65,7 +65,7 @@ func makeTestTask() {
 				Condition: "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     5,
 			},
 		)
@@ -86,7 +86,7 @@ func makeTestTask() {
 				Condition: "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     10,
 			},
 		)
@@ -110,7 +110,7 @@ func makeTestTask() {
 				Link:      "https://t.me/+h79TJSlUaO03ZDdh",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     10,
 			},
 		)
@@ -133,7 +133,7 @@ func makeTestTask() {
 				Link:      "https://x.com/nexgami",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     10,
 			},
 		)

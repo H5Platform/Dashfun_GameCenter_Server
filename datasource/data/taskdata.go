@@ -26,15 +26,15 @@ const (
 )
 
 const (
-	TaskRewardType_DashFunToken      DashFunTaskRewardType = iota + 1 //奖励DashFunToken
-	TaskRewardType_DashFunChainToken                                  //奖励dashfun的链上token，需要在数据库中存在名为DashFunCoin的coin数据
+	TaskRewardType_DashFunToken DashFunTaskRewardType = iota + 1 //奖励DashFunToken
+	TaskRewardType_DashFunPoint                                  //奖励dashfun point，用来兑换链上token
 )
 
 func TaskRewardType2CoinName(rewardType DashFunTaskRewardType) string {
 	switch rewardType {
 	case TaskRewardType_DashFunToken:
 		return "DashFunCoin"
-	case TaskRewardType_DashFunChainToken:
+	case TaskRewardType_DashFunPoint:
 		return "DashFunCoin"
 	default:
 		return "DashFunCoin"

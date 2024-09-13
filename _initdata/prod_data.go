@@ -23,7 +23,16 @@ func makeProdCoins() {
 	c := coincenter.Get()
 	_, exist := c.GetCoinByName("DashFunCoin")
 	if !exist {
-		_, err := c.CreateCoin("", "DashFunCoin", "DFC", "DashFunCoin", true, 100, make(map[string]string))
+		_, err := c.CreateCoin("", "DashFunCoin", "Dash", "DashFun Coin", true, 100, make(map[string]string))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	c = coincenter.Get()
+	_, exist = c.GetCoinByName("DashFunPoint")
+	if !exist {
+		_, err := c.CreateCoin("", "DashFunPoint", "Point", "DashFun Point", false, 0, make(map[string]string))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,7 +89,7 @@ func makeProdTasks() {
 				Condition: "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     1.5,
 			},
 		)
@@ -101,7 +110,7 @@ func makeProdTasks() {
 				Condition: "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     10,
 			},
 		)
@@ -125,7 +134,7 @@ func makeProdTasks() {
 				Link:      "https://t.me/+h79TJSlUaO03ZDdh",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     10,
 			},
 		)
@@ -148,7 +157,7 @@ func makeProdTasks() {
 				Link:      "https://x.com/dashfun_web3",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunChainToken,
+				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     10,
 			},
 		)

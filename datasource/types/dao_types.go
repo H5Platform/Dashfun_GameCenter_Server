@@ -11,6 +11,8 @@ type DaoImpl interface {
 	GetCoinDao() CoinDao
 	GetCoinUserDao() CoinUserDao
 	GetCoinRecordDao() CoinRecordDao
+	GetAdminUserDao() AdminUserDao
+	GetAdminUserLoginInfoDao() AdminUserLoginInfoDao
 }
 
 type UserDao interface {

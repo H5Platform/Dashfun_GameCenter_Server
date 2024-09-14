@@ -147,7 +147,7 @@ func makeTestTask() {
 
 func makeTestGame() {
 	s := gamecenter.Get()
-	game, err := s.FindGame("StoneAgeTest")
+	game, err := s.FindGameByName("Stone Age")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -171,7 +171,7 @@ func makeTestGame() {
 		log.Printf("Game Saved : %v", g)
 	}
 
-	game, err = s.FindGame("LocalTest")
+	game, err = s.FindGameByName("LocalTest")
 	if game == nil {
 		game = &data.DashFunGame{
 			Id:   "LocalTest",

@@ -2,8 +2,6 @@ package main
 
 import (
 	_ "dashfun_gamecenter/_initdata"
-	"dashfun_gamecenter/admin"
-	"dashfun_gamecenter/admin/admin_user_mgr"
 	_ "dashfun_gamecenter/api"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/taskcenter"
@@ -18,7 +16,7 @@ import (
 )
 
 func main() {
-	admin_user_mgr.Get().CreateUser("Marco", "ttkuraki@live.com", admin.AdminAuth_Admin)
+	//admin_user_mgr.Get().CreateUser("Marco", "ttkuraki@live.com", admin.AdminAuth_Admin)
 	logPath := config.GetConfig().Log.Path
 	if logPath == "" {
 		logPath = "app.log"

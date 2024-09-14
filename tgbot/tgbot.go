@@ -46,6 +46,7 @@ func Get() *TGBot {
 
 		b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, startHandler)
 		b.RegisterHandler(bot.HandlerTypeMessageText, "/test", bot.MatchTypePrefix, testHandler)
+		b.RegisterHandler(bot.HandlerTypeMessageText, "/p-chat-id", bot.MatchTypePrefix, printChatIdHandler)
 
 		inst = &TGBot{
 			bot: b,
@@ -117,6 +118,11 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 			return
 		}
 	}
+}
+
+func printChatIdHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	zap.S().Infow("chat id", update.Message.Chat.ID, update.Message.Chat.Title)
+	return
 }
 
 func testHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

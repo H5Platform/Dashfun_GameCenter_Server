@@ -52,6 +52,17 @@ func (a *AdminUserDaoImpl) FindUserById(id string) (*admin.AdminUser, error) {
 	return ret, nil
 }
 
+func (a *AdminUserDaoImpl) FindUserByName(name string) (*admin.AdminUser, error) {
+	var ret *admin.AdminUser
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := a.c.FindOne(ctx, bson.M{"name": name}).Decode(&ret)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
 func (a *AdminUserDaoImpl) SaveUser(user *admin.AdminUser) (*admin.AdminUser, error) {
 	update := bson.M{
 		"$set": user,

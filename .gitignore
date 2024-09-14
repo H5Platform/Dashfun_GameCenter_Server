@@ -24,6 +24,9 @@ go.work.sum
 # env file
 .env
 
+aws credentials
+pinpoint_accessKeys.csv
+
 build/
 secret.yml
 .idea/

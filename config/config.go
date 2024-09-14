@@ -28,12 +28,24 @@ type Log struct {
 	Path string `yaml:"path"`
 }
 
+type AwsPinPoint struct {
+	KeyId  string `yaml:"key_id"`
+	Secret string `yaml:"secret"`
+}
+
+type AdminConfig struct {
+	Name     string `yaml:"name"`
+	Password string `yaml:"password"`
+}
+
 type Config struct {
-	Base  *BaseConfig     `yaml:"base"`
-	Mongo *MongoConfig    `yaml:"mongo"`
-	Web   *WebConfig      `yaml:"web"`
-	TG    *TelegramConfig `yaml:"telegram"`
-	Log   *Log            `yaml:"log"`
+	Base     *BaseConfig     `yaml:"base"`
+	Mongo    *MongoConfig    `yaml:"mongo"`
+	Web      *WebConfig      `yaml:"web"`
+	TG       *TelegramConfig `yaml:"telegram"`
+	Log      *Log            `yaml:"log"`
+	PinPoint *AwsPinPoint    `yaml:"aws_pinpoint"`
+	AdminCfg *AdminConfig    `yaml:"admin_cfg"`
 }
 
 var config *Config

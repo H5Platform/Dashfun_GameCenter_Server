@@ -14,3 +14,11 @@ telegram:
 
 log:
   path: ./logs/game_center.log
+
+aws_pinpoint:
+  key_id: ${aws_pinpoint_access_key_id}
+  secret: ${aws_pinpoint_access_key}
+
+admin_cfg:
+  name: admin
+  password: ${admin_password}

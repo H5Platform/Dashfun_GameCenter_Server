@@ -22,7 +22,7 @@ type GameCenter struct {
 func Get() *GameCenter {
 	once.Do(func() {
 		instance = &GameCenter{
-			idGen:     snowflake.Must(snowflake.GetWorker(data.WorkerGameI)),
+			idGen:     snowflake.Must(snowflake.GetWorker(data.WorkerGameId)),
 			secretGen: snowflake.Must(snowflake.GetWorker(data.WorkerApiSecret)),
 		}
 	})

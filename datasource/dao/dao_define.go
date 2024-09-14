@@ -37,3 +37,6 @@ func GetCoinRecordDao() types.CoinRecordDao {
 }
 
 func GetAdminUserDao() types.AdminUserDao { return daoImpl.GetAdminUserDao() }
+func GetAdminUserLoginInfoDao() types.AdminUserLoginInfoDao {
+	return daoImpl.GetAdminUserLoginInfoDao()
+}

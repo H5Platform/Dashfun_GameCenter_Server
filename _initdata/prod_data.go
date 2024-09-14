@@ -50,7 +50,7 @@ func makeProdGames() {
 	if game == nil {
 		//create game
 		game = &data.DashFunGame{
-			Id:   "",
+			Id:   "9c4r4sdzb40", //三国固定用这个id
 			Name: "War Three Kingdoms",
 			Desc: "Easy and fast Three Kingdomes Idle RPG",
 			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",

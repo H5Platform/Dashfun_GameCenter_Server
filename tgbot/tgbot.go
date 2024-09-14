@@ -121,7 +121,7 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 }
 
 func printChatIdHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	zap.S().Infow("chat id", update.Message.Chat.ID, update.Message.Chat.Title)
+	zap.S().Infow("print chat:", "chat", update.Message.Chat)
 	return
 }
 

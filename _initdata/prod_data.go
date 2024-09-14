@@ -3,6 +3,7 @@ package _initdata
 import (
 	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/config"
+	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/taskcenter"
@@ -123,15 +124,16 @@ func makeProdTasks() {
 	taskName = "Join DashFun Group"
 	task = nil
 	task = t.GetTaskByName(taskName)
+	chatId := "-1002176516558" //dashfun official group
 	if task == nil {
 		//创建测试任务
-		chatId := "-1002198592933"
+		//chatId := "-1002198592933"
 		taskc, err := t.CreateTaskAutoId(taskName, "", data.TaskType_Normal, data.TaskCategory_Challenges,
 			data.DashFunTaskCondition{
 				Type:      data.TaskCondition_JoinTGChannel,
 				Count:     1,
 				Condition: chatId,
-				Link:      "https://t.me/+h79TJSlUaO03ZDdh",
+				Link:      "https://t.me/dashfun_official",
 			},
 			data.DashFunTaskReward{
 				RewardType: data.TaskRewardType_DashFunPoint,
@@ -142,6 +144,10 @@ func makeProdTasks() {
 			log.Fatalf("create task fail, err:%v", err)
 		}
 		task = taskc
+	} else {
+		task.Condition.Condition = chatId
+		task.Condition.Link = "https://t.me/dashfun_official"
+		dao.GetTaskDao().SaveOrUpdate(task)
 	}
 
 	taskName = "Follow DashFun On X"

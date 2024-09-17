@@ -45,6 +45,7 @@ func (t *TaskCenter) init() {
 
 	events.UserEnterGameEvents.On(t.onUserEnterGameEvent)
 	events.UserLoginEvents.On(t.onUserLogin)
+	events.PlayerLevelUpEvents.On(t.onGameReportPlayerLevelUp)
 }
 
 func (t *TaskCenter) newTasId() string {

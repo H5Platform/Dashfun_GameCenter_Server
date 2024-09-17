@@ -116,7 +116,7 @@ func (t *TaskCenter) taskRecordPlayGame(user *data.DashFunUser, task *data.DashF
 // taskRecordPlayRandomGame 给玩家记录一次游戏次数
 func (t *TaskCenter) taskRecordPlayRandomGame(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
 	//玩指定游戏
-	if task.Condition.Type == data.TaskCondition_PlayRandomGame {
+	if task.Condition.Type == data.TaskCondition_PlayRandomGame && userData.Status == data.TaskStatus_InProgress {
 		var save = &data.TaskSaveDataPlayRandomGame{}
 		if userData.SaveData != "" {
 			err := json.Unmarshal([]byte(userData.SaveData), save)
@@ -151,6 +151,23 @@ func (t *TaskCenter) taskRecordPlayRandomGame(user *data.DashFunUser, task *data
 		}
 
 		return ret
+	}
+	return false
+}
+func (t *TaskCenter) taskRecordPlayerLevelUp(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string, playerLevel int) bool {
+	if task.Condition.Type == data.TaskCondition_LevelUp && userData.Status == data.TaskStatus_InProgress {
+		l, err := strconv.Atoi(task.Condition.Condition)
+		if err != nil {
+			zap.S().Errorw("task condition config error", "err", err, "task", task)
+			return false
+		}
+
+		if playerLevel >= l {
+			//满足条件
+			userData.Progress = userData.Progress + 1
+			userData.Status = data.TaskStatus_Completed
+			return true
+		}
 	}
 	return false
 }

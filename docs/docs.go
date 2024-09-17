@@ -89,6 +89,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/game_report/player_level": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Game Report API"
+                ],
+                "summary": "游戏方上报玩家等级，Server端使用",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "上报的游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上报的用户Id",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "用户等级",
+                        "name": "level",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "时间戳",
+                        "name": "timestamp",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "签名字符串",
+                        "name": "sign",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "返回结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/payment/get": {
             "get": {
                 "produces": [
@@ -872,12 +940,12 @@ const docTemplate = `{
                 2
             ],
             "x-enum-comments": {
-                "TaskRewardType_DashFunChainToken": "奖励dashfun的链上token，需要在数据库中存在名为DashFunCoin的coin数据",
+                "TaskRewardType_DashFunPoint": "奖励dashfun point，用来兑换链上token",
                 "TaskRewardType_DashFunToken": "奖励DashFunToken"
             },
             "x-enum-varnames": [
                 "TaskRewardType_DashFunToken",
-                "TaskRewardType_DashFunChainToken"
+                "TaskRewardType_DashFunPoint"
             ]
         },
         "data.DashFunTaskStatus": {

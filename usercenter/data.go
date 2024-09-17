@@ -36,6 +36,17 @@ func (o *OnlineUsers) FindUserByChannelId(channelId string) *data.OnlineUser {
 	return user
 }
 
+func (o *OnlineUsers) FindUser(userId string) *data.OnlineUser {
+	o.RLock()
+	defer o.RUnlock()
+
+	user, exist := o.Users[userId]
+	if !exist {
+		return nil
+	}
+	return user
+}
+
 func (o *OnlineUsers) TGUserLogin(user *data.DashFunUser, tgInfo *data.TGInfo) *data.OnlineUser {
 	o.Lock()
 	defer o.Unlock()

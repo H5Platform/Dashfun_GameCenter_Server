@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
@@ -148,6 +149,26 @@ func (uc *UserCenter) GetDashFunUserByTgAuthData(tgAuthData string) (*data.DashF
 	}
 	if user == nil {
 		zap.S().Errorw("User Not Found By TGAuthData", "tgUser", initData.User)
+		return nil, errors.New("user does not exist")
+	}
+
+	return user, nil
+}
+
+func (uc *UserCenter) GetDashFunUser(userId string) (*data.DashFunUser, error) {
+	ou := uc.onlineUsers.FindUser(userId)
+	var user *data.DashFunUser
+	if ou == nil {
+		uf, err := dao.GetUserDao().GetUserById(userId)
+		if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, err
+		}
+		user = uf
+	} else {
+		user = ou.User
+	}
+	if user == nil {
+		zap.S().Errorw("User Not Found By UserId", "userId", userId)
 		return nil, errors.New("user does not exist")
 	}
 

@@ -15,6 +15,37 @@ func (t *TaskCenter) onUserLogin(user *data.OnlineUser) {
 	}
 }
 
+func (t *TaskCenter) onUserLogout(user *data.OnlineUser) {
+
+}
+
+func (t *TaskCenter) onGameReportPlayerLevelUp(evt *events.EventPlayerLevelUp) {
+	user := evt.User
+	game := evt.Game
+
+	for _, task := range t.tasks {
+		if task.Open && (isDashFunTask(task) || task.GameId == game.Id) {
+			changed := false
+			userData, err := t.GetTaskUserData(user.Id, task.Id)
+			if err != nil {
+				zap.S().Errorw("GetTaskUserData Error", "user", user.Id, "task", task.Id, "err", err)
+				continue
+			}
+
+			switch task.Condition.Type {
+			case data.TaskCondition_LevelUp:
+				changed = t.taskRecordPlayerLevelUp(user, task, userData, game.Id, evt.Level)
+				break
+			}
+
+			if changed {
+				userData.Time = time.Now().UnixMilli()
+				t.saveTaskUserData(userData)
+			}
+		}
+	}
+}
+
 // onUserEnterGameEvent 用户点击了Play按钮进入了游戏
 func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
 	//t.processTasks(evt.User, evt.Game)

@@ -7,15 +7,41 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/taskcenter"
+	"errors"
+	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"time"
 )
 
 func init() {
 	if config.IsDev() || config.IsTest() {
+		makeTestUser()
 		makeTestGame()
 		makeTestTask()
 		makeTestCoins()
+	}
+}
+
+func makeTestUser() {
+	user, err := dao.GetUserDao().GetUserById("LocalTestUser")
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		log.Fatalf("Get user err: %v", err)
+	}
+
+	if user == nil {
+		user = &data.DashFunUser{
+			Id:          "LocalTestUser",
+			ChannelId:   fmt.Sprintf("%d", "TestTgUserId"),
+			DisplayName: fmt.Sprintf("%s %s", "User", "Test"),
+			UserName:    "TestUser",
+			AvatarUrl:   "",
+			From:        data.DF_UserFrom_TG,
+			CreateData:  time.Now().UnixMilli(),
+			LoginTime:   time.Now().UnixMilli(),
+			LogoffTime:  0,
+		}
+		dao.GetUserDao().SaveOrUpdate(user)
 	}
 }
 
@@ -46,6 +72,48 @@ func makeTestTask() {
 			data.DashFunTaskReward{
 				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     0.5,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
+
+	taskId = "LocalTestLevelUpTask3"
+	task = t.GetTaskById(taskId)
+	if task == nil {
+		//创建测试任务
+		taskc, err := t.CreateTask(taskId, "Level Up to Level 3", "LocalTest", data.TaskType_Normal, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_LevelUp,
+				Count:     1,
+				Condition: "3",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunPoint,
+				Amount:     1,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
+
+	taskId = "LocalTestLevelUpTask10"
+	task = t.GetTaskById(taskId)
+	if task == nil {
+		//创建测试任务
+		taskc, err := t.CreateTask(taskId, "Level Up to Level 10", "LocalTest", data.TaskType_Normal, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_LevelUp,
+				Count:     1,
+				Condition: "10",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunPoint,
+				Amount:     1,
 			},
 		)
 		if err != nil {

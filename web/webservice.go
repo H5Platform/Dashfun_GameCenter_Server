@@ -24,11 +24,12 @@ const (
 	PUT    HttpMethod = "put"
 	DELETE HttpMethod = "delete"
 
-	ApiModuleUser    = "user"
-	ApiModuleGame    = "game"
-	ApiModulePayment = "payment"
-	ApiModuleTask    = "task"
-	ApiModuleCoin    = "coin"
+	ApiModuleUser       = "user"
+	ApiModuleGame       = "game"
+	ApiModulePayment    = "payment"
+	ApiModuleTask       = "task"
+	ApiModuleCoin       = "coin"
+	ApiModuleGameReport = "game_report"
 )
 
 type ApiNode struct {

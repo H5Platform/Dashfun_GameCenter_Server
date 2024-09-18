@@ -32,7 +32,7 @@ func makeTestUser() {
 	if user == nil {
 		user = &data.DashFunUser{
 			Id:          "LocalTestUser",
-			ChannelId:   fmt.Sprintf("%d", "TestTgUserId"),
+			ChannelId:   fmt.Sprintf("TestTgUserId"),
 			DisplayName: fmt.Sprintf("%s %s", "User", "Test"),
 			UserName:    "TestUser",
 			AvatarUrl:   "",
@@ -211,6 +211,50 @@ func makeTestTask() {
 		task = taskc
 	}
 
+	taskId = "LocalTestSpendStars"
+	task = nil
+	task = t.GetTaskById(taskId)
+	if task == nil {
+		//创建测试任务
+		taskc, err := t.CreateTask(taskId, "Spend 5 stars", "LocalTest", data.TaskType_Daily, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_SpendTGStars,
+				Count:     5,
+				Condition: "",
+				Link:      "",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunPoint,
+				Amount:     10,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
+	taskId = "LocalTestSpendStars500"
+	task = nil
+	task = t.GetTaskById(taskId)
+	if task == nil {
+		//创建测试任务
+		taskc, err := t.CreateTask(taskId, "Spend 500 stars", "LocalTest", data.TaskType_Daily, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_SpendTGStars,
+				Count:     500,
+				Condition: "",
+				Link:      "",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunPoint,
+				Amount:     100,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
 }
 
 func makeTestGame() {

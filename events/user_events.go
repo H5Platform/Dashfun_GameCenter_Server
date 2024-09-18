@@ -7,6 +7,14 @@ type EventUserEnterGame struct {
 	Game *data.DashFunGame
 }
 
+type EventUserPayment struct {
+	User    *data.DashFunUser
+	Game    *data.DashFunGame
+	Payment *data.DashFunPaymentData
+}
+
 var UserLoginEvents = NewEvent[*data.OnlineUser]()
 var UserLogoffEvents = NewEvent[*data.OnlineUser]()
 var UserEnterGameEvents = NewEvent[*EventUserEnterGame]()
+
+var UserPaymentEvents = NewEvent[*EventUserPayment]()

@@ -171,3 +171,19 @@ func (t *TaskCenter) taskRecordPlayerLevelUp(user *data.DashFunUser, task *data.
 	}
 	return false
 }
+
+func (t *TaskCenter) taskRecordUserPayment(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, payment *data.DashFunPaymentData, gameId string) bool {
+	if task.Condition.Type == data.TaskCondition_SpendTGStars && userData.Status == data.TaskStatus_InProgress {
+		ret := false
+		if userData.Progress < task.Condition.Count {
+			userData.Progress = userData.Progress + payment.Price
+			ret = true
+		}
+		if userData.Progress >= task.Condition.Count {
+			userData.Status = data.TaskStatus_Completed
+			ret = true
+		}
+		return ret
+	}
+	return false
+}

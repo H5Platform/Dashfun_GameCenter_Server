@@ -18,6 +18,7 @@ const (
 	TaskCondition_LevelUp                                            //在指定游戏中升级到指定等级
 	TaskCondition_JoinTGChannel                                      //加入指定的tg channel
 	TaskCondition_FollowX                                            //Follow X
+	TaskCondition_SpendTGStars                                       //在TG中花费星星
 )
 
 const (

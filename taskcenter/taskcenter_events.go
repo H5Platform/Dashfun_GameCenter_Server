@@ -19,6 +19,33 @@ func (t *TaskCenter) onUserLogout(user *data.OnlineUser) {
 
 }
 
+func (t *TaskCenter) onUserPayment(evt *events.EventUserPayment) {
+	user := evt.User
+	payment := evt.Payment
+
+	for _, task := range t.tasks {
+		if task.Open && (isDashFunTask(task) || task.GameId == payment.GameId) {
+			changed := false
+			userData, err := t.GetTaskUserData(user.Id, task.Id)
+			if err != nil {
+				zap.S().Errorw("GetTaskUserData Error", "user", user.Id, "task", task.Id, "err", err)
+				continue
+			}
+
+			switch task.Condition.Type {
+			case data.TaskCondition_SpendTGStars:
+				changed = t.taskRecordUserPayment(user, task, userData, payment, payment.GameId)
+			}
+
+			if changed {
+				userData.Time = time.Now().UnixMilli()
+				t.saveTaskUserData(userData)
+			}
+		}
+	}
+
+}
+
 func (t *TaskCenter) onGameReportPlayerLevelUp(evt *events.EventPlayerLevelUp) {
 	user := evt.User
 	game := evt.Game

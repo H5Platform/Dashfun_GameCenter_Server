@@ -46,6 +46,7 @@ func (t *TaskCenter) init() {
 	events.UserEnterGameEvents.On(t.onUserEnterGameEvent)
 	events.UserLoginEvents.On(t.onUserLogin)
 	events.PlayerLevelUpEvents.On(t.onGameReportPlayerLevelUp)
+	events.UserPaymentEvents.On(t.onUserPayment)
 }
 
 func (t *TaskCenter) newTasId() string {
@@ -242,12 +243,13 @@ func (t *TaskCenter) addTaskReward(task *data.DashFunTaskData, userData *data.Da
 
 // GetUserTaskInfo 获取用户的任务信息
 // 返回用户在对应游戏中可用的任务列表，以及任务对应的进度
+// gameId == "all" 时返回所有任务数据
 func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *data.UserTaskInfo {
 	userId := user.Id
 	tasks := make([]*data.DashFunTaskData, 0)             //可用任务列表
 	dataMap := make(map[string]*data.DashFunTaskUserData) //用户任务数据
 	for _, task := range t.tasks {
-		if isDashFunTask(task) || task.GameId == gameId {
+		if isDashFunTask(task) || task.GameId == gameId || gameId == "all" {
 			userData, err := t.GetTaskUserData(userId, task.Id)
 			if err != nil {
 				zap.S().Errorw("get user task data error", "user", userId, "task", task)

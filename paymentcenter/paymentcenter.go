@@ -5,8 +5,10 @@ import (
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
+	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/snowflake"
 	"dashfun_gamecenter/tgbot"
+	"dashfun_gamecenter/usercenter"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"go.uber.org/zap"
@@ -58,6 +60,24 @@ func (p *PaymentCenter) onPaymentSuccessEvent(message *models.Message) {
 		ChatID: message.Chat.ID,
 		Text:   "Thank you for your purchase\n" + strconv.Itoa(message.SuccessfulPayment.TotalAmount) + " Stars"},
 	)
+
+	user, err := usercenter.Get().GetDashFunUser(payment.UserId)
+	if err != nil {
+		zap.S().Errorw("Get User Failed", "Payment", payment, "error", err, "Message", message)
+		return
+	}
+	game, err := gamecenter.Get().FindGame(payment.GameId)
+	if err != nil {
+		zap.S().Errorw("Find Game Failed", "Payment", payment, "error", err, "Message", message)
+		return
+	}
+
+	events.UserPaymentEvents.Emit(&events.EventUserPayment{
+		User:    user,
+		Game:    game,
+		Payment: payment,
+	})
+
 }
 
 func (p *PaymentCenter) onPreCheckoutQueryEvent(query *models.PreCheckoutQuery) {

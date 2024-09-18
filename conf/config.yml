@@ -22,3 +22,5 @@ aws_pinpoint:
 admin_cfg:
   name: admin
   password: ${admin_password}
+  # 后端数据查询使用的密码
+  backend_password: ${admin_search_password}

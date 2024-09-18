@@ -34,8 +34,9 @@ type AwsPinPoint struct {
 }
 
 type AdminConfig struct {
-	Name     string `yaml:"name"`
-	Password string `yaml:"password"`
+	Name            string `yaml:"name"`
+	Password        string `yaml:"password"`
+	BackendPassword string `yaml:"backend_password"`
 }
 
 type Config struct {

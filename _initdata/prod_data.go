@@ -76,14 +76,14 @@ func makeProdTasks() {
 	taskName := "Play \"War Three Kingdoms\""
 	task := t.GetTaskByName(taskName)
 
-	game, err := gamecenter.Get().FindGameByName(gameName)
+	w3kt, err := gamecenter.Get().FindGameByName(gameName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if task == nil {
 		//创建任务
-		taskc, err := t.CreateTaskAutoId("Play \"War Three Kingdoms\"", game.Id, data.TaskType_Daily, data.TaskCategory_Daily,
+		taskc, err := t.CreateTaskAutoId("Play \"War Three Kingdoms\"", w3kt.Id, data.TaskType_Daily, data.TaskCategory_Daily,
 			data.DashFunTaskCondition{
 				Type:      data.TaskCondition_PlayGame,
 				Count:     1,
@@ -124,7 +124,7 @@ func makeProdTasks() {
 	taskName = "Join DashFun Group"
 	task = nil
 	task = t.GetTaskByName(taskName)
-	chatId := "-1002176516558" //dashfun official group
+	chatId := "@dashfun_official" //dashfun official group
 	if task == nil {
 		//创建测试任务
 		//chatId := "-1002198592933"
@@ -165,6 +165,52 @@ func makeProdTasks() {
 			data.DashFunTaskReward{
 				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     10,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
+
+	taskName = "Spend 100 stars"
+	task = nil
+	task = t.GetTaskByName(taskName)
+	if task == nil {
+		//创建测试任务
+		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Daily, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_SpendTGStars,
+				Count:     100,
+				Condition: "",
+				Link:      "",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunPoint,
+				Amount:     10,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
+
+	taskName = "Spend 1000 stars"
+	task = nil
+	task = t.GetTaskByName(taskName)
+	if task == nil {
+		//创建测试任务
+		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Daily, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_SpendTGStars,
+				Count:     1000,
+				Condition: "",
+				Link:      "",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunPoint,
+				Amount:     100,
 			},
 		)
 		if err != nil {

@@ -157,9 +157,13 @@ func testHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 			},
 		},
 	}
+	text := "Open"
+	if config.IsDev() {
+		text += " " + gameLink
+	}
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
-		Text:   "Open",
+		Text:   text,
 		ReplyMarkup: &models.InlineKeyboardMarkup{
 			InlineKeyboard: buttons,
 		},

@@ -255,6 +255,29 @@ func makeTestTask() {
 		}
 		task = taskc
 	}
+
+	taskId = "LocalTestSpendStars50000"
+	task = nil
+	task = t.GetTaskById(taskId)
+	if task == nil {
+		//创建测试任务
+		taskc, err := t.CreateTask(taskId, "Spend 50000 stars", "LocalTest", data.TaskType_Daily, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_SpendTGStars,
+				Count:     50000,
+				Condition: "",
+				Link:      "",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunPoint,
+				Amount:     100,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
 }
 
 func makeTestGame() {

@@ -144,11 +144,13 @@ func testHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		return
 	}
 	u, _ := url.Parse(botLink() + "/Games")
-	q := u.Query()
-
-	q.Set("startapp", "test-"+base64.StdEncoding.EncodeToString([]byte(msg[1])))
-	u.RawQuery = q.Encode()
+	//q := u.Query()
+	//q.Set("startapp", "test-"+base64.StdEncoding.EncodeToString([]byte(msg[1])))
+	u.RawQuery = "startapp=test-" + base64.StdEncoding.EncodeToString([]byte(msg[1]))
 	gameLink := u.String()
+
+	zap.S().Infow("Test", "gameLink", gameLink)
+
 	buttons := [][]models.InlineKeyboardButton{
 		{
 			{

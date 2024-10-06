@@ -41,7 +41,7 @@ func checkAuthorize(c *gin.Context) bool {
 }
 
 // apiAdminGetGameInfo
-// @Router		/api/v1/admin_search/game/{id} [get]
+//	@Router	/api/v1/admin_search/game/{id} [get]
 func apiAdminGetGameInfo(c *gin.Context) {
 	if !checkAuthorize(c) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError("unauthorized"))
@@ -73,7 +73,7 @@ func apiAdminGetGameInfo(c *gin.Context) {
 }
 
 // apiAdminGetGameInfo
-// @Router		/api/v1/admin_search/user/{id} [get]
+//	@Router	/api/v1/admin_search/user/{id} [get]
 func apiAdminGetUserInfo(c *gin.Context) {
 	if !checkAuthorize(c) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError("unauthorized"))

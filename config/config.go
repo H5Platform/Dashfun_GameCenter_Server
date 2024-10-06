@@ -39,14 +39,22 @@ type AdminConfig struct {
 	BackendPassword string `yaml:"backend_password"`
 }
 
+type TencentCosConfig struct {
+	BucketUrl  string `yaml:"bucket_url"`
+	ServiceUrl string `yaml:"service_url"`
+	SecretId   string `yaml:"secret_id"`
+	SecretKey  string `yaml:"secret_key"`
+}
+
 type Config struct {
-	Base     *BaseConfig     `yaml:"base"`
-	Mongo    *MongoConfig    `yaml:"mongo"`
-	Web      *WebConfig      `yaml:"web"`
-	TG       *TelegramConfig `yaml:"telegram"`
-	Log      *Log            `yaml:"log"`
-	PinPoint *AwsPinPoint    `yaml:"aws_pinpoint"`
-	AdminCfg *AdminConfig    `yaml:"admin_cfg"`
+	Base          *BaseConfig       `yaml:"base"`
+	Mongo         *MongoConfig      `yaml:"mongo"`
+	Web           *WebConfig        `yaml:"web"`
+	TG            *TelegramConfig   `yaml:"telegram"`
+	Log           *Log              `yaml:"log"`
+	PinPoint      *AwsPinPoint      `yaml:"aws_pinpoint"`
+	AdminCfg      *AdminConfig      `yaml:"admin_cfg"`
+	TencentCosCfg *TencentCosConfig `yaml:"tencent_cos"`
 }
 
 var config *Config

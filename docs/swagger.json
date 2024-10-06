@@ -4,6 +4,317 @@
         "contact": {}
     },
     "paths": {
+        "/api/v1/admin/game/create": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "创建游戏",
+                "parameters": [
+                    {
+                        "description": "游戏名称",
+                        "name": "name",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "游戏介绍",
+                        "name": "desc",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "游戏链接",
+                        "name": "url",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "游戏类型",
+                        "name": "genre",
+                        "in": "body",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DashFunGame",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunGame"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/game/update": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "更新游戏",
+                "parameters": [
+                    {
+                        "description": "要更新数据的游戏Id",
+                        "name": "id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "游戏名称",
+                        "name": "name",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "游戏介绍",
+                        "name": "desc",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "游戏链接",
+                        "name": "url",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "游戏类型",
+                        "name": "genre",
+                        "in": "body",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DashFunGame",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunGame"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/game/upload_image": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "上传游戏相关图片",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "要更新数据的游戏Id",
+                        "name": "game_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "游戏图标，512x512",
+                        "name": "icon",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "游戏logo",
+                        "name": "logo",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "游戏主图，640x320",
+                        "name": "main",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DashFunGame",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunGame"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/login": {
+            "post": {
+                "responses": {}
+            }
+        },
+        "/api/v1/admin/user/create": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "创建后台账户",
+                "parameters": [
+                    {
+                        "description": "用户名",
+                        "name": "username",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "邮箱",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "权限",
+                        "name": "auth",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "AdminUser",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.AdminCreateUserRequest"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/user/reset_password": {
+            "post": {
+                "responses": {}
+            }
+        },
+        "/api/v1/admin/user/update_base_info": {
+            "post": {
+                "responses": {}
+            }
+        },
+        "/api/v1/admin/user/update_status": {
+            "post": {
+                "responses": {}
+            }
+        },
+        "/api/v1/admin_search/game/{id}": {
+            "get": {
+                "responses": {}
+            }
+        },
+        "/api/v1/admin_search/user/{id}": {
+            "get": {
+                "responses": {}
+            }
+        },
         "/api/v1/coin/get": {
             "get": {
                 "produces": [
@@ -26,6 +337,49 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/api.GetCoinsResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/game/search": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Games API"
+                ],
+                "summary": "用户搜索游戏",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "开启的游戏Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DashFunGame",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunGame"
+                                            }
                                         }
                                     }
                                 }
@@ -571,6 +925,34 @@
         }
     },
     "definitions": {
+        "admin.AdminUserAuth": {
+            "type": "integer",
+            "enum": [
+                -1
+            ],
+            "x-enum-varnames": [
+                "AdminAuth_Admin"
+            ]
+        },
+        "api.AdminCreateUserRequest": {
+            "type": "object",
+            "required": [
+                "auth",
+                "email",
+                "username"
+            ],
+            "properties": {
+                "auth": {
+                    "$ref": "#/definitions/admin.AdminUserAuth"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "api.GetCoinsResult": {
             "type": "object",
             "properties": {
@@ -702,6 +1084,14 @@
                 "name": {
                     "type": "string"
                 },
+                "status": {
+                    "description": "游戏状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.DashFunGameStatus"
+                        }
+                    ]
+                },
                 "time": {
                     "description": "游戏入库时间",
                     "type": "integer"
@@ -711,6 +1101,27 @@
                     "type": "string"
                 }
             }
+        },
+        "data.DashFunGameStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "x-enum-comments": {
+                "DashFunGameStatus_NoChange": "给update使用的，无变化",
+                "DashFunGameStatus_Online": "审核上线的游戏",
+                "DashFunGameStatus_Pending": "刚创建的游戏，等待审核",
+                "DashFunGameStatus_Removed": "已经下线的游戏"
+            },
+            "x-enum-varnames": [
+                "DashFunGameStatus_NoChange",
+                "DashFunGameStatus_Pending",
+                "DashFunGameStatus_Online",
+                "DashFunGameStatus_Removed"
+            ]
         },
         "data.DashFunPaymentData": {
             "type": "object",
@@ -831,21 +1242,24 @@
                 2,
                 3,
                 4,
-                5
+                5,
+                6
             ],
             "x-enum-comments": {
                 "TaskCondition_FollowX": "Follow X",
                 "TaskCondition_JoinTGChannel": "加入指定的tg channel",
                 "TaskCondition_LevelUp": "在指定游戏中升级到指定等级",
                 "TaskCondition_PlayGame": "玩指定游戏指定次数，游戏id在task中指定",
-                "TaskCondition_PlayRandomGame": "订阅型任务，例如follow twitter, join tg channel..."
+                "TaskCondition_PlayRandomGame": "订阅型任务，例如follow twitter, join tg channel...",
+                "TaskCondition_SpendTGStars": "在TG中花费星星"
             },
             "x-enum-varnames": [
                 "TaskCondition_PlayRandomGame",
                 "TaskCondition_PlayGame",
                 "TaskCondition_LevelUp",
                 "TaskCondition_JoinTGChannel",
-                "TaskCondition_FollowX"
+                "TaskCondition_FollowX",
+                "TaskCondition_SpendTGStars"
             ]
         },
         "data.DashFunTaskData": {

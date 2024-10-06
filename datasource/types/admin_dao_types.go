@@ -7,6 +7,7 @@ import (
 type AdminUserDao interface {
 	FindUserById(id string) (*admin.AdminUser, error)
 	FindUserByName(name string) (*admin.AdminUser, error)
+	FindUserByMail(email string) (*admin.AdminUser, error)
 	SaveUser(user *admin.AdminUser) (*admin.AdminUser, error)
 }
 

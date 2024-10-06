@@ -1,12 +1,11 @@
 package api
 
 import (
+	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/paymentcenter"
-	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strings"
 )
 
 type PaymentRequest struct {
@@ -39,7 +38,7 @@ type PaymentResponse struct {
 // @Authorize	"tma {token}"
 // @Success	200	{object}	api.JSONResult{data=api.PaymentResponse}	"payment info"
 // @Router		/api/v1/payment/request [get]
-func apiUserRequestPayment(c *gin.Context) {
+func apiUserRequestPayment(c *gin.Context, user *data.DashFunUser) {
 	req := &PaymentRequest{}
 	err := c.ShouldBindQuery(req)
 	if err != nil {
@@ -47,18 +46,18 @@ func apiUserRequestPayment(c *gin.Context) {
 		return
 	}
 
-	tgAuthData := c.GetHeader("authorization")
-	authParts := strings.Split(tgAuthData, " ")
-	if len(authParts) < 2 {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError("Unauthorized"))
-		return
-	}
-
-	user, err := usercenter.Get().GetDashFunUserByTgAuthData(authParts[1])
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
+	//tgAuthData := c.GetHeader("authorization")
+	//authParts := strings.Split(tgAuthData, " ")
+	//if len(authParts) < 2 {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError("Unauthorized"))
+	//	return
+	//}
+	//
+	//user, err := usercenter.Get().GetDashFunUserByTgAuthData(authParts[1])
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
 
 	payment, err := paymentcenter.Get().RequestTGPayment(user.Id, req.GameId, req.Title, req.Desc, req.Price)
 	if err != nil {
@@ -100,6 +99,6 @@ func apiGetPayment(c *gin.Context) {
 }
 
 func init() {
-	web.GetService().RegisterApi(web.ApiModulePayment, web.GET, "request", apiUserRequestPayment)
+	web.GetService().RegisterApi(web.ApiModulePayment, web.GET, "request", userHandlerAuthWrapper(apiUserRequestPayment))
 	web.GetService().RegisterApi(web.ApiModulePayment, web.GET, "get", apiGetPayment)
 }

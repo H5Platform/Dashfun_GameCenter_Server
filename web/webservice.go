@@ -30,6 +30,7 @@ const (
 	ApiModuleTask        = "task"
 	ApiModuleCoin        = "coin"
 	ApiModuleGameReport  = "game_report"
+	ApiModuleAdmin       = "admin"
 	ApiModuleAdminSearch = "admin_search"
 )
 

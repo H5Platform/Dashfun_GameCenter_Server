@@ -178,7 +178,7 @@ func makeProdTasks() {
 	task = t.GetTaskByName(taskName)
 	if task == nil {
 		//创建测试任务
-		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Daily, data.TaskCategory_Challenges,
+		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Daily, data.TaskCategory_Daily,
 			data.DashFunTaskCondition{
 				Type:      data.TaskCondition_SpendTGStars,
 				Count:     100,
@@ -201,7 +201,7 @@ func makeProdTasks() {
 	task = t.GetTaskByName(taskName)
 	if task == nil {
 		//创建测试任务
-		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Daily, data.TaskCategory_Challenges,
+		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Daily, data.TaskCategory_Daily,
 			data.DashFunTaskCondition{
 				Type:      data.TaskCondition_SpendTGStars,
 				Count:     1000,

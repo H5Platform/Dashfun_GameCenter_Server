@@ -1,8 +1,11 @@
 package api
 
 import (
+	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/usercenter"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"strings"
 )
 
@@ -22,4 +25,24 @@ func CheckAuthorize(c *gin.Context) (*AuthData, error) {
 		Method: authParts[0],
 		Token:  authParts[1],
 	}, nil
+}
+
+func userHandlerAuthWrapper(handler func(ctx *gin.Context, user *data.DashFunUser)) func(*gin.Context) {
+	return func(c *gin.Context) {
+		auth, err := CheckAuthorize(c)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+			return
+		}
+
+		user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+			return
+		}
+
+		if handler != nil {
+			handler(c, user)
+		}
+	}
 }

@@ -3,21 +3,20 @@ package api
 import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/taskcenter"
-	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-//	@Summary	用户请求任务奖励
-//	@Tags		Task API
-//	@Produce	json
-//	@Param		game_id	query	string	true	"游戏Id"
-//	@Param		task_id	query	string	true	"任务Id"
-//	@Authorize	"tma {token}"
-//	@Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"DashFunTaskUserData"
-//	@Router		/api/v1/task/claim [get]
-func apiUserClaimTaskReward(c *gin.Context) {
+// @Summary	用户请求任务奖励
+// @Tags		Task API
+// @Produce	json
+// @Param		game_id	query	string	true	"游戏Id"
+// @Param		task_id	query	string	true	"任务Id"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"DashFunTaskUserData"
+// @Router		/api/v1/task/claim [get]
+func apiUserClaimTaskReward(c *gin.Context, user *data.DashFunUser) {
 	taskId, exist := c.GetQuery("task_id")
 	if !exist {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("param task_id is required"))
@@ -31,17 +30,17 @@ func apiUserClaimTaskReward(c *gin.Context) {
 
 	_ = gameId
 
-	auth, err := CheckAuthorize(c)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
-
-	user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
+	//auth, err := CheckAuthorize(c)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
+	//
+	//user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
 
 	r, err := taskcenter.Get().UserClaimReward(user, taskId)
 	if err != nil {
@@ -52,30 +51,30 @@ func apiUserClaimTaskReward(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(r))
 }
 
-//	@Summary	获取用户各个状态的任务数量
-//	@Tags		Task API
-//	@Produce	json
-//	@Param		game_id	query	string	true	"游戏Id"
-//	@Authorize	"tma {token}"
-//	@Success	200	{object}	api.JSONResult{data=map[int]int}	"UserTaskCount"
-//	@Router		/api/v1/task/count [get]
-func apiGetUserTaskCount(c *gin.Context) {
+// @Summary	获取用户各个状态的任务数量
+// @Tags		Task API
+// @Produce	json
+// @Param		game_id	query	string	true	"游戏Id"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=map[int]int}	"UserTaskCount"
+// @Router		/api/v1/task/count [get]
+func apiGetUserTaskCount(c *gin.Context, user *data.DashFunUser) {
 	gameId, exist := c.GetQuery("game_id")
 	if !exist {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("param game_id is required"))
 		return
 	}
-	auth, err := CheckAuthorize(c)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
-
-	user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
+	//auth, err := CheckAuthorize(c)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
+	//
+	//user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
 	info := taskcenter.Get().GetUserTaskInfo(user, gameId)
 
 	//各个状态下的任务数量
@@ -98,43 +97,43 @@ func apiGetUserTaskCount(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(r))
 }
 
-//	@Summary	获取用户的任务信息
-//	@Tags		Task API
-//	@Produce	json
-//	@Param		game_id	query	string	true	"游戏Id"
-//	@Authorize	"tma {token}"
-//	@Success	200	{object}	api.JSONResult{data=data.UserTaskInfo}	"UserTaskInfo"
-//	@Router		/api/v1/task/list [get]
-func apiGetUserTaskInfo(c *gin.Context) {
+// @Summary	获取用户的任务信息
+// @Tags		Task API
+// @Produce	json
+// @Param		game_id	query	string	true	"游戏Id"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=data.UserTaskInfo}	"UserTaskInfo"
+// @Router		/api/v1/task/list [get]
+func apiGetUserTaskInfo(c *gin.Context, user *data.DashFunUser) {
 	gameId, exist := c.GetQuery("game_id")
 	if !exist {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("param game_id is required"))
 		return
 	}
-	auth, err := CheckAuthorize(c)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
-
-	user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
+	//auth, err := CheckAuthorize(c)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
+	//
+	//user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
 	info := taskcenter.Get().GetUserTaskInfo(user, gameId)
 	c.JSON(http.StatusOK, RSuccess(info))
 }
 
-//	@Summary	任务条目被点击
-//	@Tags		Task API
-//	@Produce	json
-//	@Param		game_id	query	string	true	"游戏Id"
-//	@Param		task_id	query	string	true	"任务Id"
-//	@Authorize	"tma {token}"
-//	@Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
-//	@Router		/api/v1/task/clicked [get]
-func apiOnTaskClicked(c *gin.Context) {
+// @Summary	任务条目被点击
+// @Tags		Task API
+// @Produce	json
+// @Param		game_id	query	string	true	"游戏Id"
+// @Param		task_id	query	string	true	"任务Id"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
+// @Router		/api/v1/task/clicked [get]
+func apiOnTaskClicked(c *gin.Context, user *data.DashFunUser) {
 	taskId, exist := c.GetQuery("task_id")
 	if !exist {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("param task_id is required"))
@@ -146,17 +145,17 @@ func apiOnTaskClicked(c *gin.Context) {
 		return
 	}
 
-	auth, err := CheckAuthorize(c)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
-
-	user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
+	//auth, err := CheckAuthorize(c)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
+	//
+	//user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
 
 	//on clicked
 	userData, err := taskcenter.Get().UserClickedTask(user, taskId, gameId)
@@ -167,15 +166,15 @@ func apiOnTaskClicked(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(userData))
 }
 
-//	@Summary	加入tg任务验证
-//	@Tags		Task API
-//	@Produce	json
-//	@Param		game_id	query	string	true	"游戏Id"
-//	@Param		task_id	query	string	true	"任务Id"
-//	@Authorize	"tma {token}"
-//	@Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
-//	@Router		/api/v1/task/tg_verify [get]
-func apiVerifyUserTGChannelTask(c *gin.Context) {
+// @Summary	加入tg任务验证
+// @Tags		Task API
+// @Produce	json
+// @Param		game_id	query	string	true	"游戏Id"
+// @Param		task_id	query	string	true	"任务Id"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
+// @Router		/api/v1/task/tg_verify [get]
+func apiVerifyUserTGChannelTask(c *gin.Context, user *data.DashFunUser) {
 	taskId, exist := c.GetQuery("task_id")
 	if !exist {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("param task_id is required"))
@@ -187,17 +186,17 @@ func apiVerifyUserTGChannelTask(c *gin.Context) {
 		return
 	}
 
-	auth, err := CheckAuthorize(c)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
-
-	user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
+	//auth, err := CheckAuthorize(c)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
+	//
+	//user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
 
 	//verify tg task
 	userData, err := taskcenter.Get().UserVerifyTGChannel(user, taskId, gameId)
@@ -209,9 +208,9 @@ func apiVerifyUserTGChannelTask(c *gin.Context) {
 }
 
 func init() {
-	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "list", apiGetUserTaskInfo)
-	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "tg_verify", apiVerifyUserTGChannelTask)
-	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "clicked", apiOnTaskClicked)
-	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "claim", apiUserClaimTaskReward)
-	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "count", apiGetUserTaskCount)
+	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "list", userHandlerAuthWrapper(apiGetUserTaskInfo))
+	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "tg_verify", userHandlerAuthWrapper(apiVerifyUserTGChannelTask))
+	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "clicked", userHandlerAuthWrapper(apiOnTaskClicked))
+	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "claim", userHandlerAuthWrapper(apiOnTaskClicked))
+	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "count", userHandlerAuthWrapper(apiOnTaskClicked))
 }

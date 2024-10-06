@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"math"
+	"time"
 )
 
 type GameDaoMongo struct {
@@ -30,6 +32,60 @@ func (g *GameDaoMongo) GetGameByName(gameName string) (*data.DashFunGame, error)
 		return nil, err
 	}
 	return ret, nil
+}
+
+func (g *GameDaoMongo) FindGames(keyword string, genre []int, status data.DashFunGameStatus, size, page int64) (games []*data.DashFunGame, totalPages int, err error) {
+	filter := bson.D{}
+	if keyword != "" {
+		filter = append(filter, bson.E{
+			Key: "name",
+			Value: bson.D{
+				{"$regex", keyword},
+				{"$options", "i"},
+			},
+		})
+	}
+
+	if genre != nil || len(genre) > 0 {
+		filter = append(filter, bson.E{
+			Key: "genre",
+			Value: bson.D{
+				{"$all", bson.A{genre}},
+			},
+		})
+	}
+
+	if status > data.DashFunGameStatus_NoChange {
+		filter = append(filter, bson.E{
+			Key: "status",
+			Value: bson.D{
+				{"$eq", status},
+			},
+		})
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	skip := (page - 1) * size
+
+	totalDocs, err := g.c.CountDocuments(ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	totalPages = int(math.Ceil(float64(totalDocs) / float64(size)))
+
+	find, err := g.c.Find(ctx, filter, options.Find().SetSkip(skip).SetLimit(size))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if err = find.All(ctx, &games); err != nil {
+		return nil, 0, err
+	}
+
+	return games, totalPages, nil
 }
 
 func (g *GameDaoMongo) SaveOrUpdate(game *data.DashFunGame) (*data.DashFunGame, error) {
@@ -69,6 +125,18 @@ func (g *GameDaoMongo) initDB() {
 			Unique:    false,
 			Sort:      -1,
 			IndexName: "index_time",
+		},
+		{
+			FieldName: "genre",
+			Unique:    false,
+			Sort:      -1,
+			IndexName: "index_genre",
+		},
+		{
+			FieldName: "status",
+			Unique:    false,
+			Sort:      -1,
+			IndexName: "index_status",
 		},
 	})
 

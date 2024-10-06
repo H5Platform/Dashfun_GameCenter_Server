@@ -3,7 +3,6 @@ package api
 import (
 	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/datasource/data"
-	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -20,19 +19,7 @@ type GetCoinsResult struct {
 // @Authorize	"tma {token}"
 // @Success	200	{object}	api.JSONResult{data=api.GetCoinsResult}	"coins"
 // @Router		/api/v1/coin/get [get]
-func apiGetCoins(c *gin.Context) {
-	auth, err := CheckAuthorize(c)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
-
-	user, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
-		return
-	}
-
+func apiGetCoins(c *gin.Context, user *data.DashFunUser) {
 	coins := coincenter.Get().GetAllCoins()
 	userData := make(map[string]*data.CoinUserData)
 	for _, coin := range coins {
@@ -47,5 +34,5 @@ func apiGetCoins(c *gin.Context) {
 }
 
 func init() {
-	web.GetService().RegisterApi(web.ApiModuleCoin, web.GET, "get", apiGetCoins)
+	web.GetService().RegisterApi(web.ApiModuleCoin, web.GET, "get", userHandlerAuthWrapper(apiGetCoins))
 }

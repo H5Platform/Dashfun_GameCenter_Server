@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -27,10 +28,22 @@ type AdminUserAuthToken struct {
 	Token  string `json:"token"`
 }
 
-type AdminUserMgr struct {
-	loginInfo map[string]*admin.AdminUserLoginInfo
-	idGen     *snowflake.Worker
+type adminUserSession struct {
+	user        *admin.AdminUser
+	loginInfo   *admin.AdminUserLoginInfo
+	refreshTime int64
 }
+
+type AdminUserMgr struct {
+	sessions map[string]*adminUserSession
+	idGen    *snowflake.Worker
+	sync.RWMutex
+}
+
+//type AdminSession struct {
+//	User      *admin.AdminUser
+//	LoginInfo *admin.AdminUserLoginInfo
+//}
 
 func Get() *AdminUserMgr {
 	once.Do(func() {
@@ -51,7 +64,7 @@ func (mgr *AdminUserMgr) newToken() string {
 }
 
 func (mgr *AdminUserMgr) init() {
-	mgr.loginInfo = make(map[string]*admin.AdminUserLoginInfo)
+	mgr.sessions = make(map[string]*adminUserSession)
 	mgr.idGen = snowflake.Must(snowflake.GetWorker(data.WorkerAdminUserId))
 
 	adminCfg := config.GetConfig().AdminCfg
@@ -60,7 +73,7 @@ func (mgr *AdminUserMgr) init() {
 	if err == nil || errors.Is(err, mongo.ErrNoDocuments) {
 		if usrAdmin == nil {
 			//create user admin
-			usrAdmin, err = mgr.createUser(adminCfg.Name, adminCfg.Password, "", admin.AdminAuth_Admin)
+			usrAdmin, err = mgr.createUser(adminCfg.Name, adminCfg.Password, " ", admin.AdminAuth_Admin)
 			if err != nil {
 				log.Fatalf("create admin user failed : %v", err.Error())
 			}
@@ -96,8 +109,70 @@ func (mgr *AdminUserMgr) newLoginInfo(userId, token string) (*admin.AdminUserLog
 	return info, err
 }
 
+func (mgr *AdminUserMgr) getAdminUserSession(userId string) (*adminUserSession, error) {
+	mgr.Lock()
+	defer mgr.Unlock()
+	session, ok := mgr.sessions[userId]
+	if !ok {
+		info, err := dao.GetAdminUserLoginInfoDao().FindUserLoginInfo(userId)
+		if err != nil {
+			return nil, err
+		}
+		user, err := dao.GetAdminUserDao().FindUserById(userId)
+		if err != nil {
+			return nil, err
+		}
+		session = &adminUserSession{
+			user:        user,
+			loginInfo:   info,
+			refreshTime: time.Now().UnixMilli(),
+		}
+		mgr.sessions[userId] = session
+	}
+	session.refreshTime = time.Now().UnixMilli()
+	return session, nil
+}
+
+func (mgr *AdminUserMgr) GetAdminUser(userId string) (*admin.AdminUser, error) {
+	session, err := mgr.getAdminUserSession(userId)
+	if err != nil {
+		return nil, err
+	}
+	if session != nil {
+		return session.user, nil
+	}
+
+	au, err := dao.GetAdminUserDao().FindUserById(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return au, nil
+}
+
+func (mgr *AdminUserMgr) sendResetPasswordMail(user *admin.AdminUser, token string) {
+	pinpoint.Get().SendEmail("Active your account", user.Email, "Please active your account with the link below\n"+token)
+}
+
 // CreateUser 创建一个用户，并发送邮件进行激活，设置密码
 func (mgr *AdminUserMgr) CreateUser(name, email string, auth admin.AdminUserAuth) (*admin.AdminUser, error) {
+
+	au, err := dao.GetAdminUserDao().FindUserByName(name)
+	if err != nil {
+		return nil, err
+	}
+	if au != nil {
+		return nil, errors.New(fmt.Sprintf("user with name %s already exists", name))
+	}
+
+	au, err = dao.GetAdminUserDao().FindUserByMail(email)
+	if err != nil {
+		return nil, err
+	}
+	if au != nil {
+		return nil, errors.New(fmt.Sprintf("user with email %s already exists", email))
+	}
+
 	id := mgr.newUserId()
 	token := mgr.newToken()
 	adminUser := &admin.AdminUser{
@@ -110,37 +185,50 @@ func (mgr *AdminUserMgr) CreateUser(name, email string, auth admin.AdminUserAuth
 		Authorization: auth,
 	}
 	user, err := dao.GetAdminUserDao().SaveUser(adminUser)
-	if err == nil {
-		_, err = mgr.newLoginInfo(id, token)
+	if err != nil {
+		return nil, err
 	}
-
-	pinpoint.Get().SendEmail("Active your account", email, "Please active your account with the link below\n"+token)
+	_, err = mgr.newLoginInfo(id, token)
+	if err != nil {
+		return nil, err
+	}
+	mgr.sendResetPasswordMail(user, token)
 
 	return user, err
 }
 
+func (mgr *AdminUserMgr) ResetUserPassword(user *admin.AdminUser) error {
+	token := mgr.newToken()
+	_, err := mgr.newLoginInfo(user.Id, token)
+	if err != nil {
+		return err
+	}
+	user.Status = admin.AdminStatus_ResetPassword
+	_, err = dao.GetAdminUserDao().SaveUser(user)
+	if err != nil {
+		return err
+	}
+	mgr.sendResetPasswordMail(user, token)
+	return nil
+}
+
 // CheckToken 检测用户的id和token是否正确，正确返回用户数据
 func (mgr *AdminUserMgr) CheckToken(userId, token string) (*admin.AdminUser, bool) {
-	user, err := dao.GetAdminUserDao().FindUserById(userId)
+	session, err := mgr.getAdminUserSession(userId)
 	if err != nil {
 		zap.S().Errorw("check token failed", "userId", userId, "token", token, "err", err)
 		return nil, false
 	}
-	loginInfo, err := dao.GetAdminUserLoginInfoDao().FindUserLoginInfo(userId)
-	if err != nil {
-		zap.S().Errorw("check token failed", "userId", userId, "token", token, "err", err)
-		return nil, false
-	}
-	if loginInfo == nil {
+	if session == nil {
 		zap.S().Errorw("check token failed", "userId", userId, "token", token, "err", "user login info not found")
 		return nil, false
 	}
-	if loginInfo.Token != token {
-		zap.S().Errorw("check token failed", "userId", userId, "token", token, "err", "invalid token", "expecting token", loginInfo.Token)
+	if session.loginInfo.Token != token {
+		zap.S().Errorw("check token failed", "userId", userId, "token", token, "err", "invalid token", "expecting token", session.loginInfo.Token)
 		return nil, false
 	}
 
-	return user, true
+	return session.user, true
 }
 
 func (mgr *AdminUserMgr) Login(name, password string) (*admin.AdminUser, *admin.AdminUserLoginInfo, error) {
@@ -154,11 +242,67 @@ func (mgr *AdminUserMgr) Login(name, password string) (*admin.AdminUser, *admin.
 		if err != nil {
 			return nil, nil, err
 		}
+
 		dao.GetAdminUserLoginInfoDao().SaveUserLoginInfo(loginInfo)
+		mgr.Lock()
+		defer mgr.Unlock()
+		mgr.sessions[user.Id] = &adminUserSession{
+			user:        user,
+			loginInfo:   loginInfo,
+			refreshTime: time.Now().UnixMilli(),
+		}
+
 		return user, loginInfo, nil
 	} else {
-		return nil, nil, errors.New("invalid password")
+		return nil, nil, errors.New("incorrect username or password")
 	}
+}
+
+func (mgr *AdminUserMgr) UpdateUserBaseInfo(userId, username, email string, auth admin.AdminUserAuth) (*admin.AdminUser, error) {
+	user, err := mgr.GetAdminUser(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	if username != "" {
+		user.Name = username
+	}
+	if email != "" {
+		user.Email = email
+	}
+	user.Authorization = auth
+	saveUser, err := dao.GetAdminUserDao().SaveUser(user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return saveUser, nil
+}
+
+func (mgr *AdminUserMgr) UpdateUserStatus(userId string, status admin.AdminUserStatus) (*admin.AdminUser, error) {
+	user, err := mgr.GetAdminUser(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	if user.Status != status {
+		user.Status = status
+		saveUser, err := dao.GetAdminUserDao().SaveUser(user)
+		if err != nil {
+			return nil, err
+		}
+		return saveUser, nil
+	}
+	return user, nil
 }
 
 func (mgr *AdminUserMgr) ParseToken(authString string) (*AdminUserAuthToken, error) {

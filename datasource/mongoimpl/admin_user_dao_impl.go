@@ -3,6 +3,7 @@ package mongoimpl
 import (
 	"context"
 	"dashfun_gamecenter/admin"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -34,6 +35,12 @@ func (a *AdminUserDaoImpl) initDB() {
 			Sort:      1,
 			IndexName: "index_name",
 		},
+		{
+			FieldName: "email",
+			Unique:    true,
+			Sort:      1,
+			IndexName: "index_email",
+		},
 	})
 
 	if err != nil {
@@ -47,6 +54,23 @@ func (a *AdminUserDaoImpl) FindUserById(id string) (*admin.AdminUser, error) {
 	defer cancel()
 	err := a.c.FindOne(ctx, bson.M{"_id": id}).Decode(&ret)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return ret, nil
+}
+
+func (a *AdminUserDaoImpl) FindUserByMail(email string) (*admin.AdminUser, error) {
+	var ret *admin.AdminUser
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := a.c.FindOne(ctx, bson.M{"email": email}).Decode(&ret)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return ret, nil
@@ -58,6 +82,9 @@ func (a *AdminUserDaoImpl) FindUserByName(name string) (*admin.AdminUser, error)
 	defer cancel()
 	err := a.c.FindOne(ctx, bson.M{"name": name}).Decode(&ret)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return ret, nil

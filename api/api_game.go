@@ -1,6 +1,7 @@
 package api
 
 import (
+	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/web"
 	"fmt"
@@ -29,6 +30,18 @@ func apiUserStartGame(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(game))
 }
 
+// @Summary	用户搜索游戏
+// @Tags		Games API
+// @Produce	json
+// @Param	id path string true "开启的游戏Id"
+// @Authorize "tma {token}"
+// @Success	200		{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
+// @Router		/api/v1/game/search [get]
+func apiUserFindGames(c *gin.Context, user *data.DashFunUser) {
+
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id", apiUserStartGame)
+	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, "search", userHandlerAuthWrapper(apiUserFindGames))
 }

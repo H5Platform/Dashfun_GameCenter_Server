@@ -24,3 +24,10 @@ admin_cfg:
   password: ${admin_password}
   # 后端数据查询使用的密码
   backend_password: ${admin_search_password}
+
+tencent_cos:
+  bucket_url: https://dashfun-1322633994.cos.accelerate.myqcloud.com
+  service_url: https://cos.ap-singapore.myqcloud.com
+  secret_id: ${tencent_cos_secret_id}
+  secret_key: ${tencent_cos_secret_key}
+

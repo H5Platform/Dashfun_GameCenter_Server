@@ -23,7 +23,15 @@ type AdminAuthData struct {
 }
 
 // apiAdminUserLogin
-//	@Router	/api/v1/admin/login [post]
+//
+//	@Summary	admin登陆
+//	@Tags		Admin API
+//	@Produce	json
+//	@Accept		json
+//	@Param		username	body		string											false	"用户名"
+//	@Param		password	body		string											false	"密码"
+//	@Success	200			{object}	api.JSONResult{data=admin.AdminUserLoginInfo}	"Login Info"
+//	@Router		/api/v1/admin/login [post]
 func apiAdminUserLogin(c *gin.Context) {
 	d := &AdminLoginData{}
 	err := c.ShouldBindBodyWithJSON(d)

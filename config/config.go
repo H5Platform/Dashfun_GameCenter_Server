@@ -12,7 +12,8 @@ type BaseConfig struct {
 }
 
 type WebConfig struct {
-	Port int `yaml:"port"`
+	Port int    `yaml:"port"`
+	Url  string `yaml:"url"` //服务器url链接
 }
 
 type TelegramConfig struct {

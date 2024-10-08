@@ -37,12 +37,12 @@ func main() {
 	var zapcfg zap.Config
 	var writer io.Writer
 
-	if config.IsProd() {
-		zapcfg = zap.NewProductionConfig()
-		writer = rotator
-	} else {
+	if config.IsDev() {
 		zapcfg = zap.NewDevelopmentConfig()
 		writer = os.Stdout
+	} else {
+		zapcfg = zap.NewProductionConfig()
+		writer = rotator
 	}
 	defer logger.Sync()
 	zapcfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05.000")

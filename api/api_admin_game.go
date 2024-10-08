@@ -30,6 +30,14 @@ type AdminGameDataRequest struct {
 	//MainPicUrl string `json:"mainPicUrl" form:"mainPicUrl"` //游戏主图地址 横向比例
 }
 
+type AdminGameSearchRequest struct {
+	Keyword string                 `form:"keyword"`
+	Genre   []int                  `json:"genre" form:"genre"` //游戏类型Id
+	Status  data.DashFunGameStatus `json:"status" form:"status"`
+	Size    int64                  `form:"size"`
+	Page    int64                  `form:"page"`
+}
+
 type AdminGameUpdateImageRequest struct {
 	Id string `json:"id" form:"id"` //游戏ID
 }
@@ -158,7 +166,34 @@ func apiAdminGameUploadImage(c *gin.Context, op *admin.AdminUser) {
 		gamecenter.Get().SaveGame(game)
 		c.JSON(http.StatusOK, RSuccess(game))
 	}
+}
 
+// apiAdminGameSearch
+//
+//	@Summary	搜索游戏
+//	@Tags		Admin API
+//	@Accept		json
+//	@Produce	json
+//	@Param		keyword	body		string										false	"查询关键字"
+//	@Param		genre	body		[]int										false	"查询类型"
+//	@Param		status	body		data.DashFunGameStatus						false	"查询游戏状态"
+//	@Param		size	body		int64										false	"每页数量"
+//	@Param		page	body		int64										false	"当前页数，从1开始"
+//	@Success	200		{object}	api.JSONResult{data=[]data.DashFunGame}	"Search Result"
+//	@Router		/api/v1/admin/game/search [post]
+func apiAdminGameSearch(c *gin.Context, op *admin.AdminUser) {
+	req := &AdminGameSearchRequest{}
+	if err := c.ShouldBindBodyWith(req, nil); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	games, totalPages, err := gamecenter.Get().FindGamesBackend(req.Keyword, req.Genre, req.Status, req.Size, req.Page)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, PageSuccess(games, req.Page, req.Size, totalPages))
 }
 
 func getFormFileBytes(form *multipart.Form, name string) ([]byte, error) {
@@ -233,4 +268,5 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "game/create", adminHandlerAuthWrapper(admin.AdminAuth_Game, apiAdminGameCreate))
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "game/upload_image", adminHandlerAuthWrapper(admin.AdminAuth_Game, apiAdminGameUploadImage))
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "game/update", adminHandlerAuthWrapper(admin.AdminAuth_Game, apiAdminGameUpdate))
+	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "game/search", adminHandlerAuthWrapper(admin.AdminAuth_Game, apiAdminGameSearch))
 }

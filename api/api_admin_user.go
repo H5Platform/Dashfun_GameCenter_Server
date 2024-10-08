@@ -30,7 +30,7 @@ type AdminUpdateUserRequest struct {
 //	@Accept		json
 //	@Param		username	body		string										true	"用户名"
 //	@Param		email		body		string										true	"邮箱"
-//	@Param		auth		body		admin.AdminUserAuth								true	"权限"
+//	@Param		auth		body		admin.AdminUserAuth							true	"权限"
 //	@Success	200			{object}	api.JSONResult{data=AdminCreateUserRequest}	"AdminUser"
 //	@Router		/api/v1/admin/user/create [post]
 func apiAdminCreateUser(c *gin.Context, op *admin.AdminUser) {

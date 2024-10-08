@@ -4,6 +4,7 @@ base:
 
 web:
   port: 8088
+  url: http://localhost:8080/
 
 mongo:
   source: mongodb://127.0.0.1:27017/?maxPoolSize=20

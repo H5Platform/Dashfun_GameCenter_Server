@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -152,6 +153,17 @@ func (mgr *AdminUserMgr) GetAdminUser(userId string) (*admin.AdminUser, error) {
 
 func (mgr *AdminUserMgr) sendResetPasswordMail(user *admin.AdminUser, token string) {
 	pinpoint.Get().SendEmail("Active your account", user.Email, "Please active your account with the link below\n"+token)
+}
+
+func (mgr *AdminUserMgr) getActiveAccountUrl() string {
+	activeUrl := config.GetConfig().Web.Url
+	if !strings.HasSuffix(activeUrl, "/") {
+		activeUrl += "/"
+	}
+
+	activeUrl += "/"
+
+	return activeUrl
 }
 
 // CreateUser 创建一个用户，并发送邮件进行激活，设置密码

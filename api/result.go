@@ -28,3 +28,19 @@ func RError(msg string) JSONResult {
 		Data: nil,
 	}
 }
+
+func PageSuccess[T any](data T, page, size int64, totalPages int) JSONResult {
+	return RSuccess(&PageResult[T]{
+		Data:       data,
+		Page:       page,
+		Size:       size,
+		TotalPages: totalPages,
+	})
+}
+
+type PageResult[T any] struct {
+	TotalPages int   `json:"total_pages"`
+	Page       int64 `json:"page"`
+	Size       int64 `json:"size"`
+	Data       T     `json:"data"`
+}

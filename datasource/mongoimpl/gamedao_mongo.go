@@ -46,7 +46,7 @@ func (g *GameDaoMongo) FindGames(keyword string, genre []int, status data.DashFu
 		})
 	}
 
-	if genre != nil || len(genre) > 0 {
+	if genre != nil && len(genre) > 0 {
 		filter = append(filter, bson.E{
 			Key: "genre",
 			Value: bson.D{

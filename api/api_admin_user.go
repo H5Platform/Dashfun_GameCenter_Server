@@ -22,16 +22,35 @@ type AdminUpdateUserRequest struct {
 	Status   admin.AdminUserStatus `json:"status" form:"status"`
 }
 
+type AdminUserResponse struct {
+	UserId   string                `json:"user_id" form:"user_id" binding:"required"`
+	Username string                `json:"username" form:"username"`
+	Email    string                `json:"email" form:"email"`
+	Auth     admin.AdminUserAuth   `json:"auth" form:"auth" `
+	Status   admin.AdminUserStatus `json:"status" form:"status"`
+}
+
+func makeAdminUserResponse(user *admin.AdminUser) *AdminUserResponse {
+	resp := &AdminUserResponse{
+		UserId:   user.Id,
+		Username: user.Name,
+		Email:    user.Email,
+		Auth:     user.Authorization,
+		Status:   user.Status,
+	}
+	return resp
+}
+
 // apiAdminCreateUser
 //
 //	@Summary	创建后台账户
 //	@Tags		Admin API
 //	@Produce	json
 //	@Accept		json
-//	@Param		username	body		string										true	"用户名"
-//	@Param		email		body		string										true	"邮箱"
-//	@Param		auth		body		admin.AdminUserAuth							true	"权限"
-//	@Success	200			{object}	api.JSONResult{data=AdminCreateUserRequest}	"AdminUser"
+//	@Param		username	body		string									true	"用户名"
+//	@Param		email		body		string									true	"邮箱"
+//	@Param		auth		body		admin.AdminUserAuth						true	"权限"
+//	@Success	200			{object}	api.JSONResult{data=AdminUserResponse}	"AdminUser"
 //	@Router		/api/v1/admin/user/create [post]
 func apiAdminCreateUser(c *gin.Context, op *admin.AdminUser) {
 	req := &AdminCreateUserRequest{}
@@ -39,17 +58,22 @@ func apiAdminCreateUser(c *gin.Context, op *admin.AdminUser) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
-	_, err := admin_user_mgr.Get().CreateUser(req.Username, req.Email, req.Auth)
+	u, err := admin_user_mgr.Get().CreateUser(req.Username, req.Email, req.Auth)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, RSuccess(req))
+	c.JSON(http.StatusOK, RSuccess(makeAdminUserResponse(u)))
 }
 
 // apiAdminResetUserPassword
 //
-//	@Router	/api/v1/admin/user/reset_password [post]
+//	@Summary	重置用户密码
+//	@Tags		Admin API
+//	@Produce	json
+//	@Param		user_id	formData	string									true	"用户ID"
+//	@Success	200		{object}	api.JSONResult{data=AdminUserResponse}	"AdminUser"
+//	@Router		/api/v1/admin/user/reset_password [post]
 func apiAdminResetUserPassword(c *gin.Context, op *admin.AdminUser) {
 	uid, ok := c.GetPostForm("user_id")
 	if !ok {
@@ -69,12 +93,20 @@ func apiAdminResetUserPassword(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	c.JSON(http.StatusOK, RSuccess(targetUser.Id))
+	c.JSON(http.StatusOK, RSuccess(makeAdminUserResponse(targetUser)))
 }
 
 // apiAdminUpdateUserBaseInfo
 //
-//	@Router	/api/v1/admin/user/update_base_info [post]
+//	@Summary	更新用户信息
+//	@Tags		Admin API
+//	@Produce	json
+//	@Accept		json
+//	@Param		user_id		body		string									true	"用户ID"
+//	@Param		email		body		string									true	"邮箱"
+//	@Param		auth		body		admin.AdminUserAuth						true	"权限"
+//	@Success	200			{object}	api.JSONResult{data=AdminUserResponse}	"admin user"
+//	@Router		/api/v1/admin/user/update_base_info [post]
 func apiAdminUpdateUserBaseInfo(c *gin.Context, op *admin.AdminUser) {
 	req := &AdminUpdateUserRequest{}
 	if err := c.ShouldBindBodyWithJSON(req); err != nil {
@@ -82,18 +114,25 @@ func apiAdminUpdateUserBaseInfo(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	_, err := admin_user_mgr.Get().UpdateUserBaseInfo(req.UserId, req.Username, req.Email, req.Auth)
+	u, err := admin_user_mgr.Get().UpdateUserBaseInfo(req.UserId, req.Username, req.Email, req.Auth)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, RSuccess(req.UserId))
+	c.JSON(http.StatusOK, RSuccess(makeAdminUserResponse(u)))
 }
 
 // apiAdminUpdateUserStatus
 //
-//	@Router	/api/v1/admin/user/update_status [post]
+//	@Summary	修改用户状态
+//	@Tags		Admin API
+//	@Produce	json
+//	@Accept		json
+//	@Param		user_id	body		string									true	"用户ID"
+//	@Param		status	body		int										true	"用户状态"
+//	@Success	200		{object}	api.JSONResult{data=AdminUserResponse}	"admin user"
+//	@Router		/api/v1/admin/user/update_status [post]
 func apiAdminUpdateUserStatus(c *gin.Context, op *admin.AdminUser) {
 	req := &AdminUpdateUserRequest{}
 	if err := c.ShouldBindBodyWithJSON(req); err != nil {
@@ -101,13 +140,13 @@ func apiAdminUpdateUserStatus(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	_, err := admin_user_mgr.Get().UpdateUserBaseInfo(req.UserId, req.Username, req.Email, req.Auth)
+	u, err := admin_user_mgr.Get().UpdateUserStatus(req.UserId, req.Status)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, RSuccess(req.UserId))
+	c.JSON(http.StatusOK, RSuccess(makeAdminUserResponse(u)))
 }
 
 func init() {

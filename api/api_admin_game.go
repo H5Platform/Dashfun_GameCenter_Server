@@ -174,16 +174,16 @@ func apiAdminGameUploadImage(c *gin.Context, op *admin.AdminUser) {
 //	@Tags		Admin API
 //	@Accept		json
 //	@Produce	json
-//	@Param		keyword	body		string										false	"查询关键字"
-//	@Param		genre	body		[]int										false	"查询类型"
-//	@Param		status	body		data.DashFunGameStatus						false	"查询游戏状态"
-//	@Param		size	body		int64										false	"每页数量"
-//	@Param		page	body		int64										false	"当前页数，从1开始"
+//	@Param		keyword	body		string									false	"查询关键字"
+//	@Param		genre	body		[]int									false	"查询类型"
+//	@Param		status	body		data.DashFunGameStatus					false	"查询游戏状态"
+//	@Param		size	body		int64									false	"每页数量"
+//	@Param		page	body		int64									false	"当前页数，从1开始"
 //	@Success	200		{object}	api.JSONResult{data=[]data.DashFunGame}	"Search Result"
 //	@Router		/api/v1/admin/game/search [post]
 func apiAdminGameSearch(c *gin.Context, op *admin.AdminUser) {
 	req := &AdminGameSearchRequest{}
-	if err := c.ShouldBindBodyWith(req, nil); err != nil {
+	if err := c.ShouldBindBodyWithJSON(req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}

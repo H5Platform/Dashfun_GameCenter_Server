@@ -248,7 +248,7 @@ func (mgr *AdminUserMgr) Login(name, password string) (*admin.AdminUser, *admin.
 	if err != nil {
 		return nil, nil, err
 	}
-	if user.Password == password {
+	if user != nil && user.Password == password {
 		token := mgr.newToken()
 		loginInfo, err := mgr.newLoginInfo(user.Id, token)
 		if err != nil {

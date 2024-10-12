@@ -223,7 +223,7 @@ func makeProdTasks() {
 	task = t.GetTaskByName(taskName)
 	if task == nil {
 		//创建任务
-		taskc, err := t.CreateTaskAutoId(taskName, "", data.TaskType_Normal, data.TaskCategory_Challenges,
+		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Normal, data.TaskCategory_Challenges,
 			data.DashFunTaskCondition{
 				Type:      data.TaskCondition_LevelUp,
 				Count:     10,
@@ -231,7 +231,7 @@ func makeProdTasks() {
 			},
 			data.DashFunTaskReward{
 				RewardType: data.TaskRewardType_DashFunPoint,
-				Amount:     10,
+				Amount:     100,
 			},
 		)
 		if err != nil {

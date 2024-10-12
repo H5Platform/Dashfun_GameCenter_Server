@@ -9,6 +9,7 @@ import (
 	"dashfun_gamecenter/web"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 	"sort"
@@ -101,6 +102,7 @@ func apiReportPlayerLevel(c *gin.Context) {
 			Game:  game,
 			Level: req.Level,
 		})
+		zap.S().Infow("Game Report User Level Up", "user", user.Id, "game", "["+game.Id+"]"+game.Name, "Level", req.Level)
 		c.JSON(http.StatusOK, RSuccess(""))
 	} else {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("Error Signature"))

@@ -75,7 +75,7 @@ func apiReportPlayerLevel(c *gin.Context) {
 
 	game, err := gamecenter.Get().FindGame(req.GameId)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
 
@@ -83,7 +83,7 @@ func apiReportPlayerLevel(c *gin.Context) {
 
 	user, err := usercenter.Get().GetDashFunUser(req.UserId)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
 

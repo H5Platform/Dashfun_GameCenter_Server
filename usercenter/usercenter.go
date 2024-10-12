@@ -76,6 +76,8 @@ func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUse
 		Game: game,
 	})
 
+	zap.S().Infow("User from Telegram Enter Game", "userId", user.Id, "tgUserId", user.ChannelId, "name", user.UserName, "game", gameId)
+
 	return user, nil
 }
 

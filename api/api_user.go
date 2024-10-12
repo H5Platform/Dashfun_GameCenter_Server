@@ -64,6 +64,7 @@ func apiEnterGame(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
 		return
 	}
+
 	c.JSON(http.StatusOK, RSuccess(user.Id))
 }
 

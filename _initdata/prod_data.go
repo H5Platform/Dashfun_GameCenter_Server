@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	if config.IsProd() || config.IsDev() {
+	if config.IsProd() {
 		makeProdGames()
 		makeProdCoins()
 		makeProdTasks()
@@ -211,6 +211,27 @@ func makeProdTasks() {
 			data.DashFunTaskReward{
 				RewardType: data.TaskRewardType_DashFunPoint,
 				Amount:     100,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
+
+	taskName = "Level Up to Lv.10"
+	task = t.GetTaskByName(taskName)
+	if task == nil {
+		//创建任务
+		taskc, err := t.CreateTaskAutoId(taskName, "", data.TaskType_Normal, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_LevelUp,
+				Count:     10,
+				Condition: "10",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_DashFunPoint,
+				Amount:     10,
 			},
 		)
 		if err != nil {

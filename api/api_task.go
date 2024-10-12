@@ -212,5 +212,5 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "tg_verify", userHandlerAuthWrapper(apiVerifyUserTGChannelTask))
 	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "clicked", userHandlerAuthWrapper(apiOnTaskClicked))
 	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "claim", userHandlerAuthWrapper(apiOnTaskClicked))
-	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "count", userHandlerAuthWrapper(apiOnTaskClicked))
+	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "count", userHandlerAuthWrapper(apiGetUserTaskCount))
 }

@@ -87,7 +87,7 @@ func makeTestTask() {
 		taskc, err := t.CreateTask(taskId, "Level Up to Level 3", "LocalTest", data.TaskType_Normal, data.TaskCategory_Challenges,
 			data.DashFunTaskCondition{
 				Type:      data.TaskCondition_LevelUp,
-				Count:     1,
+				Count:     3,
 				Condition: "3",
 			},
 			data.DashFunTaskReward{
@@ -108,7 +108,7 @@ func makeTestTask() {
 		taskc, err := t.CreateTask(taskId, "Level Up to Level 10", "LocalTest", data.TaskType_Normal, data.TaskCategory_Challenges,
 			data.DashFunTaskCondition{
 				Type:      data.TaskCondition_LevelUp,
-				Count:     1,
+				Count:     10,
 				Condition: "10",
 			},
 			data.DashFunTaskReward{

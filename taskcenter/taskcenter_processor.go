@@ -167,7 +167,7 @@ func (t *TaskCenter) taskRecordPlayerLevelUp(user *data.DashFunUser, task *data.
 			userData.Progress = playerLevel
 			userData.Status = data.TaskStatus_Completed
 			return true
-		} else if playerLevel != userData.Progress {
+		} else if playerLevel > userData.Progress {
 			userData.Progress = playerLevel
 			return true
 		}

@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 // server report相关api
@@ -44,7 +45,7 @@ func verifyGame(params map[string]string, game *data.DashFunGame, md5Value strin
 	md5v := md5.Sum([]byte(queryString))
 	md5Str := fmt.Sprintf("%x", md5v)
 
-	return md5Str == md5Value
+	return strings.EqualFold(md5Str, md5Value)
 }
 
 type GameReportReq struct {

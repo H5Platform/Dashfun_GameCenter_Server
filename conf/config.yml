@@ -32,3 +32,9 @@ tencent_cos:
   secret_id: ${tencent_cos_secret_id}
   secret_key: ${tencent_cos_secret_key}
 
+ton_cfg:
+  api_key: ${ton_sdk_api_key}
+  wallet_mnemonic: ${ton_op_wallet}
+  wallet_version: ${ton_op_wallet_version}
+  is_test: true
+

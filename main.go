@@ -6,6 +6,7 @@ import (
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/tgbot"
+	"dashfun_gamecenter/ton"
 	"dashfun_gamecenter/web"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
@@ -56,6 +57,7 @@ func main() {
 
 	logger.Info("dashfun gamecenter started")
 
+	ton.Get()
 	if err := web.GetService().Run(); err != nil {
 		return
 	}

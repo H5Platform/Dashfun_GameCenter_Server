@@ -356,6 +356,77 @@
                 }
             }
         },
+        "/api/v1/admin/login_check": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "admin用户token验证",
+                "responses": {
+                    "200": {
+                        "description": "user id",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/user/active": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "用户激活账户，设置密码",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户新密码",
+                        "name": "new_password",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "AdminUser",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.AdminUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/user/create": {
             "post": {
                 "consumes": [
@@ -459,6 +530,85 @@
                 }
             }
         },
+        "/api/v1/admin/user/search": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "查询用户",
+                "parameters": [
+                    {
+                        "description": "用户名称",
+                        "name": "name",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "用户email",
+                        "name": "email",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "用户状态",
+                        "name": "status",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "当前页数，从1开始",
+                        "name": "page",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search Result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/admin.AdminUserResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/user/update_base_info": {
             "post": {
                 "consumes": [
@@ -475,15 +625,6 @@
                     {
                         "description": "用户ID",
                         "name": "user_id",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "用户名",
-                        "name": "username",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -1208,9 +1349,14 @@
         "admin.AdminUserAuth": {
             "type": "integer",
             "enum": [
+                0,
                 -1
             ],
+            "x-enum-comments": {
+                "AdminAuth_None": "某些api不限制权限，只要求登录的时候，使用这个权限"
+            },
             "x-enum-varnames": [
+                "AdminAuth_None",
                 "AdminAuth_Admin"
             ]
         },
@@ -1225,6 +1371,29 @@
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "admin.AdminUserResult": {
+            "type": "object",
+            "properties": {
+                "authorization": {
+                    "$ref": "#/definitions/admin.AdminUserAuth"
+                },
+                "create_at": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/admin.AdminUserStatus"
                 }
             }
         },

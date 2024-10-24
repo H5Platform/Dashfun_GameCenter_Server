@@ -47,6 +47,18 @@ func apiAdminUserLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(ali))
 }
 
+// apiAdminUserCheck
+//
+//	@Summary	admin用户token验证
+//	@Tags		Admin API
+//	@Produce	json
+//	@Success	200	{object}	api.JSONResult{data=string}	"user id"
+//	@Router		/api/v1/admin/login_check [post]
+//	 函数执行到这里就已经通过验证了，返回用户的id即可
+func apiAdminUserCheck(c *gin.Context, user *admin.AdminUser) {
+	c.JSON(http.StatusOK, RSuccess(user.Id))
+}
+
 // checkAdminAuth
 // 验证admin的信息，Bearer + Base64({user_id:userId, token: loginToken})
 func checkAdminUserLogin(c *gin.Context) (*admin.AdminUser, error) {
@@ -118,4 +130,5 @@ func adminHandlerAuthWrapper(authRequired admin.AdminUserAuth, handler func(ctx 
 
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "login", apiAdminUserLogin)
+	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "login_check", adminHandlerAuthWrapper(admin.AdminAuth_None, apiAdminUserCheck))
 }

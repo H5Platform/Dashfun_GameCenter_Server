@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"math"
 	"time"
 )
 
@@ -102,4 +103,59 @@ func (a *AdminUserDaoImpl) SaveUser(user *admin.AdminUser) (*admin.AdminUser, er
 		return nil, err
 	}
 	return user, nil
+}
+
+func (a *AdminUserDaoImpl) SearchUser(name, email string, status admin.AdminUserStatus, size, page int64) (users []*admin.AdminUser, totalPages int, err error) {
+	filter := bson.D{}
+	if name != "" {
+		filter = append(filter, bson.E{
+			Key: "name",
+			Value: bson.D{
+				{"$regex", name},
+				{"$options", "i"},
+			},
+		})
+	}
+
+	if email != "" {
+		filter = append(filter, bson.E{
+			Key: "email",
+			Value: bson.D{
+				{"$regex", email},
+				{"$options", "i"},
+			},
+		})
+	}
+
+	if status > 0 {
+		filter = append(filter, bson.E{
+			Key: "status",
+			Value: bson.D{
+				{"$eq", status},
+			},
+		})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	skip := (page - 1) * size
+
+	totalDocs, err := a.c.CountDocuments(ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	totalPages = int(math.Ceil(float64(totalDocs) / float64(size)))
+
+	find, err := a.c.Find(ctx, filter, options.Find().SetSkip(skip).SetLimit(size))
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if err = find.All(ctx, &users); err != nil {
+		return nil, 0, err
+	}
+
+	return users, totalPages, nil
 }

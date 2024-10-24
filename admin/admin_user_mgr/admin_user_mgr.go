@@ -152,18 +152,45 @@ func (mgr *AdminUserMgr) GetAdminUser(userId string) (*admin.AdminUser, error) {
 }
 
 func (mgr *AdminUserMgr) sendResetPasswordMail(user *admin.AdminUser, token string) {
-	pinpoint.Get().SendEmail("Active your account", user.Email, "Please active your account with the link below\n"+token)
+	url := mgr.getActiveAccountUrl(user.Id, token)
+	pinpoint.Get().SendEmail("Active your account", user.Email, "Please active your account with the link below\n"+url)
 }
 
-func (mgr *AdminUserMgr) getActiveAccountUrl() string {
+func (mgr *AdminUserMgr) getActiveAccountUrl(id, token string) string {
 	activeUrl := config.GetConfig().Web.Url
 	if !strings.HasSuffix(activeUrl, "/") {
 		activeUrl += "/"
 	}
 
-	activeUrl += "/"
+	t := &AdminUserAuthToken{
+		UserId: id,
+		Token:  token,
+	}
 
+	marshal, err := json.Marshal(t)
+	if err != nil {
+		return ""
+	}
+	t1 := base64.StdEncoding.EncodeToString(marshal)
+	activeUrl += "activate/" + t1
 	return activeUrl
+}
+
+// ActiveUser 用户激活账户，设置密码
+func (mgr *AdminUserMgr) ActiveUser(user *admin.AdminUser, password string) (*admin.AdminUser, error) {
+	if len(password) == 0 {
+		return nil, errors.New("password is empty")
+	}
+
+	user.Password = password
+	dao.GetAdminUserDao().SaveUser(user)
+
+	_, err := mgr.newLoginInfo(user.Id, mgr.newToken())
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // CreateUser 创建一个用户，并发送邮件进行激活，设置密码
@@ -248,7 +275,13 @@ func (mgr *AdminUserMgr) Login(name, password string) (*admin.AdminUser, *admin.
 	if err != nil {
 		return nil, nil, err
 	}
-	if user != nil && user.Password == password {
+	if user == nil {
+		return nil, nil, errors.New("incorrect username or password")
+	}
+	if user.Status == admin.AdminStatus_ResetPassword || user.Status == admin.AdminStatus_Ban {
+		return nil, nil, errors.New("incorrect user status")
+	}
+	if user.Password == password {
 		token := mgr.newToken()
 		loginInfo, err := mgr.newLoginInfo(user.Id, token)
 		if err != nil {
@@ -331,4 +364,9 @@ func (mgr *AdminUserMgr) ParseToken(authString string) (*AdminUserAuthToken, err
 	}
 
 	return t, nil
+}
+
+func (mgr *AdminUserMgr) GetUserList(name, email string, status admin.AdminUserStatus, size int64, page int64) ([]*admin.AdminUser, int, error) {
+	r, totalPages, err := dao.GetAdminUserDao().SearchUser(name, email, status, size, page)
+	return r, totalPages, err
 }

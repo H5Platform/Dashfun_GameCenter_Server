@@ -1,9 +1,13 @@
 definitions:
   admin.AdminUserAuth:
     enum:
+    - 0
     - -1
     type: integer
+    x-enum-comments:
+      AdminAuth_None: 某些api不限制权限，只要求登录的时候，使用这个权限
     x-enum-varnames:
+    - AdminAuth_None
     - AdminAuth_Admin
   admin.AdminUserLoginInfo:
     properties:
@@ -13,6 +17,21 @@ definitions:
         type: string
       token:
         type: string
+    type: object
+  admin.AdminUserResult:
+    properties:
+      authorization:
+        $ref: '#/definitions/admin.AdminUserAuth'
+      create_at:
+        type: integer
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        $ref: '#/definitions/admin.AdminUserStatus'
     type: object
   admin.AdminUserStatus:
     enum:
@@ -653,6 +672,46 @@ paths:
       summary: admin登陆
       tags:
       - Admin API
+  /api/v1/admin/login_check:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user id
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: admin用户token验证
+      tags:
+      - Admin API
+  /api/v1/admin/user/active:
+    post:
+      parameters:
+      - description: 用户新密码
+        in: formData
+        name: new_password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: AdminUser
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AdminUserResponse'
+              type: object
+      summary: 用户激活账户，设置密码
+      tags:
+      - Admin API
   /api/v1/admin/user/create:
     post:
       consumes:
@@ -714,6 +773,53 @@ paths:
       summary: 重置用户密码
       tags:
       - Admin API
+  /api/v1/admin/user/search:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户名称
+        in: body
+        name: name
+        schema:
+          type: string
+      - description: 用户email
+        in: body
+        name: email
+        schema:
+          type: string
+      - description: 用户状态
+        in: body
+        name: status
+        schema:
+          type: integer
+      - description: 每页数量
+        in: body
+        name: size
+        schema:
+          type: integer
+      - description: 当前页数，从1开始
+        in: body
+        name: page
+        schema:
+          type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search Result
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/admin.AdminUserResult'
+                  type: array
+              type: object
+      summary: 查询用户
+      tags:
+      - Admin API
   /api/v1/admin/user/update_base_info:
     post:
       consumes:
@@ -722,12 +828,6 @@ paths:
       - description: 用户ID
         in: body
         name: user_id
-        required: true
-        schema:
-          type: string
-      - description: 用户名
-        in: body
-        name: username
         required: true
         schema:
           type: string

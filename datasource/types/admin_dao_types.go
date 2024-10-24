@@ -9,6 +9,7 @@ type AdminUserDao interface {
 	FindUserByName(name string) (*admin.AdminUser, error)
 	FindUserByMail(email string) (*admin.AdminUser, error)
 	SaveUser(user *admin.AdminUser) (*admin.AdminUser, error)
+	SearchUser(name, email string, status admin.AdminUserStatus, size, page int64) (users []*admin.AdminUser, totalPages int, err error)
 }
 
 type AdminUserLoginInfoDao interface {

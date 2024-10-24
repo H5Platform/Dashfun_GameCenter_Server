@@ -47,6 +47,13 @@ type TencentCosConfig struct {
 	SecretKey  string `yaml:"secret_key"`
 }
 
+type TonConfig struct {
+	ApiKey         string `yaml:"api_key"`
+	WalletMnemonic string `yaml:"wallet_mnemonic"`
+	WalletVersion  string `yaml:"wallet_version"`
+	IsTest         bool   `yaml:"is_test"`
+}
+
 type Config struct {
 	Base          *BaseConfig       `yaml:"base"`
 	Mongo         *MongoConfig      `yaml:"mongo"`
@@ -56,6 +63,7 @@ type Config struct {
 	PinPoint      *AwsPinPoint      `yaml:"aws_pinpoint"`
 	AdminCfg      *AdminConfig      `yaml:"admin_cfg"`
 	TencentCosCfg *TencentCosConfig `yaml:"tencent_cos"`
+	TonCfg        *TonConfig        `yaml:"ton_cfg"`
 }
 
 var config *Config

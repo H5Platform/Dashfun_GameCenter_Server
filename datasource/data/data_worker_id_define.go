@@ -10,4 +10,5 @@ const (
 	WorkerAdminUserId    = 60
 	WorkerAdminUserPwd   = 61
 	WorkerTencentCosName = 70
+	WorkerSpinWheelId    = 80
 )

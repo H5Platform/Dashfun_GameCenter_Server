@@ -4,7 +4,6 @@ base:
 
 web:
   port: 8088
-  url: http://localhost:8080/
 
 mongo:
   source: mongodb://127.0.0.1:27017/?maxPoolSize=20
@@ -25,6 +24,7 @@ admin_cfg:
   password: ${admin_password}
   # 后端数据查询使用的密码
   backend_password: ${admin_search_password}
+  active_url: http://localhost:8080/
 
 tencent_cos:
   bucket_url: https://dashfun-1322633994.cos.accelerate.myqcloud.com

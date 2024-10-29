@@ -12,8 +12,7 @@ type BaseConfig struct {
 }
 
 type WebConfig struct {
-	Port int    `yaml:"port"`
-	Url  string `yaml:"url"` //服务器url链接
+	Port int `yaml:"port"`
 }
 
 type TelegramConfig struct {
@@ -38,6 +37,7 @@ type AdminConfig struct {
 	Name            string `yaml:"name"`
 	Password        string `yaml:"password"`
 	BackendPassword string `yaml:"backend_password"`
+	ActiveUrl       string `yaml:"active_url"` //账户激活链接
 }
 
 type TencentCosConfig struct {

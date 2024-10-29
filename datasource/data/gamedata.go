@@ -10,6 +10,7 @@ type DashFunGame struct {
 	LogoUrl    string            `json:"logoUrl" bson:"logo_url"`        //游戏logo
 	MainPicUrl string            `json:"mainPicUrl" bson:"main_pic_url"` //游戏主图地址 横向比例
 	Time       int64             `json:"time" bson:"time"`               //游戏入库时间
+	OpenTime   int64             `json:"openTime" bson:"open_time"`      //游戏开放时间，0表示开放，>0表示到达指定时间后才开放
 	Status     DashFunGameStatus `json:"status" bson:"status"`           //游戏状态
 	ApiSecret  string            `json:"-" bson:"api_secret"`
 }
@@ -17,7 +18,7 @@ type DashFunGame struct {
 type DashFunGameGenre struct {
 	Id     int    `json:"id" bson:"_id"`
 	Name   string `json:"name" bson:"name"`
-	Hidden bool   `json:"hidden" bson:"hidden"` //true表示不显示在分类列表里，特殊分类，比如New,Popular等
+	Hidden bool   `json:"hidden" bson:"hidden"` //true表示不显示在分类列表里，特殊分类，比如New, Popular等
 }
 
 type DashFunGameStatus int

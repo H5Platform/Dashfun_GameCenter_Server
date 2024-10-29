@@ -13,6 +13,8 @@ type DaoImpl interface {
 	GetCoinRecordDao() CoinRecordDao
 	GetAdminUserDao() AdminUserDao
 	GetAdminUserLoginInfoDao() AdminUserLoginInfoDao
+	GetSpinWheelDao() SpinWheelDao
+	GetSpinWheelUserDao() SpinWheelUserDao
 }
 
 type UserDao interface {
@@ -52,8 +54,9 @@ type CoinDao interface {
 	SaveOrUpdate(task *data.CoinData) (*data.CoinData, error)
 	FindCoinById(coinId string) (*data.CoinData, error)
 	FindCoinByName(name string) (*data.CoinData, error)
+	FindCoinByGameId(gameId string) *data.CoinData
 	GetAllCoins() ([]*data.CoinData, error)
-	CreateCoin(id, name, symbol, desc string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error)
+	CreateCoin(id, name, symbol, desc, bindGameId string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error)
 }
 
 type CoinUserDao interface {
@@ -64,4 +67,15 @@ type CoinUserDao interface {
 type CoinRecordDao interface {
 	AddRecord(user *data.CoinUserRecordData) (*data.CoinUserRecordData, error)
 	GetAllUserCoinRecords(userId, coinId string) ([]*data.CoinUserRecordData, error)
+}
+
+type SpinWheelDao interface {
+	CreateSpinWheel(id, name, gameId string, rewards []data.SpinWheelReward) (*data.SpinWheelData, error)
+	GetGameSpinWheel(gameId string) (*data.SpinWheelData, error)
+	GetSpinWheelById(spinWheelId string) (*data.SpinWheelData, error)
+}
+
+type SpinWheelUserDao interface {
+	SaveOrUpdate(userData *data.SpinWheelUserData) (*data.SpinWheelUserData, error)
+	GetUserSpinWheelData(userId, gameId string) (*data.SpinWheelUserData, error)
 }

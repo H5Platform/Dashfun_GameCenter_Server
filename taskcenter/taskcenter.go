@@ -222,10 +222,19 @@ func (t *TaskCenter) UserClaimReward(user *data.DashFunUser, taskId string) (*da
 
 func (t *TaskCenter) addTaskReward(task *data.DashFunTaskData, userData *data.DashFunTaskUserData) {
 	//add reward
-	coin, exist := coincenter.Get().GetCoinByName(data.TaskRewardType2CoinName(task.Reward.RewardType))
-	if !exist {
-		zap.S().Errorw("task reward type coin not found", "task", task)
-		return
+	c := coincenter.Get()
+	var coin *data.CoinData
+	var exist bool
+
+	if task.Reward.RewardType == data.TaskRewardType_GamePoint {
+		//查找游戏对应的coin信息
+		coin, exist = c.GetCoinByGame(task.GameId)
+	} else {
+		coin, exist = c.GetCoinByName(data.TaskRewardType2CoinName(task.Reward.RewardType))
+		if !exist {
+			zap.S().Errorw("task reward type coin not found", "task", task)
+			return
+		}
 	}
 
 	_, err := coincenter.Get().AddUserCoinAmount(userData.UserId, coin.Id, task.Reward.Amount)

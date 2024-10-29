@@ -157,7 +157,7 @@ func (mgr *AdminUserMgr) sendResetPasswordMail(user *admin.AdminUser, token stri
 }
 
 func (mgr *AdminUserMgr) getActiveAccountUrl(id, token string) string {
-	activeUrl := config.GetConfig().Web.Url
+	activeUrl := config.GetConfig().AdminCfg.ActiveUrl
 	if !strings.HasSuffix(activeUrl, "/") {
 		activeUrl += "/"
 	}
@@ -181,8 +181,12 @@ func (mgr *AdminUserMgr) ActiveUser(user *admin.AdminUser, password string) (*ad
 	if len(password) == 0 {
 		return nil, errors.New("password is empty")
 	}
+	if user.Status != admin.AdminStatus_ResetPassword {
+		return nil, errors.New("invalid user status")
+	}
 
 	user.Password = password
+	user.Status = admin.AdminStatus_Normal
 	dao.GetAdminUserDao().SaveUser(user)
 
 	_, err := mgr.newLoginInfo(user.Id, mgr.newToken())

@@ -5,6 +5,7 @@ type CoinData struct {
 	Name        string            `json:"name" bson:"name"`
 	Symbol      string            `json:"symbol" bson:"symbol"`
 	Desc        string            `json:"desc" bson:"desc"`
+	BindGameId  string            `json:"bind_game_id" bson:"bind_game_id"` //绑定的游戏id，如果不填则绑定DashFun，填写则绑定制定游戏，一个游戏只能绑定一个coin
 	CanWithdraw bool              `json:"can_withdraw" bson:"can_withdraw"` //是否可以提取
 	MinWithdraw float32           `json:"min_withdraw" bson:"min_withdraw"` //最低提取金额
 	ChainAddr   map[string]string `json:"chain_addr" bson:"chain_addr"`     //链上地址，chainName->address

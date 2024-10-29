@@ -6,6 +6,7 @@ import (
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
+	"dashfun_gamecenter/spinwheelcenter"
 	"dashfun_gamecenter/taskcenter"
 	"errors"
 	"fmt"
@@ -20,6 +21,74 @@ func init() {
 		makeTestGame()
 		makeTestTask()
 		makeTestCoins()
+		makeTestSpinWheel()
+	}
+}
+
+func makeTestSpinWheel() {
+	gameId := "LocalTest"
+
+	spinWheelData, err := spinwheelcenter.Get().GetSpinWheelForGame(gameId)
+	if err != nil {
+		log.Fatalf("GetSpinWheelForGame err: %v", err)
+	}
+	if spinWheelData == nil {
+		spinWheelData, err = spinwheelcenter.Get().CreateWheelForGame("SpinWheelTest", gameId, []data.SpinWheelReward{
+			{
+				RewardIndex: 0,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 2,
+				Weight:      5,
+			}, {
+				RewardIndex: 1,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 4,
+				Weight:      10,
+			}, {
+				RewardIndex: 2,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 6,
+				Weight:      20,
+			}, {
+				RewardIndex: 3,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 8,
+				Weight:      20,
+			}, {
+				RewardIndex: 4,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 10,
+				Weight:      20,
+			}, {
+				RewardIndex: 5,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 12,
+				Weight:      20,
+			}, {
+				RewardIndex: 6,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 14,
+				Weight:      20,
+			}, {
+				RewardIndex: 7,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 16,
+				Weight:      20,
+			}, {
+				RewardIndex: 8,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 18,
+				Weight:      20,
+			}, {
+				RewardIndex: 9,
+				RewardType:  data.SpinWheelReward_GamePoint,
+				RewardValue: 100,
+				Weight:      1,
+			},
+		})
+		if err != nil {
+			log.Fatalf("CreateWheelForGame err: %v", err)
+		}
 	}
 }
 
@@ -49,7 +118,23 @@ func makeTestCoins() {
 	c := coincenter.Get()
 	_, exist := c.GetCoinByName("DashFunCoin")
 	if !exist {
-		_, err := c.CreateCoin("", "DashFunCoin", "DFC", "DashFunCoin", true, 100, make(map[string]string))
+		_, err := c.CreateCoin("", "DashFunCoin", "DFC", "DashFunCoin", "", true, 100, make(map[string]string))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	_, exist = c.GetCoinByName("DashFunPoint")
+	if !exist {
+		_, err := c.CreateCoin("", "DashFunPoint", "DFP", "DashFun Point", "", false, 0, make(map[string]string))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	_, exist = c.GetCoinByName("W3KPoint")
+	if !exist {
+		_, err := c.CreateCoin("", "W3KPoint", "W3KP", "W3K Point", "LocalTest", false, 0, make(map[string]string))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -70,7 +155,7 @@ func makeTestTask() {
 				Condition: "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     0.5,
 			},
 		)
@@ -91,7 +176,7 @@ func makeTestTask() {
 				Condition: "3",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     1,
 			},
 		)
@@ -112,7 +197,7 @@ func makeTestTask() {
 				Condition: "10",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     1,
 			},
 		)
@@ -133,7 +218,7 @@ func makeTestTask() {
 				Condition: "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     5,
 			},
 		)
@@ -154,7 +239,7 @@ func makeTestTask() {
 				Condition: "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     10,
 			},
 		)
@@ -178,7 +263,7 @@ func makeTestTask() {
 				Link:      "https://t.me/+h79TJSlUaO03ZDdh",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     10,
 			},
 		)
@@ -201,7 +286,7 @@ func makeTestTask() {
 				Link:      "https://x.com/nexgami",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     10,
 			},
 		)
@@ -224,7 +309,7 @@ func makeTestTask() {
 				Link:      "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     10,
 			},
 		)
@@ -246,7 +331,7 @@ func makeTestTask() {
 				Link:      "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     100,
 			},
 		)
@@ -269,7 +354,7 @@ func makeTestTask() {
 				Link:      "",
 			},
 			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_DashFunPoint,
+				RewardType: data.TaskRewardType_GamePoint,
 				Amount:     100,
 			},
 		)
@@ -307,16 +392,19 @@ func makeTestGame() {
 	}
 
 	game, err = s.FindGameByName("LocalTest")
+
+	ot, _ := time.ParseInLocation(time.DateTime, "2024-10-30 00:00:00", time.Local)
 	if game == nil {
 		game = &data.DashFunGame{
 			Id:   "LocalTest",
 			Name: "LocalTest",
 			Desc: "LocalTest",
 			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
-			Url:     "https://tma-game-test.nexgami.com/",
-			Genre:   []int{1, 1001},
-			IconUrl: "",
-			Time:    time.Now().UnixMilli(),
+			Url:      "https://tma-game-test.nexgami.com/",
+			Genre:    []int{1, 1001},
+			IconUrl:  "",
+			Time:     time.Now().UnixMilli(),
+			OpenTime: ot.UnixMilli(),
 		}
 		g, err := dao.GetGameDao().SaveOrUpdate(game)
 		if err != nil {

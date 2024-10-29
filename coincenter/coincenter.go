@@ -114,12 +114,21 @@ func (c *CoinCenter) GetCoinByName(coinName string) (*data.CoinData, bool) {
 	return coin, ok
 }
 
-func (c *CoinCenter) CreateCoin(id, name, symbol, desc string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error) {
+func (c *CoinCenter) GetCoinByGame(gameId string) (*data.CoinData, bool) {
+	for _, coin := range c.coins {
+		if coin.BindGameId == gameId {
+			return coin, true
+		}
+	}
+	return nil, false
+}
+
+func (c *CoinCenter) CreateCoin(id, name, symbol, desc, bindGameId string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error) {
 	if id == "" {
 		id = c.newCoinId()
 	}
 
-	coin, err := dao.GetCoinDao().CreateCoin(id, name, symbol, desc, canWithdraw, minWithdraw, chainAddr)
+	coin, err := dao.GetCoinDao().CreateCoin(id, name, symbol, desc, bindGameId, canWithdraw, minWithdraw, chainAddr)
 	if err != nil {
 		return nil, err
 	}

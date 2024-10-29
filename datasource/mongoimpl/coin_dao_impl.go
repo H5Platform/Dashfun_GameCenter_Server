@@ -34,6 +34,11 @@ func (cd *CoinDaoMongo) initDB() {
 			Unique:    true,
 			Sort:      1,
 			IndexName: "index_name",
+		}, {
+			FieldName: "bind_game_id",
+			Unique:    false,
+			Sort:      1,
+			IndexName: "index_bind_game_id",
 		},
 	})
 
@@ -105,12 +110,25 @@ func (cd *CoinDaoMongo) FindCoinByName(name string) (*data.CoinData, error) {
 	return ret, nil
 }
 
-func (cd *CoinDaoMongo) CreateCoin(id, name, symbol, desc string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error) {
+// FindCoinByGameId 根据游戏id寻找绑定的coin，找不到返回nil
+func (cd *CoinDaoMongo) FindCoinByGameId(gameId string) *data.CoinData {
+	var ret *data.CoinData
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := cd.c.FindOne(ctx, bson.M{"bind_game_id": gameId}).Decode(&ret)
+	if err != nil {
+		return nil
+	}
+	return ret
+}
+
+func (cd *CoinDaoMongo) CreateCoin(id, name, symbol, desc, bindGameId string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error) {
 	coin := &data.CoinData{
 		Id:          id,
 		Name:        name,
 		Symbol:      symbol,
 		Desc:        desc,
+		BindGameId:  bindGameId,
 		CanWithdraw: canWithdraw,
 		MinWithdraw: minWithdraw,
 		ChainAddr:   chainAddr,

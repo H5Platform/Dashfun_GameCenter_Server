@@ -29,6 +29,7 @@ const (
 const (
 	TaskRewardType_DashFunToken DashFunTaskRewardType = iota + 1 //奖励DashFunToken
 	TaskRewardType_DashFunPoint                                  //奖励dashfun point，用来兑换链上token
+	TaskRewardType_GamePoint                                     //奖励游戏对应的Point
 )
 
 func TaskRewardType2CoinName(rewardType DashFunTaskRewardType) string {
@@ -36,9 +37,9 @@ func TaskRewardType2CoinName(rewardType DashFunTaskRewardType) string {
 	case TaskRewardType_DashFunToken:
 		return "DashFunCoin"
 	case TaskRewardType_DashFunPoint:
-		return "DashFunCoin"
+		return "DashFunPoint"
 	default:
-		return "DashFunCoin"
+		return ""
 	}
 }
 

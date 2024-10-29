@@ -125,6 +125,11 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 	events.UserLoginEvents.Emit(onlineUser)
 
 	zap.S().Infow("User from Telegram Login Successful", "userId", user.Id, "tgUserId", user.ChannelId, "name", user.UserName)
+
+	if !config.IsProd() {
+		zap.S().Info("user tg token:", tgAuthData)
+	}
+
 	return onlineUser, nil
 }
 

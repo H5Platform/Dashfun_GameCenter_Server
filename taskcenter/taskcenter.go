@@ -22,6 +22,7 @@ type TaskCenter struct {
 	idGen            *snowflake.Worker
 	tasks            map[string]*data.DashFunTaskData
 	taskUserDataList *TaskUserDataList
+	tasksLock        sync.RWMutex
 }
 
 func Get() *TaskCenter {
@@ -55,10 +56,14 @@ func (t *TaskCenter) newTasId() string {
 }
 
 func (t *TaskCenter) GetTaskById(taskId string) *data.DashFunTaskData {
+	t.tasksLock.RLock()
 	task, ok := t.tasks[taskId]
+	t.tasksLock.RUnlock()
 	if !ok {
 		task1, err := dao.GetTaskDao().FindTaskById(taskId)
 		if err == nil {
+			t.tasksLock.Lock()
+			defer t.tasksLock.Unlock()
 			t.tasks[taskId] = task1
 			task = task1
 		}
@@ -89,8 +94,31 @@ func (t *TaskCenter) CreateTask(taskId, name, gameId string, taskType data.DashF
 		return nil, err
 	}
 
+	t.tasksLock.Lock()
+	defer t.tasksLock.Unlock()
 	t.tasks[task.Id] = task
 
+	return task, nil
+}
+
+func (t *TaskCenter) UpdateTask(taskId string, name string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
+	condition data.DashFunTaskCondition, reward data.DashFunTaskReward, isOpen bool) (*data.DashFunTaskData, error) {
+	if taskId == "" {
+		return nil, errors.New("task Id is empty")
+	}
+	task := t.GetTaskById(taskId)
+	if task == nil {
+		return nil, errors.New("task not found")
+	}
+	if name != "" {
+		task.Name = name
+	}
+	task.Type = taskType
+	task.Category = category
+	task.Condition = condition
+	task.Reward = reward
+	task.Open = isOpen
+	dao.GetTaskDao().SaveOrUpdate(task)
 	return task, nil
 }
 
@@ -257,6 +285,10 @@ func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *dat
 	userId := user.Id
 	tasks := make([]*data.DashFunTaskData, 0)             //可用任务列表
 	dataMap := make(map[string]*data.DashFunTaskUserData) //用户任务数据
+
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+
 	for _, task := range t.tasks {
 		if isDashFunTask(task) || task.GameId == gameId || gameId == "all" {
 			userData, err := t.GetTaskUserData(userId, task.Id)
@@ -295,6 +327,27 @@ func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *dat
 		Tasks:    tasks,
 		UserData: dataMap,
 	}
+	return ret
+}
+
+// GetGameTasksBackend 获取游戏对应的任务，仅供后台使用
+// gameId 为空串时返回所有针对DashFun的公共任务
+func (t *TaskCenter) GetGameTasksBackend(gameId string) []*data.DashFunTaskData {
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+
+	ret := make([]*data.DashFunTaskData, 0)
+
+	for _, task := range t.tasks {
+		if gameId == "" {
+			if isDashFunTask(task) {
+				ret = append(ret, task)
+			}
+		} else if gameId == task.GameId {
+			ret = append(ret, task)
+		}
+	}
+
 	return ret
 }
 

@@ -23,6 +23,9 @@ func (t *TaskCenter) onUserPayment(evt *events.EventUserPayment) {
 	user := evt.User
 	payment := evt.Payment
 
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+
 	for _, task := range t.tasks {
 		if task.Open && (isDashFunTask(task) || task.GameId == payment.GameId) {
 			changed := false
@@ -49,6 +52,9 @@ func (t *TaskCenter) onUserPayment(evt *events.EventUserPayment) {
 func (t *TaskCenter) onGameReportPlayerLevelUp(evt *events.EventPlayerLevelUp) {
 	user := evt.User
 	game := evt.Game
+
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
 
 	for _, task := range t.tasks {
 		if task.Open && (isDashFunTask(task) || task.GameId == game.Id) {
@@ -78,6 +84,9 @@ func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
 	//t.processTasks(evt.User, evt.Game)
 	user := evt.User
 	game := evt.Game
+
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
 
 	for _, task := range t.tasks {
 		if task.Open && (isDashFunTask(task) || task.GameId == game.Id) {

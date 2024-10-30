@@ -29,10 +29,10 @@ const (
 	ApiModulePayment     = "payment"
 	ApiModuleTask        = "task"
 	ApiModuleCoin        = "coin"
+	ApiModuleSpinWheel   = "spinwheel"
 	ApiModuleGameReport  = "game_report"
 	ApiModuleAdmin       = "admin"
 	ApiModuleAdminSearch = "admin_search"
-	ApiModuleSpinWheel   = "spinwheel"
 )
 
 type ApiNode struct {

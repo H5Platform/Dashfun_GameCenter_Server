@@ -351,6 +351,10 @@ func (t *TaskCenter) GetGameTasksBackend(gameId string) []*data.DashFunTaskData 
 	return ret
 }
 
+func (t *TaskCenter) SearchTaskBackend(name string, size, page int64) (tasks []*data.DashFunTaskData, totalPage int, err error) {
+	return dao.GetTaskDao().SearchTask(name, size, page)
+}
+
 func isDashFunTask(task *data.DashFunTaskData) bool {
 	if task.GameId == "" || task.GameId == "-1" {
 		return true

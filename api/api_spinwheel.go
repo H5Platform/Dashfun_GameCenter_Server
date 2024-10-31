@@ -44,7 +44,7 @@ func apiUserSpinWheel(c *gin.Context, user *data.DashFunUser) {
 // @Produce	json
 // @Param		game_id	query	string	true	"游戏Id"
 // @Authorize	"tma {token}"
-// @Success	200	{object}	api.JSONResult{data=data.UserSpinWheelDataResult}	"当前轮盘数据及用户状态"
+// @Success	200	{object}	api.JSONResult{data=UserSpinWheelDataResult}	"当前轮盘数据及用户状态"
 // @Router		/api/v1/spinwheel/get [get]
 func apiUserGetSpinWheelInfo(c *gin.Context, user *data.DashFunUser) {
 	gameId, exist := c.GetQuery("game_id")
@@ -79,7 +79,7 @@ func apiUserGetSpinWheelInfo(c *gin.Context, user *data.DashFunUser) {
 // @Produce	json
 // @Param		game_id	query	string	true	"游戏Id"
 // @Authorize	"tma {token}"
-// @Success	200	{object}	api.JSONResult{data=data.UserSpinWheelDataResult}	"当前轮盘数据及用户状态"
+// @Success	200	{object}	api.JSONResult{data=data.SpinWheelReward}	"当前轮盘数据及用户状态"
 // @Router		/api/v1/spinwheel/claim [get]
 func apiUserClaimSpinWheelReward(c *gin.Context, user *data.DashFunUser) {
 	gameId, exist := c.GetQuery("game_id")

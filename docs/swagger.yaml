@@ -92,8 +92,31 @@ definitions:
     x-enum-varnames:
     - Success
     - Error
+  api.UserSpinWheelDataResult:
+    properties:
+      game_id:
+        type: string
+      reward_index:
+        description: 中奖索引
+        type: integer
+      rewards:
+        items:
+          $ref: '#/definitions/data.SpinWheelReward'
+        type: array
+      spinwheel_id:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/data.SpinWheelUserStatus'
+        description: 当前状态
+      user_id:
+        type: string
+    type: object
   data.CoinData:
     properties:
+      bind_game_id:
+        description: 绑定的游戏id，如果不填则绑定DashFun，填写则绑定制定游戏，一个游戏只能绑定一个coin
+        type: string
       can_withdraw:
         description: 是否可以提取
         type: boolean
@@ -147,6 +170,9 @@ definitions:
         type: string
       name:
         type: string
+      openTime:
+        description: 游戏开放时间，0表示开放，>0表示到达指定时间后才开放
+        type: integer
       status:
         allOf:
         - $ref: '#/definitions/data.DashFunGameStatus'
@@ -322,13 +348,16 @@ definitions:
     enum:
     - 1
     - 2
+    - 3
     type: integer
     x-enum-comments:
       TaskRewardType_DashFunPoint: 奖励dashfun point，用来兑换链上token
       TaskRewardType_DashFunToken: 奖励DashFunToken
+      TaskRewardType_GamePoint: 奖励游戏对应的Point
     x-enum-varnames:
     - TaskRewardType_DashFunToken
     - TaskRewardType_DashFunPoint
+    - TaskRewardType_GamePoint
   data.DashFunTaskStatus:
     enum:
     - 1
@@ -446,6 +475,55 @@ definitions:
     - DashFunPaymentStatus_Paid
     - DashFunPaymentStatus_Canceled
     - DashFunPaymentStatus_Failed
+  data.SpinWheelReward:
+    properties:
+      reward_index:
+        description: 区域Id, 0~9
+        type: integer
+      reward_type:
+        $ref: '#/definitions/data.SpinWheelRewardType'
+      reward_value:
+        type: integer
+    type: object
+  data.SpinWheelRewardType:
+    enum:
+    - 1
+    type: integer
+    x-enum-comments:
+      SpinWheelReward_GamePoint: 奖励游戏绑定的积分
+    x-enum-varnames:
+    - SpinWheelReward_GamePoint
+  data.SpinWheelUserData:
+    properties:
+      reward_index:
+        description: 抽中的区域索引，0-9
+        type: integer
+      spin_time:
+        description: 抽奖时间
+        type: integer
+      spin_wheel_id:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/data.SpinWheelUserStatus'
+        description: 状态
+      user_id:
+        type: string
+    type: object
+  data.SpinWheelUserStatus:
+    enum:
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-comments:
+      SpinWheelUserStatus_CanClaim: 可以领取奖励
+      SpinWheelUserStatus_Claimed: 已领取
+      SpinWheelUserStatus_Spin: 可转
+    x-enum-varnames:
+    - SpinWheelUserStatus_Spin
+    - SpinWheelUserStatus_CanClaim
+    - SpinWheelUserStatus_Claimed
   data.UserTaskInfo:
     properties:
       tasks:
@@ -462,6 +540,31 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/v1/admin/game/{game_id}:
+    get:
+      parameters:
+      - description: 游戏ID
+        in: path
+        name: game_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search Result
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/data.DashFunGame'
+                  type: array
+              type: object
+      summary: 获取指定id的游戏数据
+      tags:
+      - Admin API
   /api/v1/admin/game/create:
     post:
       consumes:
@@ -687,6 +790,191 @@ paths:
                   type: string
               type: object
       summary: admin用户token验证
+      tags:
+      - Admin API
+  /api/v1/admin/task/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 任务名称
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: 绑定的游戏Id
+        in: body
+        name: game_id
+        required: true
+        schema:
+          type: string
+      - description: 任务类型
+        in: body
+        name: type
+        required: true
+        schema:
+          type: integer
+      - description: 任务分类
+        in: body
+        name: category
+        required: true
+        schema:
+          type: integer
+      - description: 任务分类
+        in: body
+        name: condition
+        required: true
+        schema:
+          $ref: '#/definitions/data.DashFunTaskCondition'
+      - description: 任务奖励
+        in: body
+        name: reward
+        required: true
+        schema:
+          $ref: '#/definitions/data.DashFunTaskReward'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 新增的任务数据
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/data.DashFunTaskData'
+                  type: array
+              type: object
+      summary: 新建任务数据
+      tags:
+      - Admin API
+  /api/v1/admin/task/get/{game_id}:
+    post:
+      parameters:
+      - description: 游戏id
+        in: path
+        name: game_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search Result
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/data.DashFunTaskData'
+                  type: array
+              type: object
+      summary: 获取指定游戏绑定的任务
+      tags:
+      - Admin API
+  /api/v1/admin/task/search:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 任务名字或绑定游戏的ID，任务名字模糊匹配
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: 每页数量
+        in: body
+        name: size
+        schema:
+          type: integer
+      - description: 当前页数，从1开始
+        in: body
+        name: page
+        schema:
+          type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search Result
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/data.DashFunTaskData'
+                  type: array
+              type: object
+      summary: 查询任务列表
+      tags:
+      - Admin API
+  /api/v1/admin/task/update:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新的任务Id
+        in: body
+        name: id
+        required: true
+        schema:
+          type: string
+      - description: 任务名称
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: 任务类型
+        in: body
+        name: type
+        required: true
+        schema:
+          type: integer
+      - description: 任务分类
+        in: body
+        name: category
+        required: true
+        schema:
+          type: integer
+      - description: 任务分类
+        in: body
+        name: condition
+        required: true
+        schema:
+          $ref: '#/definitions/data.DashFunTaskCondition'
+      - description: 任务奖励
+        in: body
+        name: reward
+        required: true
+        schema:
+          $ref: '#/definitions/data.DashFunTaskReward'
+      - description: 任务是否开放
+        in: body
+        name: open
+        required: true
+        schema:
+          type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新后的任务数据
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/data.DashFunTaskData'
+                  type: array
+              type: object
+      summary: 更新任务数据
       tags:
       - Admin API
   /api/v1/admin/user/active:
@@ -1084,6 +1372,75 @@ paths:
       summary: telegram用户请求支付订单
       tags:
       - Payment API
+  /api/v1/spinwheel/claim:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 当前轮盘数据及用户状态
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/data.SpinWheelReward'
+              type: object
+      summary: 用戶领取转盘奖励
+      tags:
+      - SpinWheel API
+  /api/v1/spinwheel/get:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 当前轮盘数据及用户状态
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.UserSpinWheelDataResult'
+              type: object
+      summary: 获取用户的轮盘数据
+      tags:
+      - SpinWheel API
+  /api/v1/spinwheel/spin:
+    get:
+      parameters:
+      - description: 游戏Id
+        in: query
+        name: game_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户轮盘数据
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.JSONResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/data.SpinWheelUserData'
+              type: object
+      summary: 用户请求转轮盘
+      tags:
+      - SpinWheel API
   /api/v1/task/claim:
     get:
       parameters:

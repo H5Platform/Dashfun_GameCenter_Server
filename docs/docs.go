@@ -315,6 +315,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/game/{game_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "获取指定id的游戏数据",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏ID",
+                        "name": "game_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search Result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunGame"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/login": {
             "post": {
                 "consumes": [
@@ -389,6 +432,308 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/task/create": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "新建任务数据",
+                "parameters": [
+                    {
+                        "description": "任务名称",
+                        "name": "name",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "绑定的游戏Id",
+                        "name": "game_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "任务类型",
+                        "name": "type",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "任务分类",
+                        "name": "category",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "任务分类",
+                        "name": "condition",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.DashFunTaskCondition"
+                        }
+                    },
+                    {
+                        "description": "任务奖励",
+                        "name": "reward",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.DashFunTaskReward"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "新增的任务数据",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunTaskData"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/task/get/{game_id}": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "获取指定游戏绑定的任务",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏id",
+                        "name": "game_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search Result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunTaskData"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/task/search": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "查询任务列表",
+                "parameters": [
+                    {
+                        "description": "任务名字或绑定游戏的ID，任务名字模糊匹配",
+                        "name": "name",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "当前页数，从1开始",
+                        "name": "page",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search Result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunTaskData"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/task/update": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin API"
+                ],
+                "summary": "更新任务数据",
+                "parameters": [
+                    {
+                        "description": "更新的任务Id",
+                        "name": "id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "任务名称",
+                        "name": "name",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "任务类型",
+                        "name": "type",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "任务分类",
+                        "name": "category",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "任务分类",
+                        "name": "condition",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.DashFunTaskCondition"
+                        }
+                    },
+                    {
+                        "description": "任务奖励",
+                        "name": "reward",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.DashFunTaskReward"
+                        }
+                    },
+                    {
+                        "description": "任务是否开放",
+                        "name": "open",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新后的任务数据",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/data.DashFunTaskData"
+                                            }
                                         }
                                     }
                                 }
@@ -1057,6 +1402,126 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/spinwheel/claim": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SpinWheel API"
+                ],
+                "summary": "用戶领取转盘奖励",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "当前轮盘数据及用户状态",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.SpinWheelReward"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/spinwheel/get": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SpinWheel API"
+                ],
+                "summary": "获取用户的轮盘数据",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "当前轮盘数据及用户状态",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.UserSpinWheelDataResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/spinwheel/spin": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SpinWheel API"
+                ],
+                "summary": "用户请求转轮盘",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "游戏Id",
+                        "name": "game_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "用户轮盘数据",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.JSONResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/data.SpinWheelUserData"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/task/claim": {
             "get": {
                 "produces": [
@@ -1495,9 +1960,45 @@ const docTemplate = `{
                 "Error"
             ]
         },
+        "api.UserSpinWheelDataResult": {
+            "type": "object",
+            "properties": {
+                "game_id": {
+                    "type": "string"
+                },
+                "reward_index": {
+                    "description": "中奖索引",
+                    "type": "integer"
+                },
+                "rewards": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.SpinWheelReward"
+                    }
+                },
+                "spinwheel_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "当前状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.SpinWheelUserStatus"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "data.CoinData": {
             "type": "object",
             "properties": {
+                "bind_game_id": {
+                    "description": "绑定的游戏id，如果不填则绑定DashFun，填写则绑定制定游戏，一个游戏只能绑定一个coin",
+                    "type": "string"
+                },
                 "can_withdraw": {
                     "description": "是否可以提取",
                     "type": "boolean"
@@ -1574,6 +2075,10 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "openTime": {
+                    "description": "游戏开放时间，0表示开放，\u003e0表示到达指定时间后才开放",
+                    "type": "integer"
                 },
                 "status": {
                     "description": "游戏状态",
@@ -1831,15 +2336,18 @@ const docTemplate = `{
             "type": "integer",
             "enum": [
                 1,
-                2
+                2,
+                3
             ],
             "x-enum-comments": {
                 "TaskRewardType_DashFunPoint": "奖励dashfun point，用来兑换链上token",
-                "TaskRewardType_DashFunToken": "奖励DashFunToken"
+                "TaskRewardType_DashFunToken": "奖励DashFunToken",
+                "TaskRewardType_GamePoint": "奖励游戏对应的Point"
             },
             "x-enum-varnames": [
                 "TaskRewardType_DashFunToken",
-                "TaskRewardType_DashFunPoint"
+                "TaskRewardType_DashFunPoint",
+                "TaskRewardType_GamePoint"
             ]
         },
         "data.DashFunTaskStatus": {
@@ -2001,6 +2509,78 @@ const docTemplate = `{
                 "DashFunPaymentStatus_Paid",
                 "DashFunPaymentStatus_Canceled",
                 "DashFunPaymentStatus_Failed"
+            ]
+        },
+        "data.SpinWheelReward": {
+            "type": "object",
+            "properties": {
+                "reward_index": {
+                    "description": "区域Id, 0~9",
+                    "type": "integer"
+                },
+                "reward_type": {
+                    "$ref": "#/definitions/data.SpinWheelRewardType"
+                },
+                "reward_value": {
+                    "type": "integer"
+                }
+            }
+        },
+        "data.SpinWheelRewardType": {
+            "type": "integer",
+            "enum": [
+                1
+            ],
+            "x-enum-comments": {
+                "SpinWheelReward_GamePoint": "奖励游戏绑定的积分"
+            },
+            "x-enum-varnames": [
+                "SpinWheelReward_GamePoint"
+            ]
+        },
+        "data.SpinWheelUserData": {
+            "type": "object",
+            "properties": {
+                "reward_index": {
+                    "description": "抽中的区域索引，0-9",
+                    "type": "integer"
+                },
+                "spin_time": {
+                    "description": "抽奖时间",
+                    "type": "integer"
+                },
+                "spin_wheel_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/data.SpinWheelUserStatus"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.SpinWheelUserStatus": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3
+            ],
+            "x-enum-comments": {
+                "SpinWheelUserStatus_CanClaim": "可以领取奖励",
+                "SpinWheelUserStatus_Claimed": "已领取",
+                "SpinWheelUserStatus_Spin": "可转"
+            },
+            "x-enum-varnames": [
+                "SpinWheelUserStatus_Spin",
+                "SpinWheelUserStatus_CanClaim",
+                "SpinWheelUserStatus_Claimed"
             ]
         },
         "data.UserTaskInfo": {

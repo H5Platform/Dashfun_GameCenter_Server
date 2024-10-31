@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"math"
 	"time"
 )
 
@@ -117,6 +118,42 @@ func (p *TaskDaoMongo) SaveOrUpdate(task *data.DashFunTaskData) (*data.DashFunTa
 	}
 
 	return task, nil
+}
+
+func (p *TaskDaoMongo) SearchTask(keyword string, size, page int64) (tasks []*data.DashFunTaskData, totalPages int, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	filter := bson.D{}
+	if keyword != "" {
+		filter = bson.D{
+			{
+				"$or", bson.A{
+					bson.D{{"name", bson.D{{"$regex", keyword}, {"$options", "i"}}}},
+					bson.D{{"game_id", keyword}},
+				}},
+		}
+	}
+
+	skip := (page - 1) * size
+
+	totalDocs, err := p.c.CountDocuments(ctx, filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	totalPages = int(math.Ceil(float64(totalDocs) / float64(size)))
+
+	find, err := p.c.Find(ctx, filter, options.Find().SetSkip(skip).SetLimit(size))
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if err = find.All(ctx, &tasks); err != nil {
+		return nil, 0, err
+	}
+
+	return tasks, totalPages, nil
 }
 
 func (p *TaskDaoMongo) CreateTask(id, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,

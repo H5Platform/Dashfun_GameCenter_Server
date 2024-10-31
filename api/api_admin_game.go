@@ -19,12 +19,13 @@ const (
 )
 
 type AdminGameDataRequest struct {
-	Id     string                 `json:"id" form:"id"`
-	Name   string                 `json:"name" form:"name"`
-	Desc   string                 `json:"desc" form:"desc"`
-	Url    string                 `json:"url" form:"url"`       //H5游戏部署地址
-	Genre  []int                  `json:"genre" form:"genre"`   //游戏类型Id
-	Status data.DashFunGameStatus `json:"status" form:"status"` //游戏状态
+	Id       string                 `json:"id" form:"id"`
+	Name     string                 `json:"name" form:"name"`
+	Desc     string                 `json:"desc" form:"desc"`
+	Url      string                 `json:"url" form:"url"`                             //H5游戏部署地址
+	Genre    []int                  `json:"genre" form:"genre"`                         //游戏类型Id
+	OpenTime int64                  `json:"open_time" form:"open_time" required:"true"` //游戏开放时间
+	Status   data.DashFunGameStatus `json:"status" form:"status"`                       //游戏状态
 	//IconUrl    string `json:"iconUrl" form:"iconUrl"`       //游戏图标地址
 	//LogoUrl    string `json:"logoUrl" form:"logoUrl"`       //游戏logo
 	//MainPicUrl string `json:"mainPicUrl" form:"mainPicUrl"` //游戏主图地址 横向比例
@@ -48,11 +49,12 @@ type AdminGameUpdateImageRequest struct {
 //	@Tags		Admin API
 //	@Produce	json
 //	@Accept		json
-//	@Param		name	body		string									false	"游戏名称"
-//	@Param		desc	body		string									false	"游戏介绍"
-//	@Param		url		body		string									false	"游戏链接"
-//	@Param		genre	body		[]int									false	"游戏类型"
-//	@Success	200		{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
+//	@Param		name		body		string									false	"游戏名称"
+//	@Param		desc		body		string									false	"游戏介绍"
+//	@Param		url			body		string									false	"游戏链接"
+//	@Param		genre		body		[]int									false	"游戏类型"
+//	@Param		open_time	body		int64									true	"游戏开放时间，如果保持不变传入-1，0表示立即开启，>0表示指定开放时间的毫秒数"
+//	@Success	200			{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
 //	@Router		/api/v1/admin/game/create [post]
 func apiAdminGameCreate(c *gin.Context, op *admin.AdminUser) {
 	req := &AdminGameDataRequest{}
@@ -76,12 +78,13 @@ func apiAdminGameCreate(c *gin.Context, op *admin.AdminUser) {
 //	@Tags		Admin API
 //	@Produce	json
 //	@Accept		json
-//	@Param		id		body		string									true	"要更新数据的游戏Id"
-//	@Param		name	body		string									false	"游戏名称"
-//	@Param		desc	body		string									false	"游戏介绍"
-//	@Param		url		body		string									false	"游戏链接"
-//	@Param		genre	body		[]int									false	"游戏类型"
-//	@Success	200		{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
+//	@Param		id			body		string									true	"要更新数据的游戏Id"
+//	@Param		name		body		string									false	"游戏名称"
+//	@Param		desc		body		string									false	"游戏介绍"
+//	@Param		url			body		string									false	"游戏链接"
+//	@Param		genre		body		[]int									false	"游戏类型"
+//	@Param		open_time	body		int64									true	"游戏开放时间，如果保持不变传入-1，0表示立即开启，>0表示指定开放时间的毫秒数"
+//	@Success	200			{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
 //	@Router		/api/v1/admin/game/update [post]
 func apiAdminGameUpdate(c *gin.Context, op *admin.AdminUser) {
 	req := &AdminGameDataRequest{}
@@ -90,7 +93,7 @@ func apiAdminGameUpdate(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	info, err := gamecenter.Get().UpdateGameInfo(req.Id, req.Name, req.Desc, req.Url, req.Genre, req.Status)
+	info, err := gamecenter.Get().UpdateGameInfo(req.Id, req.Name, req.Desc, req.Url, req.Genre, req.OpenTime, req.Status)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return

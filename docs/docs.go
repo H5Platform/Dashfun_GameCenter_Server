@@ -62,6 +62,15 @@ const docTemplate = `{
                                 "type": "integer"
                             }
                         }
+                    },
+                    {
+                        "description": "游戏开放时间，如果保持不变传入-1，0表示立即开启，\u003e0表示指定开放时间的毫秒数",
+                        "name": "open_time",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -226,6 +235,15 @@ const docTemplate = `{
                             "items": {
                                 "type": "integer"
                             }
+                        }
+                    },
+                    {
+                        "description": "游戏开放时间，如果保持不变传入-1，0表示立即开启，\u003e0表示指定开放时间的毫秒数",
+                        "name": "open_time",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],

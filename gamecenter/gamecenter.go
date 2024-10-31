@@ -104,7 +104,8 @@ func (gc *GameCenter) updateGameImage(game *data.DashFunGame, img []byte, imgTyp
 	return nil
 }
 
-func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, status data.DashFunGameStatus) (*data.DashFunGame, error) {
+// UpdateGameInfo 更新游戏信息，如果openTime不需要变更，传入-1
+func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, openTime int64, status data.DashFunGameStatus) (*data.DashFunGame, error) {
 	game, err := gc.FindGame(id)
 	if err != nil {
 		return nil, err
@@ -135,6 +136,10 @@ func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, st
 	}
 	if url != "" {
 		game.Url = url
+		update = true
+	}
+	if openTime >= 0 {
+		game.OpenTime = openTime
 		update = true
 	}
 	if genre != nil && len(genre) > 0 {

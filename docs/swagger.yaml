@@ -592,6 +592,12 @@ paths:
           items:
             type: integer
           type: array
+      - description: 游戏开放时间，如果保持不变传入-1，0表示立即开启，>0表示指定开放时间的毫秒数
+        in: body
+        name: open_time
+        required: true
+        schema:
+          type: integer
       produces:
       - application/json
       responses:
@@ -691,6 +697,12 @@ paths:
           items:
             type: integer
           type: array
+      - description: 游戏开放时间，如果保持不变传入-1，0表示立即开启，>0表示指定开放时间的毫秒数
+        in: body
+        name: open_time
+        required: true
+        schema:
+          type: integer
       produces:
       - application/json
       responses:

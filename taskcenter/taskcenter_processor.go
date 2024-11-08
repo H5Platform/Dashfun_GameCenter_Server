@@ -9,6 +9,7 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"go.uber.org/zap"
+	"math/rand"
 	"strconv"
 	"time"
 )
@@ -26,8 +27,17 @@ func (t *TaskCenter) UserClickedTask(user *data.DashFunUser, taskId string, game
 	if userData.Status == data.TaskStatus_InProgress {
 		switch task.Condition.Type {
 		case data.TaskCondition_FollowX:
-			//follow x类，点击即送
-			userData.Status = data.TaskStatus_Completed
+			//follow x类，进入pending状态，同时给一个随机数，2-4，来模拟验证，让用户反复操作保证follow
+			userData.Status = data.TaskStatus_Verify_Pending
+			checkData := &data.TaskSaveDataFollowX{
+				RandomCount: rand.Intn(2) + 2,
+				CheckCount:  0,
+			}
+			bytes, err := json.Marshal(checkData)
+			if err != nil {
+				return nil, err
+			}
+			userData.SaveData = string(bytes)
 			changed = true
 			break
 
@@ -37,6 +47,31 @@ func (t *TaskCenter) UserClickedTask(user *data.DashFunUser, taskId string, game
 			changed = true
 			break
 		}
+	}
+
+	if changed {
+		t.saveTaskUserData(userData)
+	}
+
+	return userData, nil
+}
+
+func (t *TaskCenter) UserVerifyTask(user *data.DashFunUser, taskId string, gameId string) (*data.DashFunTaskUserData, error) {
+	task := t.GetTaskById(taskId)
+	if task == nil {
+		return nil, errors.New("task not found")
+	}
+	userData, err := t.GetTaskUserData(user.Id, taskId)
+	if err != nil {
+		return nil, err
+	}
+
+	changed := false
+	switch task.Condition.Type {
+	case data.TaskCondition_FollowX:
+		changed = t.taskVerifyFollowX(user, task, userData, gameId)
+	case data.TaskCondition_JoinTGChannel:
+		changed = t.taskVerifyTGChannel(user, task, userData, gameId)
 	}
 
 	if changed {
@@ -61,6 +96,34 @@ func (t *TaskCenter) UserVerifyTGChannel(user *data.DashFunUser, taskId string, 
 	}
 
 	return userData, nil
+}
+
+func (t *TaskCenter) taskVerifyFollowX(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
+	ret := false
+	if task.Condition.Type == data.TaskCondition_FollowX {
+		if (isDashFunTask(task) || task.GameId == gameId) && userData.Status == data.TaskStatus_Verify_Pending {
+			save := data.TaskSaveDataFollowX{}
+			err := json.Unmarshal([]byte(userData.SaveData), &save)
+			if err != nil {
+				zap.S().Errorw("unmarshal task save data error", "err", err.Error(), "user", user.Id, "task", task.Id, "game", task.GameId, "savedata", userData.SaveData)
+				ret = false
+			} else {
+				save.CheckCount++
+				if save.CheckCount >= save.RandomCount {
+					userData.Status = data.TaskStatus_Completed
+				}
+				marshal, err := json.Marshal(save)
+				if err != nil {
+					zap.S().Errorw("marshal task save data error", "err", err.Error(), "user", user.Id, "task", task.Id, "game", task.GameId, "savedata", userData.SaveData)
+				} else {
+					userData.SaveData = string(marshal)
+				}
+				ret = true
+			}
+
+		}
+	}
+	return ret
 }
 
 // taskVerifyTGChannel 验证用户是否加入了tg channel

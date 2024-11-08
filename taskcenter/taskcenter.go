@@ -181,25 +181,31 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 
 	task := t.GetTaskById(taskId)
 	taskTime := time.UnixMilli(userData.Time)
+	taskTime = time.Date(taskTime.Year(), taskTime.Month(), taskTime.Day(), 0, 0, 0, 0, taskTime.Location())
 	nowTime := time.Now()
-	td := taskTime.YearDay()
-	ty := taskTime.Year()
+	nowTime = time.Date(nowTime.Year(), nowTime.Month(), nowTime.Day(), 0, 0, 0, 0, nowTime.Location())
 
-	nd := nowTime.YearDay()
-	ny := nowTime.Year()
+	//td := taskTime.YearDay()
+	//ty := taskTime.Year()
+	//
+	//nd := nowTime.YearDay()
+	//ny := nowTime.Year()
+
+	diff := nowTime.Sub(taskTime)
+	diffDays := diff.Hours() / 24
 
 	reset := false
 
 	if task != nil {
 		switch task.Type {
 		case data.TaskType_Daily:
-			//不是同一天则重置进度
-			reset = ty != ny || td != nd
-			break
-
+			reset = diffDays >= 1
 		case data.TaskType_2Days:
-			reset = nd-td >= 2
-			break
+			reset = diffDays >= 2
+		case data.TaskType_3Days:
+			reset = diffDays >= 3
+		case data.TaskType_7Days:
+			reset = diffDays >= 7
 		}
 	}
 
@@ -215,11 +221,12 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 // 如果修改了用户的数据，返回true，否则返回false
 func (t *TaskCenter) checkTaskProgress(task *data.DashFunTaskData, user *data.DashFunUser, userData *data.DashFunTaskUserData, gameId string) bool {
 	changed := false
-	if task != nil && task.Condition.Type == data.TaskCondition_JoinTGChannel && userData.Status == data.TaskStatus_Verify_Pending {
-		//加入tg channel的任务，如果任务状态为verify_pending，则在获取列表时进行验证
-		changed = t.taskVerifyTGChannel(user, task, userData, gameId)
-
-	}
+	//2024-11-07 取消了自动验证，改为手动验证了
+	//if task != nil && task.Condition.Type == data.TaskCondition_JoinTGChannel && userData.Status == data.TaskStatus_Verify_Pending {
+	//	//加入tg channel的任务，如果任务状态为verify_pending，则在获取列表时进行验证
+	//	changed = t.taskVerifyTGChannel(user, task, userData, gameId)
+	//
+	//}
 	return changed
 }
 

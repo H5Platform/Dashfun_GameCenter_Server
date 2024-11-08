@@ -12,10 +12,10 @@ import (
 type adminUpdateTaskRequest struct {
 	Id        string                    `json:"id" form:"id" required:"false"`
 	Name      string                    `json:"name" form:"name" required:"true"`
-	Type      data.DashFunTaskType      `json:"type" form:"type" required:"true"`
+	Type      data.DashFunTaskType      `json:"task_type" form:"task_type" required:"true"`
 	GameId    string                    `json:"game_id" form:"game_id" required:"false"`
 	Category  data.DashFunTaskCategory  `json:"category" form:"category" required:"true"`
-	Condition data.DashFunTaskCondition `json:"condition" form:"condition" required:"true"`
+	Condition data.DashFunTaskCondition `json:"require" form:"require" required:"true"`
 	Reward    data.DashFunTaskReward    `json:"reward" form:"reward" required:"true"`
 	Open      bool                      `json:"open" form:"open" required:"false"`
 }
@@ -33,7 +33,7 @@ type adminTaskSearchRequest struct {
 //	@Produce	json
 //	@Param		game_id	path		string										true	"游戏id"
 //	@Success	200		{object}	api.JSONResult{data=[]data.DashFunTaskData}	"Search Result"
-//	@Router		/api/v1/admin/task/get/{game_id} [post]
+//	@Router		/api/v1/admin/task/get_by_game/{game_id} [post]
 func apiAdminTaskGetForGame(c *gin.Context, op *admin.AdminUser) {
 	gameId := c.Param("game_id")
 	if gameId == "" {
@@ -132,6 +132,6 @@ func apiAdminTaskCreate(c *gin.Context, op *admin.AdminUser) {
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "task/create", adminHandlerAuthWrapper(admin.AdminAuth_Task, apiAdminTaskCreate))
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "task/update", adminHandlerAuthWrapper(admin.AdminAuth_Task, apiAdminTaskUpdate))
-	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "task/get/:game_id", adminHandlerAuthWrapper(admin.AdminAuth_Task, apiAdminTaskGetForGame))
+	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "task/get_by_game/:game_id", adminHandlerAuthWrapper(admin.AdminAuth_Task, apiAdminTaskGetForGame))
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "task/search", adminHandlerAuthWrapper(admin.AdminAuth_Task, apiAdminTaskSearch))
 }

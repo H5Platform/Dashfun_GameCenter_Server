@@ -100,7 +100,8 @@ func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
 			switch task.Condition.Type {
 			case data.TaskCondition_JoinTGChannel:
 				//加入tg channel
-				changed = t.taskVerifyTGChannel(user, task, userData, game.Id)
+				//@2024-11-07 改为用户手动点击验证了
+				// changed = t.taskVerifyTGChannel(user, task, userData, game.Id)
 				break
 			case data.TaskCondition_PlayGame:
 				//进行指定游戏

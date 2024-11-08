@@ -393,7 +393,7 @@ func makeTestGame() {
 
 	game, err = s.FindGameByName("LocalTest")
 
-	ot, _ := time.ParseInLocation(time.DateTime, "2024-10-30 00:00:00", time.Local)
+	ot, _ := time.ParseInLocation(time.DateTime, "2024-11-05 00:00:00", time.Local)
 	if game == nil {
 		game = &data.DashFunGame{
 			Id:   "LocalTest",

@@ -173,8 +173,8 @@ func apiOnTaskClicked(c *gin.Context, user *data.DashFunUser) {
 // @Param		task_id	query	string	true	"任务Id"
 // @Authorize	"tma {token}"
 // @Success	200	{object}	api.JSONResult{data=data.DashFunTaskUserData}	"UserTaskInfo"
-// @Router		/api/v1/task/tg_verify [get]
-func apiVerifyUserTGChannelTask(c *gin.Context, user *data.DashFunUser) {
+// @Router		/api/v1/task/verify [get]
+func apiVerifyUserTask(c *gin.Context, user *data.DashFunUser) {
 	taskId, exist := c.GetQuery("task_id")
 	if !exist {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("param task_id is required"))
@@ -198,8 +198,8 @@ func apiVerifyUserTGChannelTask(c *gin.Context, user *data.DashFunUser) {
 	//	return
 	//}
 
-	//verify tg task
-	userData, err := taskcenter.Get().UserVerifyTGChannel(user, taskId, gameId)
+	//verify task
+	userData, err := taskcenter.Get().UserVerifyTask(user, taskId, gameId)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
 		return
@@ -209,7 +209,7 @@ func apiVerifyUserTGChannelTask(c *gin.Context, user *data.DashFunUser) {
 
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "list", userHandlerAuthWrapper(apiGetUserTaskInfo))
-	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "tg_verify", userHandlerAuthWrapper(apiVerifyUserTGChannelTask))
+	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "verify", userHandlerAuthWrapper(apiVerifyUserTask))
 	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "clicked", userHandlerAuthWrapper(apiOnTaskClicked))
 	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "claim", userHandlerAuthWrapper(apiUserClaimTaskReward))
 	web.GetService().RegisterApi(web.ApiModuleTask, web.GET, "count", userHandlerAuthWrapper(apiGetUserTaskCount))

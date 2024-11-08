@@ -78,10 +78,11 @@ func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 			return
 		}
 		if update.Message.Chat.Type == "private" {
-			b.SendMessage(ctx, &bot.SendMessageParams{
-				ChatID: update.Message.Chat.ID,
-				Text:   "Say /start",
-			})
+			//b.SendMessage(ctx, &bot.SendMessageParams{
+			//	ChatID: update.Message.Chat.ID,
+			//	Text:   "Say /start",
+			//})
+			startHandler(ctx, b, update)
 		}
 	} else if update.PreCheckoutQuery != nil {
 		//paymentId := update.PreCheckoutQuery.InvoicePayload

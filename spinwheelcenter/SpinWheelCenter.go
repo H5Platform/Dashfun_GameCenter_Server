@@ -77,8 +77,8 @@ func (s *SpinWheelCenter) GetSpinWheelUserData(userId, spinWheelId string) (*dat
 		if config.IsProd() {
 			needReset = !utils.IsSameDay(spinTime, nowTime)
 		} else {
-			//测试服务器，5分钟的cd
-			needReset = (nowTime.UnixMilli() - spinTime.UnixMilli()) > 5000*60
+			//测试服务器，1分钟的cd
+			needReset = (nowTime.UnixMilli() - spinTime.UnixMilli()) > 1000*60
 		}
 
 		if needReset {

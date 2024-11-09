@@ -400,11 +400,13 @@ func makeTestGame() {
 			Name: "LocalTest",
 			Desc: "LocalTest",
 			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
-			Url:      "https://tma-game-test.nexgami.com/",
-			Genre:    []int{1, 1001},
-			IconUrl:  "",
-			Time:     time.Now().UnixMilli(),
-			OpenTime: ot.UnixMilli(),
+			Url:        "https://tma-game-test.nexgami.com/",
+			MainPicUrl: "https://res.dashfun.games/pics/3kweb3-main.jpg",
+			LogoUrl:    "https://res.dashfun.games/pics/3kweb3-logo.png",
+			Genre:      []int{1, 1001},
+			IconUrl:    "https://res.dashfun.games/icons/3kweb3-512.jpg",
+			Time:       time.Now().UnixMilli(),
+			OpenTime:   ot.UnixMilli(),
 		}
 		g, err := dao.GetGameDao().SaveOrUpdate(game)
 		if err != nil {

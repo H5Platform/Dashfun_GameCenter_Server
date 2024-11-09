@@ -198,52 +198,6 @@ func makeProdTasks() {
 	//5. spend tg stars (can be a daily task , eg. spend 100 stars a day)
 	//
 
-	taskName = "Follow Official Twitter"
-	task = nil
-	task = t.GetTaskByName(taskName)
-	if task == nil {
-		//创建任务
-		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Normal, data.TaskCategory_Challenges,
-			data.DashFunTaskCondition{
-				Type:      data.TaskCondition_FollowX,
-				Count:     1,
-				Condition: "",
-				Link:      "https://x.com/war3kingdom",
-			},
-			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_GamePoint,
-				Amount:     10,
-			},
-		)
-		if err != nil {
-			log.Fatalf("create task fail, err:%v", err)
-		}
-		task = taskc
-	}
-
-	taskName = "Follow NexGami"
-	task = nil
-	task = t.GetTaskByName(taskName)
-	if task == nil {
-		//创建任务
-		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Normal, data.TaskCategory_Challenges,
-			data.DashFunTaskCondition{
-				Type:      data.TaskCondition_FollowX,
-				Count:     1,
-				Condition: "",
-				Link:      "https://x.com/nexgami",
-			},
-			data.DashFunTaskReward{
-				RewardType: data.TaskRewardType_GamePoint,
-				Amount:     8,
-			},
-		)
-		if err != nil {
-			log.Fatalf("create task fail, err:%v", err)
-		}
-		task = taskc
-	}
-
 	taskName = "Join Official Group"
 	task = nil
 	task = t.GetTaskByName(taskName)
@@ -296,6 +250,52 @@ func makeProdTasks() {
 
 	makeLevelUpTasks(w3kt)
 	makeSpendStarTasks(w3kt)
+
+	taskName = "Follow Official Twitter"
+	task = nil
+	task = t.GetTaskByName(taskName)
+	if task == nil {
+		//创建任务
+		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Normal, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_FollowX,
+				Count:     1,
+				Condition: "",
+				Link:      "https://x.com/war3kingdom",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_GamePoint,
+				Amount:     10,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
+
+	taskName = "Follow NexGami"
+	task = nil
+	task = t.GetTaskByName(taskName)
+	if task == nil {
+		//创建任务
+		taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Normal, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_FollowX,
+				Count:     1,
+				Condition: "",
+				Link:      "https://x.com/nexgami",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_GamePoint,
+				Amount:     8,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
 	//taskName = "Play Any Game"
 	//task = t.GetTaskByName(taskName)
 	//if task == nil {
@@ -439,7 +439,7 @@ func makeProdTasks() {
 func makeSpendStarTasks(game *data.DashFunGame) {
 	t := taskcenter.Get()
 
-	taskName := "Spend 100 TG Stars"
+	taskName := "Spend 100 Stars"
 	task := t.GetTaskByName(taskName)
 	if task == nil {
 		//创建测试任务
@@ -461,7 +461,7 @@ func makeSpendStarTasks(game *data.DashFunGame) {
 		task = taskc
 	}
 
-	taskName = "Spend 200 TG Stars"
+	taskName = "Spend 200 Stars"
 	task = t.GetTaskByName(taskName)
 	if task == nil {
 		//创建测试任务
@@ -483,11 +483,11 @@ func makeSpendStarTasks(game *data.DashFunGame) {
 		task = taskc
 	}
 
-	taskName = "Spend 1000 TG Stars over 7 days"
+	taskName = "Spend 1000 Stars"
 	task = t.GetTaskByName(taskName)
 	if task == nil {
 		//创建测试任务
-		taskc, err := t.CreateTaskAutoId(taskName, game.Id, data.TaskType_Daily, data.TaskCategory_Daily,
+		taskc, err := t.CreateTaskAutoId(taskName, game.Id, data.TaskType_7Days, data.TaskCategory_Weekly,
 			data.DashFunTaskCondition{
 				Type:      data.TaskCondition_SpendTGStars,
 				Count:     1000,

@@ -204,10 +204,15 @@ func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount float32) (*
 }
 
 func (c *CoinCenter) GetCoinUserData(userId, coinId string) *data.CoinUserData {
+	_, ok := c.users.Has(userId)
+	if !ok {
+		c.loadUserCoins(userId)
+	}
 	cud := c.users.GetCoinsUserData(userId)
 	cd := cud.GetCoinUserData(coinId)
 	if cd == nil {
 		cd = newCoinUserData(userId, coinId)
+		cud.AddOrUpdateUserData(cd)
 		dao.GetCoinUserDao().SaveOrUpdate(cd)
 	}
 	return cd

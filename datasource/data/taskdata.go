@@ -26,6 +26,7 @@ const (
 const (
 	TaskCategory_Challenges DashFunTaskCategory = iota + 1
 	TaskCategory_Daily                          //每日
+	TaskCategory_Weekly                         //每7天,这个不是固定周，从用户接到任务开始算第一天
 )
 
 const (

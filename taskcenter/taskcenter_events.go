@@ -122,3 +122,34 @@ func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
 		}
 	}
 }
+
+func (t *TaskCenter) onUserBindAddress(evt *events.EventUserBindWallet) {
+	user := evt.User
+
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+
+	for _, task := range t.tasks {
+		if task.Open && (isDashFunTask(task)) { // || task.GameId == game.Id) {
+			changed := false
+			userData, err := t.GetTaskUserData(user.Id, task.Id)
+			if err != nil {
+				zap.S().Errorw("GetTaskUserData Error", "user", user.Id, "task", task.Id, "err", err)
+				continue
+			}
+
+			switch task.Condition.Type {
+			case data.TaskCondition_BindWallet:
+				if task.Condition.Condition == evt.Chain {
+					changed = t.taskVerifyWalletAddress(user, task, userData)
+				}
+				break
+			}
+
+			if changed {
+				userData.Time = time.Now().UnixMilli()
+				t.saveTaskUserData(userData)
+			}
+		}
+	}
+}

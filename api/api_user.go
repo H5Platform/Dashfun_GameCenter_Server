@@ -1,6 +1,7 @@
 package api
 
 import (
+	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	"github.com/gin-gonic/gin"
@@ -68,7 +69,37 @@ func apiEnterGame(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(user.Id))
 }
 
+type WalletBindReq struct {
+	Chain   string `json:"chain" form:"chain" binding:"required"`
+	Address string `json:"address" form:"address" binding:"required"`
+}
+
+// @Summary	用户绑定钱包地址
+// @Tags		User API
+// @Produce	json
+// @Accept	json
+// @Param		chain	body	string	true	"网络名称"
+// @Param		address	body	string	true	"钱包地址"
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=string}	"DashFunUserId"
+// @Router		/api/v1/user/bind_wallet [post]
+func apiUserBindWallet(c *gin.Context, user *data.DashFunUser) {
+	req := &WalletBindReq{}
+	if err := c.ShouldBindBodyWithJSON(req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	u, err := usercenter.Get().UserBindWallet(user.Id, req.Chain, req.Address)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(u.WalletAddress))
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "tg_login", apiTgUserLogin)
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "enter_game", apiEnterGame)
+	web.GetService().RegisterApi(web.ApiModuleUser, web.POST, "bind_wallet", userHandlerAuthWrapper(apiUserBindWallet))
+
 }

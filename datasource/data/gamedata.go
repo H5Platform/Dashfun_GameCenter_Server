@@ -39,6 +39,11 @@ func init() {
 			Name:   "New",
 			Hidden: true,
 		},
+		2: {
+			Id:     2,
+			Name:   "Popular",
+			Hidden: true,
+		},
 		1001: {
 			Id:     1001,
 			Name:   "RPG",
@@ -47,6 +52,11 @@ func init() {
 		1002: {
 			Id:     1002,
 			Name:   "Card",
+			Hidden: false,
+		},
+		1003: {
+			Id:     1003,
+			Name:   "Strategy",
 			Hidden: false,
 		},
 	}

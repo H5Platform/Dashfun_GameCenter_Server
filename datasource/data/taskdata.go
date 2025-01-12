@@ -15,12 +15,13 @@ const (
 )
 
 const (
-	TaskCondition_PlayRandomGame DashFunTaskConditionType = iota + 1 //订阅型任务，例如follow twitter, join tg channel...
+	TaskCondition_PlayRandomGame DashFunTaskConditionType = iota + 1 //玩任意游戏指定次数
 	TaskCondition_PlayGame                                           //玩指定游戏指定次数，游戏id在task中指定
 	TaskCondition_LevelUp                                            //在指定游戏中升级到指定等级
 	TaskCondition_JoinTGChannel                                      //加入指定的tg channel
 	TaskCondition_FollowX                                            //Follow X
 	TaskCondition_SpendTGStars                                       //在TG中花费星星
+	TaskCondition_BindWallet                                         //绑定钱包
 )
 
 const (
@@ -50,7 +51,8 @@ const (
 	TaskStatus_InProgress     DashFunTaskStatus = iota + 1 //任务正在进行中
 	TaskStatus_Verify_Pending                              //任务需要验证
 	TaskStatus_Completed
-	TaskStatus_Claimed //任务奖励已领取
+	TaskStatus_Claimed          //任务奖励已领取
+	TaskStatus_ReturnInProgress //专门给followx类型设置的状态，遇到这个状态按照inprogress处理，但不清理savedata
 )
 
 type DashFunTaskReward struct {

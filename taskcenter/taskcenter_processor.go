@@ -24,20 +24,23 @@ func (t *TaskCenter) UserClickedTask(user *data.DashFunUser, taskId string, game
 		return nil, err
 	}
 	changed := false
-	if userData.Status == data.TaskStatus_InProgress {
+	if userData.Status == data.TaskStatus_InProgress || userData.Status == data.TaskStatus_ReturnInProgress {
 		switch task.Condition.Type {
 		case data.TaskCondition_FollowX:
-			//follow x类，进入pending状态，同时给一个随机数，2-4，来模拟验证，让用户反复操作保证follow
+			//follow x类，进入pending状态，同时给一个随机数，2-3，来模拟验证，让用户反复操作保证follow
+			if userData.Status == data.TaskStatus_InProgress {
+				//inprogress状态时新接任务
+				checkData := &data.TaskSaveDataFollowX{
+					RandomCount: rand.Intn(1) + 2,
+					CheckCount:  0,
+				}
+				bytes, err := json.Marshal(checkData)
+				if err != nil {
+					return nil, err
+				}
+				userData.SaveData = string(bytes)
+			}
 			userData.Status = data.TaskStatus_Verify_Pending
-			checkData := &data.TaskSaveDataFollowX{
-				RandomCount: rand.Intn(2) + 2,
-				CheckCount:  0,
-			}
-			bytes, err := json.Marshal(checkData)
-			if err != nil {
-				return nil, err
-			}
-			userData.SaveData = string(bytes)
 			changed = true
 			break
 
@@ -109,8 +112,11 @@ func (t *TaskCenter) taskVerifyFollowX(user *data.DashFunUser, task *data.DashFu
 				ret = false
 			} else {
 				save.CheckCount++
+				//随机一个重复次数，如果没达到重试次数，任务状态变回inprogress，迫使用户再次点击follow
 				if save.CheckCount >= save.RandomCount {
 					userData.Status = data.TaskStatus_Completed
+				} else {
+					userData.Status = data.TaskStatus_ReturnInProgress
 				}
 				marshal, err := json.Marshal(save)
 				if err != nil {
@@ -219,12 +225,12 @@ func (t *TaskCenter) taskRecordPlayRandomGame(user *data.DashFunUser, task *data
 }
 func (t *TaskCenter) taskRecordPlayerLevelUp(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string, playerLevel int) bool {
 	if task.Condition.Type == data.TaskCondition_LevelUp && userData.Status == data.TaskStatus_InProgress {
-		l, err := strconv.Atoi(task.Condition.Condition)
-		if err != nil {
-			zap.S().Errorw("task condition config error", "err", err, "task", task)
-			return false
-		}
-
+		//l, err := strconv.Atoi(task.Condition.Condition)
+		//if err != nil {
+		//	zap.S().Errorw("task condition config error", "err", err, "task", task)
+		//	return false
+		//}
+		l := task.Condition.Count
 		if playerLevel >= l {
 			//满足条件
 			userData.Progress = playerLevel
@@ -246,6 +252,19 @@ func (t *TaskCenter) taskRecordUserPayment(user *data.DashFunUser, task *data.Da
 			ret = true
 		}
 		if userData.Progress >= task.Condition.Count {
+			userData.Status = data.TaskStatus_Completed
+			ret = true
+		}
+		return ret
+	}
+	return false
+}
+
+func (t *TaskCenter) taskVerifyWalletAddress(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData) bool {
+	if task.Condition.Type == data.TaskCondition_BindWallet && userData.Status == data.TaskStatus_InProgress {
+		ret := false
+		addr, ok := user.WalletAddress[task.Condition.Condition]
+		if ok && len(addr) > 0 {
 			userData.Status = data.TaskStatus_Completed
 			ret = true
 		}

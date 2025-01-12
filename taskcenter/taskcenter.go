@@ -48,6 +48,7 @@ func (t *TaskCenter) init() {
 	events.UserLoginEvents.On(t.onUserLogin)
 	events.PlayerLevelUpEvents.On(t.onGameReportPlayerLevelUp)
 	events.UserPaymentEvents.On(t.onUserPayment)
+	events.UserBindAddressEvents.On(t.onUserBindAddress)
 }
 
 func (t *TaskCenter) newTasId() string {
@@ -227,6 +228,10 @@ func (t *TaskCenter) checkTaskProgress(task *data.DashFunTaskData, user *data.Da
 	//	changed = t.taskVerifyTGChannel(user, task, userData, gameId)
 	//
 	//}
+
+	if task != nil && task.Condition.Type == data.TaskCondition_BindWallet {
+		changed = t.taskVerifyWalletAddress(user, task, userData)
+	}
 	return changed
 }
 
@@ -297,7 +302,7 @@ func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *dat
 	defer t.tasksLock.RUnlock()
 
 	for _, task := range t.tasks {
-		if isDashFunTask(task) || task.GameId == gameId || gameId == "all" {
+		if task.Open && (isDashFunTask(task) || task.GameId == gameId || gameId == "all") {
 			userData, err := t.GetTaskUserData(userId, task.Id)
 			if err != nil {
 				zap.S().Errorw("get user task data error", "user", userId, "task", task)

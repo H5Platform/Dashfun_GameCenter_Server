@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
+	"github.com/tonkeeper/tongo/ton"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"strconv"
@@ -179,5 +180,36 @@ func (uc *UserCenter) GetDashFunUser(userId string) (*data.DashFunUser, error) {
 		return nil, errors.New("user does not exist")
 	}
 
+	return user, nil
+}
+
+func (uc *UserCenter) UserBindWallet(userId, chain, address string) (*data.DashFunUser, error) {
+	user, err := uc.GetDashFunUser(userId)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user does not exist")
+	}
+
+	if chain == "Ton" {
+		acc, err := ton.ParseAccountID(address)
+		zap.S().Infow("user bind wallet", "chain", chain, "address", address, "acc", acc.ToHuman(false, false))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if user.WalletAddress == nil {
+		user.WalletAddress = make(map[string]string)
+	}
+
+	user.WalletAddress[chain] = address
+	dao.GetUserDao().SaveOrUpdate(user)
+	events.UserBindAddressEvents.Emit(&events.EventUserBindWallet{
+		User:    user,
+		Chain:   chain,
+		Address: address,
+	})
 	return user, nil
 }

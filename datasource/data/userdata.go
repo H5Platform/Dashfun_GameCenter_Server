@@ -10,15 +10,16 @@ const (
 
 // DashFunUser user data db
 type DashFunUser struct {
-	Id          string          `json:"id" bson:"_id"`                    //全局userId
-	ChannelId   string          `json:"channel_id" bson:"channel_id"`     //渠道方id
-	DisplayName string          `json:"display_name" bson:"display_name"` //显示名称
-	UserName    string          `json:"user_name" bson:"user_name"`       //用户名
-	AvatarUrl   string          `json:"avatar_url" bson:"avatar_url"`     //avatar地址
-	From        DashFunUserFrom `json:"from" bson:"from"`                 //用户来源
-	CreateData  int64           `json:"create_data" bson:"create_data"`   //创建时间
-	LoginTime   int64           `json:"login_time" bson:"login_time"`     //登录时间
-	LogoffTime  int64           `json:"logoff_time" bson:"logoff_time"`   //登出时间
+	Id            string            `json:"id" bson:"_id"`                        //全局userId
+	ChannelId     string            `json:"channel_id" bson:"channel_id"`         //渠道方id
+	DisplayName   string            `json:"display_name" bson:"display_name"`     //显示名称
+	UserName      string            `json:"user_name" bson:"user_name"`           //用户名
+	AvatarUrl     string            `json:"avatar_url" bson:"avatar_url"`         //avatar地址
+	From          DashFunUserFrom   `json:"from" bson:"from"`                     //用户来源
+	CreateData    int64             `json:"create_data" bson:"create_data"`       //创建时间
+	LoginTime     int64             `json:"login_time" bson:"login_time"`         //登录时间
+	LogoffTime    int64             `json:"logoff_time" bson:"logoff_time"`       //登出时间
+	WalletAddress map[string]string `json:"wallet_address" bson:"wallet_address"` //钱包地址 key=网络，value=地址
 }
 
 type TGInfo struct {

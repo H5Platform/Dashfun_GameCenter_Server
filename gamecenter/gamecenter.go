@@ -272,6 +272,14 @@ func (gc *GameCenter) FindGamesBackend(keyword string, genre []int, status data.
 	return dao.GetGameDao().FindGames(keyword, genre, status, size, page)
 }
 
+func (gc *GameCenter) GetGameGenres() []data.DashFunGameGenre {
+	ret := make([]data.DashFunGameGenre, 0)
+	for _, genre := range data.Genres {
+		ret = append(ret, genre)
+	}
+	return ret
+}
+
 func (gc *GameCenter) genApiSecret() string {
 	secret := "dashfun-" + gc.secretGen.NextStrId()
 	secret = base64.StdEncoding.EncodeToString([]byte(secret))

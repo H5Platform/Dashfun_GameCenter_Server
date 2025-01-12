@@ -126,6 +126,14 @@ func makeProdCoins() {
 			log.Fatal(err)
 		}
 	}
+
+	_, exist = c.GetCoinByName("TestPoint")
+	if !exist {
+		_, err := c.CreateCoin("", "TestPoint", "TestPoint", "TestPoint", "test-h5-brain", false, 0, make(map[string]string))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func makeProdGames() {
@@ -135,7 +143,7 @@ func makeProdGames() {
 		log.Fatal(err)
 	}
 
-	ot, _ := time.ParseInLocation(time.DateTime, "2024-11-10 11:00:00", time.Local)
+	ot, _ := time.ParseInLocation(time.DateTime, "2024-12-09 06:00:00", time.UTC)
 
 	if game == nil {
 		//create game
@@ -151,6 +159,33 @@ func makeProdGames() {
 			IconUrl:    "https://res.dashfun.games/icons/3kweb3-512.jpg",
 			Time:       time.Now().UnixMilli(),
 			OpenTime:   ot.UnixMilli(),
+		}
+		g, err := s.SaveGame(game)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Game Saved : %v", g)
+	}
+
+	game, err = s.FindGameByName("Brain(H5 Test)")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if game == nil {
+		//create game
+		game = &data.DashFunGame{
+			Id:   "h5-test-brain",
+			Name: "Brain(H5 Test)",
+			Desc: "Only for test",
+			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
+			Url:        "https://h5-test-brain.dashfun.games",
+			MainPicUrl: "",
+			LogoUrl:    "",
+			Genre:      []int{1, 1001},
+			IconUrl:    "",
+			Time:       time.Now().UnixMilli(),
+			OpenTime:   0,
 		}
 		g, err := s.SaveGame(game)
 		if err != nil {
@@ -197,6 +232,28 @@ func makeProdTasks() {
 	//4. level up to level (can create multiple tasks, eg. Level up to Lv.3   Level up to Lv.10)
 	//5. spend tg stars (can be a daily task , eg. spend 100 stars a day)
 	//
+
+	taskName = "Connect your Ton wallet"
+	task = nil
+	task = t.GetTaskByName(taskName)
+	if task == nil {
+		taskc, err := t.CreateTaskAutoId(taskName, "", data.TaskType_Normal, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_BindWallet,
+				Count:     1,
+				Condition: "Ton", //需要绑定的网络
+				Link:      "",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_GamePoint,
+				Amount:     50,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
 
 	taskName = "Join Official Group"
 	task = nil

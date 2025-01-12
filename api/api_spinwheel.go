@@ -58,6 +58,10 @@ func apiUserGetSpinWheelInfo(c *gin.Context, user *data.DashFunUser) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
 	}
+	if gameWheel == nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError("spinWheel is not existed"))
+		return
+	}
 	userData, err := center.GetSpinWheelUserData(user.Id, gameWheel.Id)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))

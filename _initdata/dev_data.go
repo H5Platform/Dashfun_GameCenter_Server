@@ -363,6 +363,29 @@ func makeTestTask() {
 		}
 		task = taskc
 	}
+
+	taskId = "LocalTestBindWallet"
+	task = nil
+	task = t.GetTaskById(taskId)
+	if task == nil {
+		//创建测试任务
+		taskc, err := t.CreateTask(taskId, "Connect your ton wallet", "", data.TaskType_Normal, data.TaskCategory_Challenges,
+			data.DashFunTaskCondition{
+				Type:      data.TaskCondition_BindWallet,
+				Count:     1,
+				Condition: "Ton", //需要绑定的网络
+				Link:      "",
+			},
+			data.DashFunTaskReward{
+				RewardType: data.TaskRewardType_GamePoint,
+				Amount:     100,
+			},
+		)
+		if err != nil {
+			log.Fatalf("create task fail, err:%v", err)
+		}
+		task = taskc
+	}
 }
 
 func makeTestGame() {
@@ -409,6 +432,33 @@ func makeTestGame() {
 			OpenTime:   ot.UnixMilli(),
 		}
 		g, err := dao.GetGameDao().SaveOrUpdate(game)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Game Saved : %v", g)
+	}
+
+	game, err = s.FindGameByName("Brain(H5 Test)")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if game == nil {
+		//create game
+		game = &data.DashFunGame{
+			Id:   "h5-test-brain",
+			Name: "Brain(H5 Test)",
+			Desc: "Only for test",
+			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
+			Url:        "https://h5-test-brain.dashfun.games",
+			MainPicUrl: "",
+			LogoUrl:    "",
+			Genre:      []int{1, 1001},
+			IconUrl:    "",
+			Time:       time.Now().UnixMilli(),
+			OpenTime:   0,
+		}
+		g, err := s.SaveGame(game)
 		if err != nil {
 			log.Fatal(err)
 		}

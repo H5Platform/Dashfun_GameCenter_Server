@@ -243,7 +243,9 @@ func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	//b.SendPhoto(ctx, msg1)
 
 	game, err := gamecenter.Get().FindGameByName("War Three Kingdoms")
-
+	if err != nil || game == nil {
+		return
+	}
 	buttons2 := [][]models.InlineKeyboardButton{
 		{
 			{

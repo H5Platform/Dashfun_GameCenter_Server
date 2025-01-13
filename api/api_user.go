@@ -3,6 +3,7 @@ package api
 import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/usercenter"
+	"dashfun_gamecenter/utils"
 	"dashfun_gamecenter/web"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -27,7 +28,7 @@ func apiTgUserLogin(c *gin.Context) {
 	//	return
 	//}
 
-	auth, err := CheckAuthorize(c)
+	auth, err := utils.CheckAuthorize(c)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
 		return
@@ -49,7 +50,7 @@ func apiTgUserLogin(c *gin.Context) {
 // @Success	200	{object}	api.JSONResult{data=string}	"DashFunUserId"
 // @Router		/api/v1/user/enter_game [get]
 func apiEnterGame(c *gin.Context) {
-	auth, err := CheckAuthorize(c)
+	auth, err := utils.CheckAuthorize(c)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
 		return

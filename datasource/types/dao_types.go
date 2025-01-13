@@ -15,6 +15,7 @@ type DaoImpl interface {
 	GetAdminUserLoginInfoDao() AdminUserLoginInfoDao
 	GetSpinWheelDao() SpinWheelDao
 	GetSpinWheelUserDao() SpinWheelUserDao
+	GetUserSaveDataDao() DashFunUserSaveDataDao
 }
 
 type UserDao interface {
@@ -79,4 +80,9 @@ type SpinWheelDao interface {
 type SpinWheelUserDao interface {
 	SaveOrUpdate(userData *data.SpinWheelUserData) (*data.SpinWheelUserData, error)
 	GetUserSpinWheelData(userId, gameId string) (*data.SpinWheelUserData, error)
+}
+
+type DashFunUserSaveDataDao interface {
+	SaveOrUpdate(user *data.DashFunUserSaveData) (*data.DashFunUserSaveData, error)
+	GetUserSaveData(userId, gameId, key string) (*data.DashFunUserSaveData, error)
 }

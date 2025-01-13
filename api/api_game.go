@@ -3,6 +3,7 @@ package api
 import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
+	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,11 @@ type UserGameSearchRequest struct {
 	Genre   []int  `json:"genre" form:"genre"` //游戏类型Id
 	Size    int64  `form:"size"`
 	Page    int64  `form:"page"`
+}
+
+type UserGameDataRequest struct {
+	Key  string `form:"key" binding:"required"`
+	Data string `form:"data"`
 }
 
 // @Summary	telegram用户开启游戏
@@ -73,8 +79,58 @@ func apiUserGetGenres(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(gamecenter.Get().GetGameGenres()))
 }
 
+// @Summary 用户保存数据
+// @Tags		Games API
+// @Produce	json
+// @Authorize "tma {token}"
+// @Param		key		body		string								true	"数据存储键值"
+// @Param		data	body		string								true	"要存储的数据"
+// @Success	200		{object}	api.JSONResult{data=bool}	"save result"
+// @Router		/api/v1/game/{id}/data [post]
+func apiUserSetData(c *gin.Context, user *data.DashFunUser) {
+	gameId := c.Param("id")
+	req := &UserGameDataRequest{}
+	if err := c.ShouldBindBodyWithJSON(req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	_, err := usercenter.Get().UserSaveData(user.Id, gameId, req.Key, req.Data)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(true))
+}
+
+// @Summary 用户读取数据
+// @Tags		Games API
+// @Produce	json
+// @Authorize "tma {token}"
+// @Param		key		body		string								true	"要读取的数据键值"
+// @Success	200		{object}	api.JSONResult{data=string}	"save data"
+// @Router		/api/v1/game/{id}/data [get]
+func apiUserGetData(c *gin.Context, user *data.DashFunUser) {
+	gameId := c.Param("id")
+	req := &UserGameDataRequest{}
+
+	if err := c.ShouldBindBodyWithJSON(req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	saveData, err := usercenter.Get().UserGetData(user.Id, gameId, req.Key)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(saveData))
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id", apiUserStartGame)
 	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, "search", userHandlerAuthWrapper(apiUserFindGames))
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, "genres", apiUserGetGenres)
+
+	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, ":id/data", userHandlerAuthWrapper(apiUserSetData))
+	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/data", userHandlerAuthWrapper(apiUserGetData))
 }

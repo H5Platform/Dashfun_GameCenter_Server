@@ -26,6 +26,7 @@ type DaoImplMongo struct {
 	adminUserLoginInfoDao types.AdminUserLoginInfoDao
 	spinWheelDao          types.SpinWheelDao
 	spinWheelUserDao      types.SpinWheelUserDao
+	userSaveDataDao       types.DashFunUserSaveDataDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
@@ -42,6 +43,7 @@ func NewDaoImplMongo() *DaoImplMongo {
 		adminUserLoginInfoDao: GetAdminUserLoginInfoDaoMongo(),
 		spinWheelDao:          GetSpinWheelDaoMongo(),
 		spinWheelUserDao:      GetSpinWheelUserDaoMongo(),
+		userSaveDataDao:       GetUserSaveDataDaoMongo(),
 	}
 }
 
@@ -61,8 +63,9 @@ func (d *DaoImplMongo) GetAdminUserDao() types.AdminUserDao {
 func (d *DaoImplMongo) GetAdminUserLoginInfoDao() types.AdminUserLoginInfoDao {
 	return d.adminUserLoginInfoDao
 }
-func (d *DaoImplMongo) GetSpinWheelDao() types.SpinWheelDao         { return d.spinWheelDao }
-func (d *DaoImplMongo) GetSpinWheelUserDao() types.SpinWheelUserDao { return d.spinWheelUserDao }
+func (d *DaoImplMongo) GetSpinWheelDao() types.SpinWheelDao              { return d.spinWheelDao }
+func (d *DaoImplMongo) GetSpinWheelUserDao() types.SpinWheelUserDao      { return d.spinWheelUserDao }
+func (d *DaoImplMongo) GetUserSaveDataDao() types.DashFunUserSaveDataDao { return d.userSaveDataDao }
 
 func GetMongoDatabase() *mongo.Database {
 	mongoCfg := config.GetConfig().Mongo

@@ -1,6 +1,9 @@
 package data
 
-import initdata "github.com/telegram-mini-apps/init-data-golang"
+import (
+	"dashfun_gamecenter/apperrors"
+	initdata "github.com/telegram-mini-apps/init-data-golang"
+)
 
 type DashFunUserFrom int
 
@@ -27,7 +30,56 @@ type TGInfo struct {
 	InitData *initdata.InitData
 }
 
+type UserSaveData struct {
+	GameId string
+	//key->data
+	SaveData map[string]string
+}
+
+func (usd *UserSaveData) GetSaveData(key string) string {
+	v, ok := usd.SaveData[key]
+	if ok {
+		return v
+	}
+	return ""
+}
+
+func NewOnlineUser(User *DashFunUser, TGInfo *TGInfo) *OnlineUser {
+	return &OnlineUser{
+		User:     User,
+		TGInfo:   TGInfo,
+		SaveData: map[string]*UserSaveData{},
+	}
+}
+
 type OnlineUser struct {
 	User   *DashFunUser
 	TGInfo *TGInfo
+	//用户在各个游戏中存储的数据
+	//GameId -> *UserSaveData
+	SaveData map[string]*UserSaveData
+}
+
+func (ou *OnlineUser) GetGameSaveData(gameId, key string) (string, error) {
+	save, ok := ou.SaveData[gameId]
+	if !ok {
+		return "", apperrors.ErrUserGameSaveDataNotExisted
+	}
+	d, ok := save.SaveData[key]
+	if !ok {
+		return "", nil
+	}
+	return d, nil
+}
+
+func (ou *OnlineUser) SetGameSaveData(gameId, key, saveData string) {
+	save, ok := ou.SaveData[gameId]
+	if !ok {
+		save = &UserSaveData{
+			GameId:   gameId,
+			SaveData: map[string]string{},
+		}
+		ou.SaveData[gameId] = save
+	}
+	save.SaveData[key] = saveData
 }

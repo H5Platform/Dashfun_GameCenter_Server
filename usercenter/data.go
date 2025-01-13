@@ -53,10 +53,7 @@ func (o *OnlineUsers) TGUserLogin(user *data.DashFunUser, tgInfo *data.TGInfo) *
 
 	u, e := o.Users[user.Id]
 	if !e {
-		u = &data.OnlineUser{
-			User:   user,
-			TGInfo: tgInfo,
-		}
+		u = data.NewOnlineUser(user, tgInfo)
 		o.Users[user.Id] = u
 	}
 	o.ChannelMap[user.ChannelId] = user.Id

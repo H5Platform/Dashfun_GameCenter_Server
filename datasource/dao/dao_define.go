@@ -38,3 +38,7 @@ func GetSpinWheelDao() types.SpinWheelDao {
 func GetSpinWheelUserDao() types.SpinWheelUserDao {
 	return daoImpl.GetSpinWheelUserDao()
 }
+
+func GetUserSaveDataDao() types.DashFunUserSaveDataDao {
+	return daoImpl.GetUserSaveDataDao()
+}

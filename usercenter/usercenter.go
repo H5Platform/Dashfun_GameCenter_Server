@@ -1,6 +1,7 @@
 package usercenter
 
 import (
+	"dashfun_gamecenter/apperrors"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
@@ -64,7 +65,7 @@ func (uc *UserCenter) newUserId() string {
 
 // UserEnterGame 用户点击了Play按钮进入游戏
 func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUser, error) {
-	user, err := uc.GetDashFunUserByTgAuthData(tgAuthData)
+	user, err := uc.GetDashFunUserByTgAuthData(tgAuthData, false)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +84,7 @@ func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUse
 }
 
 func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
-	initData, err := parseInitData(tgAuthData, time.Hour)
+	initData, err := parseInitData(tgAuthData, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +136,8 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 }
 
 // GetDashFunUserByTgAuthData 根据用户的tgAuthData，找到对应的DashFunUser
-func (uc *UserCenter) GetDashFunUserByTgAuthData(tgAuthData string) (*data.DashFunUser, error) {
+// onlineUserOnly -- 是否只检查在线用户
+func (uc *UserCenter) GetDashFunUserByTgAuthData(tgAuthData string, onlineUserOnly bool) (*data.DashFunUser, error) {
 	initData, err := parseInitData(tgAuthData, 0)
 	if err != nil {
 		return nil, err
@@ -147,17 +149,22 @@ func (uc *UserCenter) GetDashFunUserByTgAuthData(tgAuthData string) (*data.DashF
 	var user *data.DashFunUser
 
 	if ou == nil {
-		uf, err := dao.GetUserDao().GetUserByChannelId(channelId)
-		if err != nil {
-			return nil, err
+		//只检查在线用户的情况下不读取数据库
+		if onlineUserOnly {
+			user = nil
+		} else {
+			uf, err := dao.GetUserDao().GetUserByChannelId(channelId)
+			if err != nil {
+				return nil, err
+			}
+			user = uf
 		}
-		user = uf
 	} else {
 		user = ou.User
 	}
 	if user == nil {
 		zap.S().Errorw("User Not Found By TGAuthData", "tgUser", initData.User)
-		return nil, errors.New("user does not exist")
+		return nil, apperrors.ErrUserDoesNotExist
 	}
 
 	return user, nil
@@ -212,4 +219,58 @@ func (uc *UserCenter) UserBindWallet(userId, chain, address string) (*data.DashF
 		Address: address,
 	})
 	return user, nil
+}
+
+// UserSaveData 保存用户数据
+func (uc *UserCenter) UserSaveData(userId, gameId, key, saveData string) (*data.DashFunUserSaveData, error) {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		//只有在线用户给保存数据
+		return nil, apperrors.ErrOnlineUserNotExist
+	}
+
+	ou.SetGameSaveData(gameId, key, saveData)
+	//同时存库
+	d := dao.GetUserSaveDataDao()
+	ret := &data.DashFunUserSaveData{
+		UserId: userId,
+		GameId: gameId,
+		Key:    key,
+		Data:   saveData,
+	}
+	d.SaveOrUpdate(ret)
+	return ret, nil
+}
+
+// UserGetData 用户获取保存的数据
+// userId	用户Id
+// gameId	游戏Id
+// key		数据键值
+func (uc *UserCenter) UserGetData(userId, gameId, key string) (string, error) {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		//只有在线用户给读取数据
+		return "", apperrors.ErrOnlineUserNotExist
+	}
+
+	gameSaveData, err := ou.GetGameSaveData(gameId, key)
+	if errors.Is(err, apperrors.ErrUserGameSaveDataNotExisted) {
+		//用户数据不存在，尝试读取数据库
+		d := dao.GetUserSaveDataDao()
+		saveData, err := d.GetUserSaveData(userId, gameId, key)
+		if err != nil {
+			return "", err
+		}
+		if saveData == nil {
+			//用户没有保存过数据，临时存储一条
+			ou.SetGameSaveData(gameId, key, "")
+		} else {
+			ou.SetGameSaveData(gameId, key, saveData.Data)
+			gameSaveData = saveData.Data
+		}
+	} else if err != nil {
+		return "", err
+	}
+
+	return gameSaveData, nil
 }

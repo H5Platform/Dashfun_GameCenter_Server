@@ -1,9 +1,13 @@
 package web
 
 import (
+	"dashfun_gamecenter/apperrors"
 	"dashfun_gamecenter/config"
+	"dashfun_gamecenter/usercenter"
+	"dashfun_gamecenter/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"sync"
@@ -102,6 +106,25 @@ func CorsMiddleware() gin.HandlerFunc {
 	}
 }
 
+func TGLoginCheckMiddleware(excludePaths ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		for _, path := range excludePaths {
+			if c.FullPath() == path {
+				return
+			}
+		}
+
+		auth, err := utils.CheckAuthorize(c)
+		if err == nil {
+			_, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token, true)
+			if errors.Is(err, apperrors.ErrUserDoesNotExist) {
+				//用户调用api时没有在在线用户列表中，有可能由于重启服务器导致，重新进行用户登录
+				usercenter.Get().TGUserLogin(auth.Token)
+			}
+		}
+	}
+}
+
 func (s *Service) getApiModule(name ApiModuleName) *ApiModule {
 	module, ok := s.apiMap[name]
 	if !ok {
@@ -135,7 +158,7 @@ func (s *Service) Run() error {
 			Output:    nil,
 			SkipPaths: []string{"/health"},
 		}),
-		noCacheMiddleWare(), CorsMiddleware() /*, authMiddleWare()*/)
+		noCacheMiddleWare(), CorsMiddleware(), TGLoginCheckMiddleware("/api/v1/user/tg_login") /*, authMiddleWare()*/)
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "ok")
 	})

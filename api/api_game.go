@@ -106,19 +106,17 @@ func apiUserSetData(c *gin.Context, user *data.DashFunUser) {
 // @Tags		Games API
 // @Produce	json
 // @Authorize "tma {token}"
-// @Param		key		body		string								true	"要读取的数据键值"
+// @Param		key		query		string								true	"要读取的数据键值"
 // @Success	200		{object}	api.JSONResult{data=string}	"save data"
 // @Router		/api/v1/game/{id}/data [get]
 func apiUserGetData(c *gin.Context, user *data.DashFunUser) {
 	gameId := c.Param("id")
-	req := &UserGameDataRequest{}
-
-	if err := c.ShouldBindBodyWithJSON(req); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+	key, exist := c.GetQuery("key")
+	if !exist {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError("param key not found"))
 		return
 	}
-
-	saveData, err := usercenter.Get().UserGetData(user.Id, gameId, req.Key)
+	saveData, err := usercenter.Get().UserGetData(user.Id, gameId, key)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return

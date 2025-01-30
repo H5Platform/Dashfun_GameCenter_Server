@@ -25,7 +25,7 @@ type DashFunGameStatus int
 
 const (
 	DashFunGameStatus_NoChange DashFunGameStatus = iota //给update使用的，无变化
-	DashFunGameStatus_Pending                           //刚创建的游戏，等待审核
+	DashFunGameStatus_Pending                           //刚创建的游戏，等待审核，pending状态的游戏充值不扣费
 	DashFunGameStatus_Online                            //审核上线的游戏
 	DashFunGameStatus_Removed                           //已经下线的游戏
 )

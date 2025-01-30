@@ -7,6 +7,7 @@ import (
 	"dashfun_gamecenter/web"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -20,6 +21,11 @@ type UserGameSearchRequest struct {
 type UserGameDataRequest struct {
 	Key  string `form:"key" binding:"required"`
 	Data string `form:"data"`
+}
+
+type UserGetDataResult struct {
+	Key  string `json:"key"`
+	Data string `json:"data"`
 }
 
 // @Summary	telegram用户开启游戏
@@ -95,11 +101,12 @@ func apiUserSetData(c *gin.Context, user *data.DashFunUser) {
 		return
 	}
 	_, err := usercenter.Get().UserSaveData(user.Id, gameId, req.Key, req.Data)
+	zap.S().Infow("save user data", "user", user.Id, "key", req.Key, "save", req.Data)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, RSuccess(true))
+	c.JSON(http.StatusOK, RSuccess(req.Key))
 }
 
 // @Summary 用户读取数据
@@ -121,7 +128,29 @@ func apiUserGetData(c *gin.Context, user *data.DashFunUser) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, RSuccess(saveData))
+	c.JSON(http.StatusOK, RSuccess(&UserGetDataResult{Key: key, Data: saveData}))
+}
+
+// @Summary 用户读取数据，同时返回key和data
+// @Tags		Games API
+// @Produce	json
+// @Authorize "tma {token}"
+// @Param		key		query		string								true	"要读取的数据键值"
+// @Success	200		{object}	api.JSONResult{data=UserGetDataResult}	"save data"
+// @Router		/api/v1/game/{id}/data_v2 [get]
+func apiUserGetData1(c *gin.Context, user *data.DashFunUser) {
+	gameId := c.Param("id")
+	key, exist := c.GetQuery("key")
+	if !exist {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError("param key not found"))
+		return
+	}
+	saveData, err := usercenter.Get().UserGetData(user.Id, gameId, key)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(&UserGetDataResult{Key: key, Data: saveData}))
 }
 
 func init() {
@@ -131,4 +160,5 @@ func init() {
 
 	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, ":id/data", userHandlerAuthWrapper(apiUserSetData))
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/data", userHandlerAuthWrapper(apiUserGetData))
+	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/data_v2", userHandlerAuthWrapper(apiUserGetData1))
 }

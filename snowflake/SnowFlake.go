@@ -36,6 +36,7 @@ func GetWorker(workerId int64) (*Worker, error) {
 		return nil, errors.New("worker id out of range")
 	}
 	return &Worker{
+		mu:        sync.Mutex{},
 		timestamp: 0,
 		workerId:  workerId,
 		number:    0,

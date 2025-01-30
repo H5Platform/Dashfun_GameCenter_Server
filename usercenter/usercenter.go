@@ -8,6 +8,7 @@ import (
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/snowflake"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
@@ -228,15 +229,15 @@ func (uc *UserCenter) UserSaveData(userId, gameId, key, saveData string) (*data.
 		//只有在线用户给保存数据
 		return nil, apperrors.ErrOnlineUserNotExist
 	}
-
-	ou.SetGameSaveData(gameId, key, saveData)
+	dd := base64.StdEncoding.EncodeToString([]byte(saveData))
+	ou.SetGameSaveData(gameId, key, dd)
 	//同时存库
 	d := dao.GetUserSaveDataDao()
 	ret := &data.DashFunUserSaveData{
 		UserId: userId,
 		GameId: gameId,
 		Key:    key,
-		Data:   saveData,
+		Data:   dd,
 	}
 	d.SaveOrUpdate(ret)
 	return ret, nil

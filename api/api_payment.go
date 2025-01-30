@@ -2,8 +2,10 @@ package api
 
 import (
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/paymentcenter"
 	"dashfun_gamecenter/web"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -59,7 +61,17 @@ func apiUserRequestPayment(c *gin.Context, user *data.DashFunUser) {
 	//	return
 	//}
 
-	payment, err := paymentcenter.Get().RequestTGPayment(user.Id, req.GameId, req.Title, req.Desc, req.Price)
+	game, err := gamecenter.Get().FindGame(req.GameId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	if game == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("game %s not found", req.GameId)))
+		return
+	}
+
+	payment, err := paymentcenter.Get().RequestTGPayment(user.Id, req.GameId, req.Title, req.Desc, req.Price, game.IsTesting())
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
 		return

@@ -15,6 +15,10 @@ type DashFunGame struct {
 	ApiSecret  string            `json:"-" bson:"api_secret"`
 }
 
+func (g *DashFunGame) IsTesting() bool {
+	return g.Status <= DashFunGameStatus_Pending
+}
+
 type DashFunGameGenre struct {
 	Id     int    `json:"id" bson:"_id"`
 	Name   string `json:"name" bson:"name"`

@@ -127,25 +127,33 @@ func (p *PaymentCenter) FindPayment(id string) (*data.DashFunPaymentData, error)
 }
 
 // RequestTGPayment 请求使用tg支付
-func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc string, price int) (*data.DashFunPaymentData, error) {
+func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc string, price int, isTesting bool) (*data.DashFunPaymentData, error) {
 	//向tg bot请求一个新的Invoice
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancelFunc()
 	id := p.newPaymentId()
 
-	invoiceLink, err := tgbot.Bot().CreateInvoiceLink(ctx, &bot.CreateInvoiceLinkParams{
-		Title:         title,
-		Description:   desc,
-		Payload:       id,
-		ProviderToken: "",
-		Currency:      "XTR",
-		Prices: []models.LabeledPrice{
-			{
-				Label:  title,
-				Amount: price,
+	invoiceLink := ""
+	var err error = nil
+
+	if isTesting {
+		invoiceLink = "test-" + id
+	} else {
+		invoiceLink, err = tgbot.Bot().CreateInvoiceLink(ctx, &bot.CreateInvoiceLinkParams{
+			Title:         title,
+			Description:   desc,
+			Payload:       id,
+			ProviderToken: "",
+			Currency:      "XTR",
+			Prices: []models.LabeledPrice{
+				{
+					Label:  title,
+					Amount: price,
+				},
 			},
-		},
-	})
+		})
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -155,10 +163,39 @@ func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc string, pri
 		paymentId = invoiceLink
 	}
 
-	payment, err := dao.GetPaymentDao().CreatePayment(id, userId, gameId, paymentId, title, desc, "", "XTR", data.DashFunPaymentFrom_TG, price, invoiceLink)
+	currency := "XTR"
+	from := data.DashFunPaymentFrom_TG
+	if isTesting {
+		currency = "TEST"
+		from = data.DashFunPaymentFrom_TEST
+	}
+	payment, err := dao.GetPaymentDao().CreatePayment(id, userId, gameId, paymentId, title, desc, "", currency, from, price, invoiceLink)
 	if err != nil {
 		return nil, err
 	}
 
+	if isTesting {
+		//测试状态下直接完成订单
+		payment.Status = data.DashFunPaymentStatus_Paid
+		payment.Message = "Test Payment"
+		payment.PaidAt = time.Now().UnixMilli()
+		_, err = dao.GetPaymentDao().SaveOrUpdate(payment)
+
+		user, err := usercenter.Get().GetDashFunUser(payment.UserId)
+		if err != nil {
+			zap.S().Errorw("RequestTestPayment Get User Failed", "Payment", payment, "error", err)
+			return payment, nil
+		}
+		game, err := gamecenter.Get().FindGame(payment.GameId)
+		if err != nil {
+			zap.S().Errorw("RequestTestPayment Find Game Failed", "Payment", payment, "error")
+			return payment, nil
+		}
+		events.UserPaymentEvents.Emit(&events.EventUserPayment{
+			User:    user,
+			Game:    game,
+			Payment: payment,
+		})
+	}
 	return payment, nil
 }

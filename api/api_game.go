@@ -100,7 +100,16 @@ func apiUserSetData(c *gin.Context, user *data.DashFunUser) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
-	_, err := usercenter.Get().UserSaveData(user.Id, gameId, req.Key, req.Data)
+	game, err := gamecenter.Get().FindGame(gameId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	if game == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("game %s not found", gameId)))
+		return
+	}
+	_, err = usercenter.Get().UserSaveData(user.Id, gameId, req.Key, req.Data, game.IsTesting())
 	zap.S().Infow("save user data", "user", user.Id, "key", req.Key, "save", req.Data)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
@@ -123,7 +132,16 @@ func apiUserGetData(c *gin.Context, user *data.DashFunUser) {
 		c.AbortWithStatusJSON(http.StatusNotFound, RError("param key not found"))
 		return
 	}
-	saveData, err := usercenter.Get().UserGetData(user.Id, gameId, key)
+	game, err := gamecenter.Get().FindGame(gameId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	if game == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("game %s not found", gameId)))
+		return
+	}
+	saveData, err := usercenter.Get().UserGetData(user.Id, gameId, key, game.IsTesting())
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
@@ -145,7 +163,16 @@ func apiUserGetData1(c *gin.Context, user *data.DashFunUser) {
 		c.AbortWithStatusJSON(http.StatusNotFound, RError("param key not found"))
 		return
 	}
-	saveData, err := usercenter.Get().UserGetData(user.Id, gameId, key)
+	game, err := gamecenter.Get().FindGame(gameId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	if game == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("game %s not found", gameId)))
+		return
+	}
+	saveData, err := usercenter.Get().UserGetData(user.Id, gameId, key, game.IsTesting())
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return

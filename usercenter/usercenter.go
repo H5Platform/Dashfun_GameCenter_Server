@@ -222,13 +222,24 @@ func (uc *UserCenter) UserBindWallet(userId, chain, address string) (*data.DashF
 	return user, nil
 }
 
+func (uc *UserCenter) getDataKey(dataKey string, isTesting bool) string {
+	key := dataKey
+	if isTesting {
+		key = "TEST_" + key
+	}
+	return key
+}
+
 // UserSaveData 保存用户数据
-func (uc *UserCenter) UserSaveData(userId, gameId, key, saveData string) (*data.DashFunUserSaveData, error) {
+func (uc *UserCenter) UserSaveData(userId, gameId, dataKey, saveData string, isTesting bool) (*data.DashFunUserSaveData, error) {
 	ou := uc.onlineUsers.FindUser(userId)
 	if ou == nil {
 		//只有在线用户给保存数据
 		return nil, apperrors.ErrOnlineUserNotExist
 	}
+
+	key := uc.getDataKey(dataKey, isTesting)
+
 	dd := base64.StdEncoding.EncodeToString([]byte(saveData))
 	ou.SetGameSaveData(gameId, key, dd)
 	//同时存库
@@ -247,12 +258,14 @@ func (uc *UserCenter) UserSaveData(userId, gameId, key, saveData string) (*data.
 // userId	用户Id
 // gameId	游戏Id
 // key		数据键值
-func (uc *UserCenter) UserGetData(userId, gameId, key string) (string, error) {
+func (uc *UserCenter) UserGetData(userId, gameId, dataKey string, isTesting bool) (string, error) {
 	ou := uc.onlineUsers.FindUser(userId)
 	if ou == nil {
 		//只有在线用户给读取数据
 		return "", apperrors.ErrOnlineUserNotExist
 	}
+
+	key := uc.getDataKey(dataKey, isTesting)
 
 	gameSaveData, err := ou.GetGameSaveData(gameId, key)
 	if errors.Is(err, apperrors.ErrUserGameSaveDataNotExisted) {

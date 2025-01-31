@@ -75,6 +75,16 @@ func apiUserFindGames(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, PageSuccess(games, req.Page, req.Size, totalPages))
 }
 
+// @Summary	获取所有测试游戏
+func apiGetTestingGames(c *gin.Context, user *data.DashFunUser) {
+	games, totalPages, err := gamecenter.Get().FindGamesBackend("", nil, data.DashFunGameStatus_Pending, 1000, 1)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, PageSuccess(games, 1, 100, totalPages))
+}
+
 // @Summary	获取游戏类型数据
 // @Tags		Games API
 // @Produce	json
@@ -146,7 +156,7 @@ func apiUserGetData(c *gin.Context, user *data.DashFunUser) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, RSuccess(&UserGetDataResult{Key: key, Data: saveData}))
+	c.JSON(http.StatusOK, RSuccess(saveData))
 }
 
 // @Summary 用户读取数据，同时返回key和data
@@ -184,6 +194,7 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id", apiUserStartGame)
 	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, "search", userHandlerAuthWrapper(apiUserFindGames))
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, "genres", apiUserGetGenres)
+	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, "testing", userHandlerAuthWrapper(apiGetTestingGames))
 
 	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, ":id/data", userHandlerAuthWrapper(apiUserSetData))
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/data", userHandlerAuthWrapper(apiUserGetData))

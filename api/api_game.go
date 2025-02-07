@@ -28,6 +28,11 @@ type UserGetDataResult struct {
 	Data string `json:"data"`
 }
 
+type GameListResult struct {
+	GameList map[data.GameListType][]string `json:"game_list"` //列表类型对应的游戏id列表
+	Games    []*data.DashFunGame            `json:"games"`     //游戏id对应的游戏数据详情
+}
+
 // @Summary	telegram用户开启游戏
 // @Tags		Games API
 // @Produce	json
@@ -190,6 +195,41 @@ func apiUserGetData1(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(&UserGetDataResult{Key: key, Data: saveData}))
 }
 
+// @Summary 用户获取game-center首页的各种gameList
+// @Tags		Games API
+// @Produce	json
+// @Authorize "tma {token}"
+// @Success	200		{object}	api.JSONResult{data=api.GameListResult}	"GameListResult"
+// @Router		/api/v1/game/{id}/data_v2 [get]
+func apiGetGameList(c *gin.Context, user *data.DashFunUser) {
+	result := &GameListResult{
+		GameList: make(map[data.GameListType][]string),
+		Games:    make([]*data.DashFunGame, 0),
+	}
+
+	gc := gamecenter.Get()
+	types := []data.GameListType{data.GameListType_New, data.GameListType_Popular, data.GameListType_Suggest, data.GameListType_Banner}
+
+	gameIds := make([]string, 0)
+	seen := make(map[string]struct{})
+	for _, listType := range types {
+		games := gc.GetGameList(listType)
+		result.GameList[listType] = games
+		for _, game := range games {
+			_, existed := seen[game]
+			if !existed {
+				seen[game] = struct{}{}
+				gameIds = append(gameIds, game)
+			}
+		}
+	}
+
+	games := gc.FindGamesById(gameIds...)
+	result.Games = games
+
+	c.JSON(http.StatusOK, RSuccess(result))
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id", apiUserStartGame)
 	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, "search", userHandlerAuthWrapper(apiUserFindGames))
@@ -199,4 +239,6 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, ":id/data", userHandlerAuthWrapper(apiUserSetData))
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/data", userHandlerAuthWrapper(apiUserGetData))
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/data_v2", userHandlerAuthWrapper(apiUserGetData1))
+
+	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, "game_list", userHandlerAuthWrapper(apiGetGameList))
 }

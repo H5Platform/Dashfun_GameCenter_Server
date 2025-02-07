@@ -67,6 +67,7 @@ func (uc *UserCenter) newUserId() string {
 // UserEnterGame 用户点击了Play按钮进入游戏
 func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUser, error) {
 	user, err := uc.GetDashFunUserByTgAuthData(tgAuthData, false)
+
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +75,15 @@ func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUse
 	if err != nil {
 		return nil, err
 	}
+
+	ou := uc.onlineUsers.FindUser(user.Id)
+	ou.AddPlayRecord(gameId)
+
+	dao.GetUserPlayRecordDao().SaveOrUpdate(&data.DashFunUserPlayRecord{
+		UserId:  user.Id,
+		Records: ou.PlayRecord,
+	})
+
 	events.UserEnterGameEvents.Emit(&events.EventUserEnterGame{
 		User: user,
 		Game: game,
@@ -120,12 +130,20 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 		return nil, err
 	}
 
-	onlineUser := uc.onlineUsers.TGUserLogin(u, &data.TGInfo{
+	var playRecord []*data.PlayGameRecord
+	record, err := dao.GetUserPlayRecordDao().GetUserPlayRecord(u.Id)
+	if record == nil || record.Records == nil {
+		playRecord = make([]*data.PlayGameRecord, 0)
+	} else {
+		playRecord = record.Records
+	}
+
+	ou := uc.onlineUsers.TGUserLogin(u, &data.TGInfo{
 		AuthData: tgAuthData,
 		InitData: initData,
-	})
+	}, playRecord)
 
-	events.UserLoginEvents.Emit(onlineUser)
+	events.UserLoginEvents.Emit(ou)
 
 	zap.S().Infow("User from Telegram Login Successful", "userId", user.Id, "tgUserId", user.ChannelId, "name", user.UserName)
 
@@ -133,7 +151,7 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 		zap.S().Info("user tg token:", tgAuthData)
 	}
 
-	return onlineUser, nil
+	return ou, nil
 }
 
 // GetDashFunUserByTgAuthData 根据用户的tgAuthData，找到对应的DashFunUser
@@ -287,4 +305,13 @@ func (uc *UserCenter) UserGetData(userId, gameId, dataKey string, isTesting bool
 	}
 
 	return gameSaveData, nil
+}
+
+func (uc *UserCenter) UserGetPlayRecord(userId string) []*data.PlayGameRecord {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		zap.S().Errorw("User Not Found", "userId", userId)
+		return nil
+	}
+	return ou.PlayRecord
 }

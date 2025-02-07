@@ -16,6 +16,7 @@ type DaoImpl interface {
 	GetSpinWheelDao() SpinWheelDao
 	GetSpinWheelUserDao() SpinWheelUserDao
 	GetUserSaveDataDao() DashFunUserSaveDataDao
+	GetUserPlayRecordDao() DashFunUserPlayRecordDao
 }
 
 type UserDao interface {
@@ -29,6 +30,7 @@ type GameDao interface {
 	SaveOrUpdate(game *data.DashFunGame) (*data.DashFunGame, error)
 	GetGameByName(gameName string) (*data.DashFunGame, error)
 	FindGames(keyword string, genre []int, status data.DashFunGameStatus, size, page int64) (games []*data.DashFunGame, totalPages int, err error)
+	FindGameList(listType data.GameListType, count int) (games []*data.DashFunGame, err error)
 }
 
 type PaymentDao interface {
@@ -85,4 +87,9 @@ type SpinWheelUserDao interface {
 type DashFunUserSaveDataDao interface {
 	SaveOrUpdate(user *data.DashFunUserSaveData) (*data.DashFunUserSaveData, error)
 	GetUserSaveData(userId, gameId, key string) (*data.DashFunUserSaveData, error)
+}
+
+type DashFunUserPlayRecordDao interface {
+	SaveOrUpdate(user *data.DashFunUserPlayRecord) (*data.DashFunUserPlayRecord, error)
+	GetUserPlayRecord(userId string) (*data.DashFunUserPlayRecord, error)
 }

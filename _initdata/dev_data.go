@@ -464,4 +464,155 @@ func makeTestGame() {
 		}
 		log.Printf("Game Saved : %v", g)
 	}
+
+	game, err = s.FindGameByName("Game(Popular)")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if game == nil {
+		//create game
+		game = &data.DashFunGame{
+			Id:   "Game(Popular)",
+			Name: "Game(Popular)",
+			Desc: "Game(Popular) test",
+			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
+			Url:         "https://h5-test-brain.dashfun.games",
+			MainPicUrl:  "",
+			LogoUrl:     "",
+			Genre:       []int{1, 1001},
+			IconUrl:     "",
+			Time:        time.Now().UnixMilli(),
+			OpenTime:    0,
+			PopularFlag: 1,
+			Status:      2,
+		}
+		g, err := s.SaveGame(game)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Game Saved : %v", g)
+	}
+
+	game, err = s.FindGameByName("Game(Suggest)")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if game == nil {
+		//create game
+		game = &data.DashFunGame{
+			Id:   "Game(Suggest)",
+			Name: "Game(Suggest)",
+			Desc: "Game(Suggest) test",
+			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
+			Url:         "https://h5-test-brain.dashfun.games",
+			MainPicUrl:  "",
+			LogoUrl:     "",
+			Genre:       []int{1, 1001},
+			IconUrl:     "",
+			Time:        time.Now().UnixMilli(),
+			OpenTime:    0,
+			PopularFlag: 1,
+			Status:      2,
+		}
+		g, err := s.SaveGame(game)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Game Saved : %v", g)
+	}
+
+	game, err = s.FindGameByName("Game(Suggest And Popular)")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if game == nil {
+		//create game
+		game = &data.DashFunGame{
+			Id:   "Game(Suggest And Popular)",
+			Name: "Game(Suggest And Popular)",
+			Desc: "Game(Suggest And Popular) test",
+			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
+			Url:         "https://h5-test-brain.dashfun.games",
+			MainPicUrl:  "",
+			LogoUrl:     "",
+			Genre:       []int{1, 1001},
+			IconUrl:     "",
+			Time:        time.Now().UnixMilli(),
+			OpenTime:    0,
+			PopularFlag: 1,
+			SuggestFlag: 1,
+			Status:      2,
+		}
+		g, err := s.SaveGame(game)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Game Saved : %v", g)
+	}
+
+	game, err = s.FindGameByName("Game(Banner)")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if game == nil {
+		//create game
+		game = &data.DashFunGame{
+			Id:   "Game(Banner)",
+			Name: "Game(Banner)",
+			Desc: "Game(Banner) test",
+			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
+			Url:         "https://h5-test-brain.dashfun.games",
+			MainPicUrl:  "",
+			LogoUrl:     "",
+			Genre:       []int{1, 1001},
+			IconUrl:     "",
+			Time:        time.Now().UnixMilli(),
+			OpenTime:    0,
+			PopularFlag: 0,
+			SuggestFlag: 0,
+			BannerFlag:  1,
+			Status:      2,
+		}
+		g, err := s.SaveGame(game)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Game Saved : %v", g)
+	}
+
+	game, err = s.FindGameByName("Game(New)")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if game == nil {
+		//create game
+		game = &data.DashFunGame{
+			Id:   "Game(New)",
+			Name: "Game(New)",
+			Desc: "Game(New) test",
+			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
+			Url:         "https://h5-test-brain.dashfun.games",
+			MainPicUrl:  "",
+			LogoUrl:     "",
+			Genre:       []int{1, 1001},
+			IconUrl:     "",
+			Time:        time.Now().UnixMilli() - 86400000,
+			OpenTime:    0,
+			PopularFlag: 0,
+			SuggestFlag: 0,
+			BannerFlag:  0,
+			NewFlag:     1,
+			Status:      2,
+		}
+		g, err := s.SaveGame(game)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Game Saved : %v", g)
+	}
 }

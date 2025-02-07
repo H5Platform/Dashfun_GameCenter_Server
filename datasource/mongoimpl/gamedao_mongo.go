@@ -16,6 +16,39 @@ type GameDaoMongo struct {
 	c  *mongo.Collection
 }
 
+func (g *GameDaoMongo) FindGameList(listType data.GameListType, count int) (games []*data.DashFunGame, err error) {
+	filter := bson.D{}
+	sort := bson.D{{"time", -1}, {"_id", 1}}
+
+	if listType == data.GameListType_New {
+		filter = append(filter, bson.E{Key: "status", Value: 2})
+		sort = bson.D{{"new_flag", -1}, {"time", -1}, {"_id", 1}}
+	} else if listType == data.GameListType_Popular {
+		sort = bson.D{{"time", -1}, {"_id", 1}}
+		filter = append(filter, bson.E{Key: "popular_flag", Value: 1}, bson.E{Key: "status", Value: 2})
+	} else if listType == data.GameListType_Suggest {
+		sort = bson.D{{"time", -1}, {"_id", 1}}
+		filter = append(filter, bson.E{Key: "suggest_flag", Value: 1})
+	} else if listType == data.GameListType_Banner {
+		sort = bson.D{{"time", -1}, {"_id", 1}}
+		filter = append(filter, bson.E{Key: "banner_flag", Value: 1})
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	find, err := g.c.Find(ctx, filter, options.Find().SetLimit(int64(count)).SetSort(sort))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = find.All(ctx, &games); err != nil {
+		return nil, err
+	}
+
+	return games, nil
+}
+
 func (g *GameDaoMongo) GetGameById(gameId string) (*data.DashFunGame, error) {
 	var ret *data.DashFunGame
 	err := g.c.FindOne(context.TODO(), bson.M{"_id": gameId}).Decode(&ret)
@@ -76,7 +109,7 @@ func (g *GameDaoMongo) FindGames(keyword string, genre []int, status data.DashFu
 
 	totalPages = int(math.Ceil(float64(totalDocs) / float64(size)))
 
-	find, err := g.c.Find(ctx, filter, options.Find().SetSkip(skip).SetLimit(size))
+	find, err := g.c.Find(ctx, filter, options.Find().SetSkip(skip).SetLimit(size).SetSort(bson.D{{"time", -1}}))
 	if err != nil {
 		return nil, 0, err
 	}

@@ -3,6 +3,8 @@ package data
 import (
 	"dashfun_gamecenter/apperrors"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
+	"slices"
+	"time"
 )
 
 type DashFunUserFrom int
@@ -44,11 +46,12 @@ func (usd *UserSaveData) GetSaveData(key string) string {
 	return ""
 }
 
-func NewOnlineUser(User *DashFunUser, TGInfo *TGInfo) *OnlineUser {
+func NewOnlineUser(User *DashFunUser, TGInfo *TGInfo, playRecord []*PlayGameRecord) *OnlineUser {
 	return &OnlineUser{
-		User:     User,
-		TGInfo:   TGInfo,
-		SaveData: map[string]*UserSaveData{},
+		User:       User,
+		TGInfo:     TGInfo,
+		SaveData:   map[string]*UserSaveData{},
+		PlayRecord: playRecord,
 	}
 }
 
@@ -58,6 +61,33 @@ type OnlineUser struct {
 	//用户在各个游戏中存储的数据
 	//GameId -> *UserSaveData
 	SaveData map[string]*UserSaveData
+	//用户的游戏记录
+	PlayRecord []*PlayGameRecord
+}
+
+func (ou *OnlineUser) AddPlayRecord(gameId string) {
+	found := false
+	for _, record := range ou.PlayRecord {
+		if record.GameId == gameId {
+			found = true
+			record.PlayTime = time.Now().UnixMilli()
+			break
+		}
+	}
+	if !found {
+		ou.PlayRecord = append(ou.PlayRecord, &PlayGameRecord{
+			GameId:   gameId,
+			PlayTime: time.Now().UnixMilli(),
+		})
+	}
+
+	slices.SortFunc(ou.PlayRecord, func(a, b *PlayGameRecord) int {
+		return int(b.PlayTime - a.PlayTime)
+	})
+
+	if len(ou.PlayRecord) > 30 {
+		ou.PlayRecord = ou.PlayRecord[0:30]
+	}
 }
 
 func (ou *OnlineUser) GetGameSaveData(gameId, key string) (string, error) {

@@ -242,6 +242,23 @@ func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	//
 	//b.SendPhoto(ctx, msg1)
 
+	msgCenter := &bot.SendMessageParams{
+		ChatID: update.Message.Chat.ID,
+		Text:   "GameCenter",
+		ReplyMarkup: &models.InlineKeyboardMarkup{
+			InlineKeyboard: [][]models.InlineKeyboardButton{
+				{
+					{
+						Text: "GameCenter",
+						URL:  botLink() + "/Center",
+					},
+				},
+			},
+		},
+	}
+
+	b.SendMessage(ctx, msgCenter)
+
 	game, err := gamecenter.Get().FindGameByName("War Three Kingdoms")
 	if err != nil || game == nil {
 		return

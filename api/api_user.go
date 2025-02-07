@@ -98,9 +98,20 @@ func apiUserBindWallet(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(u.WalletAddress))
 }
 
+// @Summary	用户获取最近游戏列表
+// @Tags		User API
+// @Produce	json
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=[]*data.PlayGameRecord}	"PlayGameRecords"
+// @Router		/api/v1/user/play_record [post]
+func apiUserGetPlayRecord(c *gin.Context, user *data.DashFunUser) {
+	records := usercenter.Get().UserGetPlayRecord(user.Id)
+	c.JSON(http.StatusOK, RSuccess(records))
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "tg_login", apiTgUserLogin)
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "enter_game", apiEnterGame)
 	web.GetService().RegisterApi(web.ApiModuleUser, web.POST, "bind_wallet", userHandlerAuthWrapper(apiUserBindWallet))
-
+	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "play_record", userHandlerAuthWrapper(apiUserGetPlayRecord))
 }

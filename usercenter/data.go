@@ -47,13 +47,13 @@ func (o *OnlineUsers) FindUser(userId string) *data.OnlineUser {
 	return user
 }
 
-func (o *OnlineUsers) TGUserLogin(user *data.DashFunUser, tgInfo *data.TGInfo) *data.OnlineUser {
+func (o *OnlineUsers) TGUserLogin(user *data.DashFunUser, tgInfo *data.TGInfo, playRecord []*data.PlayGameRecord) *data.OnlineUser {
 	o.Lock()
 	defer o.Unlock()
 
 	u, e := o.Users[user.Id]
 	if !e {
-		u = data.NewOnlineUser(user, tgInfo)
+		u = data.NewOnlineUser(user, tgInfo, playRecord)
 		o.Users[user.Id] = u
 	}
 	o.ChannelMap[user.ChannelId] = user.Id

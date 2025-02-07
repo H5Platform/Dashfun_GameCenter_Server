@@ -42,3 +42,7 @@ func GetSpinWheelUserDao() types.SpinWheelUserDao {
 func GetUserSaveDataDao() types.DashFunUserSaveDataDao {
 	return daoImpl.GetUserSaveDataDao()
 }
+
+func GetUserPlayRecordDao() types.DashFunUserPlayRecordDao {
+	return daoImpl.GetUserPlayRecordDao()
+}

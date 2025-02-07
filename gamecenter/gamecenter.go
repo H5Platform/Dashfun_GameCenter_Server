@@ -3,11 +3,13 @@ package gamecenter
 import (
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/snowflake"
 	"dashfun_gamecenter/tencentcos"
 	"encoding/base64"
 	"errors"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.uber.org/zap"
 	"strconv"
 	"sync"
 	"time"
@@ -19,6 +21,14 @@ var instance *GameCenter
 type GameCenter struct {
 	idGen     *snowflake.Worker
 	secretGen *snowflake.Worker
+
+	incOpenCountLock sync.Mutex
+	gameLock         sync.RWMutex
+	//游戏数据缓存
+	id2games   map[string]*data.DashFunGame
+	name2games map[string]*data.DashFunGame
+
+	gameList map[data.GameListType][]string
 }
 
 func Get() *GameCenter {
@@ -32,6 +42,19 @@ func Get() *GameCenter {
 func (gc *GameCenter) init() {
 	gc.idGen = snowflake.Must(snowflake.GetWorker(data.WorkerGameId))
 	gc.secretGen = snowflake.Must(snowflake.GetWorker(data.WorkerApiSecret))
+	gc.gameLock = sync.RWMutex{}
+	gc.incOpenCountLock = sync.Mutex{}
+
+	gc.id2games = make(map[string]*data.DashFunGame)
+	gc.name2games = make(map[string]*data.DashFunGame)
+
+	gc.gameList = make(map[data.GameListType][]string)
+	gc.refreshGameList(data.GameListType_New)
+	gc.refreshGameList(data.GameListType_Popular)
+	gc.refreshGameList(data.GameListType_Suggest)
+	gc.refreshGameList(data.GameListType_Banner)
+
+	events.UserEnterGameEvents.On(gc.onUserEnterGame)
 }
 
 func (gc *GameCenter) newGameId() string {
@@ -51,16 +74,21 @@ func (gc *GameCenter) processGame(game *data.DashFunGame) {
 // 创建一个游戏
 func (gc *GameCenter) CreateGame(name, desc, url, iconUrl, logoUrl, mainPicUrl string, genre []int) *data.DashFunGame {
 	game := &data.DashFunGame{
-		Id:         gc.newGameId(),
-		Name:       name,
-		Desc:       desc,
-		Url:        url,
-		IconUrl:    iconUrl,
-		LogoUrl:    logoUrl,
-		MainPicUrl: mainPicUrl,
-		Genre:      genre,
-		Time:       time.Now().UnixMilli(),
-		Status:     data.DashFunGameStatus_Pending,
+		Id:          gc.newGameId(),
+		Name:        name,
+		Desc:        desc,
+		Url:         url,
+		IconUrl:     iconUrl,
+		LogoUrl:     logoUrl,
+		MainPicUrl:  mainPicUrl,
+		Genre:       genre,
+		Time:        time.Now().UnixMilli(),
+		Status:      data.DashFunGameStatus_Pending,
+		NewFlag:     0,
+		PopularFlag: 0,
+		SuggestFlag: 0,
+		BannerFlag:  0,
+		OpenCount:   0,
 	}
 	gc.processGame(game)
 	return game
@@ -197,25 +225,77 @@ func (gc *GameCenter) SaveGame(game *data.DashFunGame) (*data.DashFunGame, error
 	if err != nil {
 		return nil, err
 	}
+	gc.gameLock.Lock()
+	defer gc.gameLock.Unlock()
+	gc.id2games[game.Id] = game
+	gc.name2games[game.Name] = game
+
 	return update, nil
 }
 
+func (gc *GameCenter) FindGamesById(gameIds ...string) []*data.DashFunGame {
+	gc.gameLock.Lock()
+	defer gc.gameLock.Unlock()
+
+	var ret []*data.DashFunGame
+
+	for _, gameId := range gameIds {
+		var game *data.DashFunGame
+		if gc.id2games[gameId] != nil {
+			game = gc.id2games[gameId]
+		} else {
+			var err error
+			game, err = dao.GetGameDao().GetGameById(gameId)
+			if err != nil {
+				continue
+			}
+			gc.id2games[game.Id] = game
+			gc.name2games[game.Name] = game
+		}
+		if game != nil {
+			ret = append(ret, game)
+		}
+	}
+	return ret
+}
+
 func (gc *GameCenter) FindGame(gameId string) (*data.DashFunGame, error) {
-	game, err := dao.GetGameDao().GetGameById(gameId)
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, nil
+	gc.gameLock.Lock()
+	defer gc.gameLock.Unlock()
+	var game *data.DashFunGame
+	if gc.id2games[gameId] != nil {
+		game = gc.id2games[gameId]
+	} else {
+		var err error
+		game, err = dao.GetGameDao().GetGameById(gameId)
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+
+		gc.id2games[game.Id] = game
+		gc.name2games[game.Name] = game
+
 	}
 	gc.processGame(game)
-	return game, err
+	return game, nil
 }
 
 func (gc *GameCenter) FindGameByName(gameName string) (*data.DashFunGame, error) {
-	game, err := dao.GetGameDao().GetGameByName(gameName)
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, nil
+	gc.gameLock.Lock()
+	defer gc.gameLock.Unlock()
+	var game *data.DashFunGame
+
+	if gc.name2games[gameName] != nil {
+		game = gc.name2games[gameName]
+	} else {
+		var err error
+		game, err = dao.GetGameDao().GetGameByName(gameName)
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
 	}
 	gc.processGame(game)
-	return game, err
+	return game, nil
 }
 
 // FindGames
@@ -242,7 +322,58 @@ func (gc *GameCenter) FindGames(keyword string, genre []int, size int64, page in
 	}
 
 	return dao.GetGameDao().FindGames(keyword, genre, data.DashFunGameStatus_Online, size, page)
+}
 
+func (gc *GameCenter) refreshGameList(listType data.GameListType) {
+	games, err := dao.GetGameDao().FindGameList(listType, 20)
+	if err != nil {
+		zap.S().Error("UpdateGameList "+strconv.Itoa(int(listType))+" failed", zap.Error(err))
+		return
+	}
+	list := make([]string, 0)
+	for _, game := range games {
+		list = append(list, game.Id)
+	}
+	gc.gameList[listType] = list
+}
+
+// UpdateGameFlagBackend
+// 后台更新游戏flag接口
+func (gc *GameCenter) UpdateGameFlagBackend(id string, newFlag, popularFlag, suggestFlag, bannerFlag int) {
+	game, err := gc.FindGame(id)
+	if err != nil {
+		return
+	}
+
+	changedList := make([]data.GameListType, 0)
+
+	if game.NewFlag != newFlag {
+		game.NewFlag = newFlag
+		changedList = append(changedList, data.GameListType_New)
+	}
+	if game.PopularFlag != popularFlag {
+		game.PopularFlag = popularFlag
+		changedList = append(changedList, data.GameListType_Popular)
+	}
+	if game.SuggestFlag != suggestFlag {
+		game.SuggestFlag = suggestFlag
+		changedList = append(changedList, data.GameListType_Suggest)
+	}
+	if game.BannerFlag != bannerFlag {
+		game.BannerFlag = bannerFlag
+		changedList = append(changedList, data.GameListType_Banner)
+	}
+
+	if len(changedList) > 0 {
+		gc.SaveGame(game)
+		for _, listType := range changedList {
+			gc.refreshGameList(listType)
+		}
+	}
+}
+
+func (gc *GameCenter) GetGameList(listType data.GameListType) []string {
+	return gc.gameList[listType]
 }
 
 // FindGamesBackend
@@ -286,6 +417,10 @@ func (gc *GameCenter) genApiSecret() string {
 	return secret
 }
 
-func init() {
-
+func (gc *GameCenter) onUserEnterGame(evt *events.EventUserEnterGame) {
+	gc.incOpenCountLock.Lock()
+	defer gc.incOpenCountLock.Unlock()
+	game := evt.Game
+	game.OpenCount++
+	gc.SaveGame(game)
 }

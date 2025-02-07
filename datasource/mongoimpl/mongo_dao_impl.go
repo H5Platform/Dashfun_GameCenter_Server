@@ -27,6 +27,7 @@ type DaoImplMongo struct {
 	spinWheelDao          types.SpinWheelDao
 	spinWheelUserDao      types.SpinWheelUserDao
 	userSaveDataDao       types.DashFunUserSaveDataDao
+	userPlayRecordDao     types.DashFunUserPlayRecordDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
@@ -44,6 +45,7 @@ func NewDaoImplMongo() *DaoImplMongo {
 		spinWheelDao:          GetSpinWheelDaoMongo(),
 		spinWheelUserDao:      GetSpinWheelUserDaoMongo(),
 		userSaveDataDao:       GetUserSaveDataDaoMongo(),
+		userPlayRecordDao:     GetUserPlayRecordDaoMongo(),
 	}
 }
 
@@ -66,6 +68,9 @@ func (d *DaoImplMongo) GetAdminUserLoginInfoDao() types.AdminUserLoginInfoDao {
 func (d *DaoImplMongo) GetSpinWheelDao() types.SpinWheelDao              { return d.spinWheelDao }
 func (d *DaoImplMongo) GetSpinWheelUserDao() types.SpinWheelUserDao      { return d.spinWheelUserDao }
 func (d *DaoImplMongo) GetUserSaveDataDao() types.DashFunUserSaveDataDao { return d.userSaveDataDao }
+func (d *DaoImplMongo) GetUserPlayRecordDao() types.DashFunUserPlayRecordDao {
+	return d.userPlayRecordDao
+}
 
 func GetMongoDatabase() *mongo.Database {
 	mongoCfg := config.GetConfig().Mongo

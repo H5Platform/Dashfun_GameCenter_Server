@@ -137,10 +137,10 @@ func testHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		return
 	}
 
-	if !strings.HasPrefix(msg[1], "https://") {
+	if !(strings.HasPrefix(msg[1], "http://") || strings.HasPrefix(msg[1], "https://")) {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: update.Message.Chat.ID,
-			Text:   "Usage: /test https://game_url\nthe game url must start with https://",
+			Text:   "Usage: /test https://game_url\nthe game url must start with http:// or https://",
 		})
 		return
 	}

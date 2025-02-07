@@ -193,6 +193,33 @@ func makeProdGames() {
 		}
 		log.Printf("Game Saved : %v", g)
 	}
+
+	game, err = s.FindGameByName("ForTest")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if game == nil {
+		//create game
+		game = &data.DashFunGame{
+			Id:         "ForTest",
+			Name:       "ForTest",
+			Desc:       "Only for test",
+			Url:        "",
+			MainPicUrl: "",
+			LogoUrl:    "",
+			Genre:      []int{1, 1001},
+			IconUrl:    "",
+			Time:       time.Now().UnixMilli(),
+			OpenTime:   0,
+		}
+		g, err := s.SaveGame(game)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Game Saved : %v", g)
+	}
+
 }
 
 func makeProdTasks() {

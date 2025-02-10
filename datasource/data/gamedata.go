@@ -42,10 +42,11 @@ const (
 type GameListType int
 
 const (
-	GameListType_New GameListType = iota + 1
-	GameListType_Popular
-	GameListType_Suggest
-	GameListType_Banner
+	GameListType_Played  GameListType = iota //用户玩过的游戏列表，储存在OnlineUser中
+	GameListType_New                         //最新游戏列表，按入库时间倒序
+	GameListType_Popular                     //最流行游戏列表，按游玩次数倒序
+	GameListType_Suggest                     //推荐游戏列表，suggest = 1
+	GameListType_Banner                      //主屏顶部列表, banner=1
 )
 
 var Genres map[int]DashFunGameGenre

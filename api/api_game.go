@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 )
 
 type UserGameSearchRequest struct {
@@ -195,25 +196,51 @@ func apiUserGetData1(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(&UserGetDataResult{Key: key, Data: saveData}))
 }
 
-// @Summary 用户获取game-center首页的各种gameList
+// @Summary 用户获取game-center首页的各个gameList
 // @Tags		Games API
 // @Produce	json
+// @Param		list_type		query		[]number								"要获取的gameList类型，空串=全部获取"
 // @Authorize "tma {token}"
 // @Success	200		{object}	api.JSONResult{data=api.GameListResult}	"GameListResult"
-// @Router		/api/v1/game/{id}/data_v2 [get]
+// @Router		/api/v1/game/{id}/game_list [get]
 func apiGetGameList(c *gin.Context, user *data.DashFunUser) {
+	listTypes, ok := c.GetQueryArray("list_type[]")
+	types := make([]data.GameListType, 0)
+
+	if !ok || len(listTypes) == 0 {
+		types = []data.GameListType{data.GameListType_Played, data.GameListType_New, data.GameListType_Popular, data.GameListType_Suggest, data.GameListType_Banner}
+	} else {
+		for _, listType := range listTypes {
+			t, err := strconv.Atoi(listType)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+				return
+			}
+			if t >= int(data.GameListType_Played) && t <= int(data.GameListType_Banner) {
+				types = append(types, data.GameListType(t))
+			}
+		}
+	}
+
 	result := &GameListResult{
 		GameList: make(map[data.GameListType][]string),
 		Games:    make([]*data.DashFunGame, 0),
 	}
 
 	gc := gamecenter.Get()
-	types := []data.GameListType{data.GameListType_New, data.GameListType_Popular, data.GameListType_Suggest, data.GameListType_Banner}
 
 	gameIds := make([]string, 0)
 	seen := make(map[string]struct{})
 	for _, listType := range types {
-		games := gc.GetGameList(listType)
+		games := make([]string, 0)
+		if listType == data.GameListType_Played {
+			records := usercenter.Get().UserGetPlayRecord(user.Id)
+			for _, record := range records {
+				games = append(games, record.GameId)
+			}
+		} else {
+			games = gc.GetGameList(listType)
+		}
 		result.GameList[listType] = games
 		for _, game := range games {
 			_, existed := seen[game]

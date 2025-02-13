@@ -1,6 +1,7 @@
 package usercenter
 
 import (
+	"crypto/md5"
 	"dashfun_gamecenter/apperrors"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/dao"
@@ -8,13 +9,17 @@ import (
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/snowflake"
+	"dashfun_gamecenter/tgbot"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/dgryski/go-identicon"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"github.com/tonkeeper/tongo/ton"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
+	"io"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -80,8 +85,9 @@ func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUse
 	ou.AddPlayRecord(gameId)
 
 	dao.GetUserPlayRecordDao().SaveOrUpdate(&data.DashFunUserPlayRecord{
-		UserId:  user.Id,
-		Records: ou.PlayRecord,
+		UserId:    user.Id,
+		Records:   ou.PlayRecord,
+		Favorites: ou.Favorites,
 	})
 
 	events.UserEnterGameEvents.Emit(&events.EventUserEnterGame{
@@ -107,6 +113,7 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 	}
 
 	tgUser := initData.User
+	//photoUrl := tgbot.Get().GetUserPhotoUrl(tgUser.ID)
 
 	if user == nil {
 		//create new user
@@ -115,33 +122,51 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 			ChannelId:   fmt.Sprintf("%d", tgUser.ID),
 			DisplayName: fmt.Sprintf("%s %s", tgUser.FirstName, tgUser.LastName),
 			UserName:    tgUser.Username,
-			AvatarUrl:   tgUser.PhotoURL,
+			AvatarUrl:   "",
 			From:        data.DF_UserFrom_TG,
 			CreateData:  time.Now().UnixMilli(),
 			LoginTime:   time.Now().UnixMilli(),
 			LogoffTime:  0,
 		}
-		zap.S().Debugw("User Created", "user", user)
-	}
-
-	u, err := ud.SaveOrUpdate(user)
-	if err != nil {
-		zap.S().Errorw("save user error", "user", user, "err", err)
-		return nil, err
+		_, err = ud.SaveOrUpdate(user)
+		if err != nil {
+			zap.S().Errorw("save user error", "user", user, "err", err)
+			return nil, err
+		} else {
+			zap.S().Debugw("User Created", "user", user)
+		}
+	} else {
+		user.LoginTime = time.Now().UnixMilli()
+		//update display name
+		user.DisplayName = fmt.Sprintf("%s %s", tgUser.FirstName, tgUser.LastName)
 	}
 
 	var playRecord []*data.PlayGameRecord
-	record, err := dao.GetUserPlayRecordDao().GetUserPlayRecord(u.Id)
+	var favorites []string
+
+	record, err := dao.GetUserPlayRecordDao().GetUserPlayRecord(user.Id)
 	if record == nil || record.Records == nil {
 		playRecord = make([]*data.PlayGameRecord, 0)
 	} else {
 		playRecord = record.Records
 	}
 
-	ou := uc.onlineUsers.TGUserLogin(u, &data.TGInfo{
+	if record == nil || record.Favorites == nil {
+		favorites = make([]string, 0)
+	} else {
+		favorites = record.Favorites
+	}
+
+	ou := uc.onlineUsers.TGUserLogin(user, &data.TGInfo{
 		AuthData: tgAuthData,
 		InitData: initData,
-	}, playRecord)
+	}, playRecord, favorites)
+
+	_, err = ud.SaveOrUpdate(user)
+	if err != nil {
+		zap.S().Errorw("save user error", "user", user, "err", err)
+		return nil, err
+	}
 
 	events.UserLoginEvents.Emit(ou)
 
@@ -307,6 +332,65 @@ func (uc *UserCenter) UserGetData(userId, gameId, dataKey string, isTesting bool
 	return gameSaveData, nil
 }
 
+// UserGetFavorites 获取用户收藏的游戏
+func (uc *UserCenter) UserGetFavorites(userId string) []string {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		zap.S().Errorw("User Not Found", "userId", userId)
+		return nil
+	}
+	return ou.Favorites
+}
+
+// UserAddFavorite adds a game to the user's favorites
+func (uc *UserCenter) UserAddFavorite(userId, gameId string) error {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		return apperrors.ErrOnlineUserNotExist
+	}
+	ou.AddFavoriteGame(gameId)
+	// Save the updated favorites to the database
+	_, err := dao.GetUserPlayRecordDao().SaveOrUpdate(&data.DashFunUserPlayRecord{
+		UserId:    userId,
+		Records:   ou.PlayRecord,
+		Favorites: ou.Favorites,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// IsUserFavoriteGame checks if a game is in the user's favorites
+func (uc *UserCenter) IsUserFavoriteGame(userId, gameId string) (bool, error) {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		return false, apperrors.ErrOnlineUserNotExist
+	}
+	return ou.IsFavoriteGame(gameId), nil
+}
+
+// UserRemoveFavorite removes a game from the user's favorites
+func (uc *UserCenter) UserRemoveFavorite(userId, gameId string) error {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		return apperrors.ErrOnlineUserNotExist
+	}
+	ou.RemoveFavoriteGame(gameId)
+	// Save the updated favorites to the database
+	_, err := dao.GetUserPlayRecordDao().SaveOrUpdate(&data.DashFunUserPlayRecord{
+		UserId:    userId,
+		Records:   ou.PlayRecord,
+		Favorites: ou.Favorites,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (uc *UserCenter) UserGetPlayRecord(userId string) []*data.PlayGameRecord {
 	ou := uc.onlineUsers.FindUser(userId)
 	if ou == nil {
@@ -314,4 +398,40 @@ func (uc *UserCenter) UserGetPlayRecord(userId string) []*data.PlayGameRecord {
 		return nil
 	}
 	return ou.PlayRecord
+}
+
+func (uc *UserCenter) GetUserHeadAvatar(userId string) []byte {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		zap.S().Errorw("User Not Found", "userId", userId)
+		return nil
+	}
+	if ou.Header == nil {
+		photoUrl := tgbot.Get().GetUserPhotoUrl(ou.TGInfo.InitData.User.ID)
+		if photoUrl == "" {
+			//用户没有头像
+		} else {
+			resp, err := http.Get(photoUrl)
+			if err == nil {
+				defer resp.Body.Close()
+				d, err := io.ReadAll(resp.Body)
+				if err == nil {
+					ou.Header = d
+				}
+			}
+		}
+	}
+
+	if ou.Header == nil {
+		//根据用户id生成一个头像
+		hash16 := md5.Sum([]byte(userId))
+		hash := hash16[:]
+		salt16 := md5.Sum([]byte(userId + "SALT"))
+		salt := salt16[:]
+
+		icon := identicon.New7x7(salt).Render(hash)
+		ou.Header = icon
+	}
+
+	return ou.Header
 }

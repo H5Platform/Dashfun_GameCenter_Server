@@ -6,6 +6,7 @@ import (
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/gamecenter"
 	"encoding/base64"
+	"fmt"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"go.uber.org/zap"
@@ -60,6 +61,32 @@ func Get() *TGBot {
 
 func Bot() *bot.Bot {
 	return Get().bot
+}
+
+func (t *TGBot) GetUserPhotoUrl(userId int64) string {
+	tgbot := t.bot
+
+	photos, err := tgbot.GetUserProfilePhotos(context.TODO(), &bot.GetUserProfilePhotosParams{
+		UserID: userId,
+		Limit:  1,
+	})
+	if err != nil || photos.TotalCount == 0 {
+		//没有头像
+		return ""
+	} else {
+		fileId := photos.Photos[0][0].FileID
+		file, err := tgbot.GetFile(context.TODO(), &bot.GetFileParams{
+			FileID: fileId,
+		})
+
+		if err != nil {
+			//头像获取失败
+			return ""
+		} else {
+			photoUrl := fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", config.GetConfig().TG.Token, file.FilePath)
+			return photoUrl
+		}
+	}
 }
 
 func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

@@ -208,7 +208,7 @@ func apiGetGameList(c *gin.Context, user *data.DashFunUser) {
 	types := make([]data.GameListType, 0)
 
 	if !ok || len(listTypes) == 0 {
-		types = []data.GameListType{data.GameListType_Played, data.GameListType_New, data.GameListType_Popular, data.GameListType_Suggest, data.GameListType_Banner}
+		types = []data.GameListType{data.GameListType_Played, data.GameListType_New, data.GameListType_Popular, data.GameListType_Suggest, data.GameListType_Banner, data.GameListType_Favorite}
 	} else {
 		for _, listType := range listTypes {
 			t, err := strconv.Atoi(listType)
@@ -216,7 +216,7 @@ func apiGetGameList(c *gin.Context, user *data.DashFunUser) {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 				return
 			}
-			if t >= int(data.GameListType_Played) && t <= int(data.GameListType_Banner) {
+			if t >= int(data.GameListType_Played) && t <= int(data.GameListTypeEnd) {
 				types = append(types, data.GameListType(t))
 			}
 		}
@@ -238,6 +238,8 @@ func apiGetGameList(c *gin.Context, user *data.DashFunUser) {
 			for _, record := range records {
 				games = append(games, record.GameId)
 			}
+		} else if listType == data.GameListType_Favorite {
+			games = usercenter.Get().UserGetFavorites(user.Id)
 		} else {
 			games = gc.GetGameList(listType)
 		}
@@ -257,6 +259,65 @@ func apiGetGameList(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(result))
 }
 
+// @Summary 用户设置收藏游戏
+// @Tags		Games API
+// @Produce	json
+// @Authorize "tma {token}"
+// @Param		action	body		string								true	"add or remove"
+// @Param		gameId	body		string								true	"游戏Id"
+// @Success	200		{object}	api.JSONResult{data=bool}	"set favorite result"
+// @Router		/api/v1/game/{id}/favorite [post]
+func apiUserSetFavoriteGame(c *gin.Context, user *data.DashFunUser) {
+	gameId := c.Param("id")
+	action := c.PostForm("action")
+
+	if action != "add" && action != "remove" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("invalid action"))
+		return
+	}
+
+	var err error
+
+	game, err := gamecenter.Get().FindGame(gameId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	if game == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("game %s not found", gameId)))
+		return
+	}
+
+	if action == "add" {
+		err = usercenter.Get().UserAddFavorite(user.Id, gameId)
+	} else {
+		err = usercenter.Get().UserRemoveFavorite(user.Id, gameId)
+	}
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, RSuccess(true))
+}
+
+// @Summary 用户设置收藏游戏
+// @Tags		Games API
+// @Produce	json
+// @Authorize "tma {token}"
+// @Success	200		{object}	api.JSONResult{data=bool}	"set favorite result"
+// @Router		/api/v1/game/{id}/favorite [get]
+func apiUserGetFavoriteGame(c *gin.Context, user *data.DashFunUser) {
+	gameId := c.Param("id")
+	isFavorite, err := usercenter.Get().IsUserFavoriteGame(user.Id, gameId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(isFavorite))
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id", apiUserStartGame)
 	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, "search", userHandlerAuthWrapper(apiUserFindGames))
@@ -266,6 +327,8 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, ":id/data", userHandlerAuthWrapper(apiUserSetData))
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/data", userHandlerAuthWrapper(apiUserGetData))
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/data_v2", userHandlerAuthWrapper(apiUserGetData1))
+	web.GetService().RegisterApi(web.ApiModuleGame, web.POST, ":id/favorite", userHandlerAuthWrapper(apiUserSetFavoriteGame))
+	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, ":id/favorite", userHandlerAuthWrapper(apiUserGetFavoriteGame))
 
 	web.GetService().RegisterApi(web.ApiModuleGame, web.GET, "game_list", userHandlerAuthWrapper(apiGetGameList))
 }

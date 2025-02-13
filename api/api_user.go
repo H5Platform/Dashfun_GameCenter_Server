@@ -109,9 +109,21 @@ func apiUserGetPlayRecord(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(records))
 }
 
+// @Summary	用户获取头像数据
+// @Tags		User API
+// @Produce	json
+// @Authorize	"tma {token}"
+// @Success	200	{object}	api.JSONResult{data=[]byte}	"avatar png"
+// @Router		/api/v1/user/avatar [get]
+func apiUserGetHeadPhoto(c *gin.Context, user *data.DashFunUser) {
+	headerData := usercenter.Get().GetUserHeadAvatar(user.Id)
+	c.Data(http.StatusOK, "image/png", headerData)
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "tg_login", apiTgUserLogin)
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "enter_game", apiEnterGame)
 	web.GetService().RegisterApi(web.ApiModuleUser, web.POST, "bind_wallet", userHandlerAuthWrapper(apiUserBindWallet))
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "play_record", userHandlerAuthWrapper(apiUserGetPlayRecord))
+	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "avatar", userHandlerAuthWrapper(apiUserGetHeadPhoto))
 }

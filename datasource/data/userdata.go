@@ -46,12 +46,13 @@ func (usd *UserSaveData) GetSaveData(key string) string {
 	return ""
 }
 
-func NewOnlineUser(User *DashFunUser, TGInfo *TGInfo, playRecord []*PlayGameRecord) *OnlineUser {
+func NewOnlineUser(User *DashFunUser, TGInfo *TGInfo, playRecord []*PlayGameRecord, favorites []string) *OnlineUser {
 	return &OnlineUser{
 		User:       User,
 		TGInfo:     TGInfo,
 		SaveData:   map[string]*UserSaveData{},
 		PlayRecord: playRecord,
+		Favorites:  favorites,
 	}
 }
 
@@ -63,6 +64,10 @@ type OnlineUser struct {
 	SaveData map[string]*UserSaveData
 	//用户的游戏记录
 	PlayRecord []*PlayGameRecord
+	//用户的收藏游戏id
+	Favorites []string
+	//用户头像缓存数据
+	Header []byte
 }
 
 func (ou *OnlineUser) AddPlayRecord(gameId string) {
@@ -87,6 +92,33 @@ func (ou *OnlineUser) AddPlayRecord(gameId string) {
 
 	if len(ou.PlayRecord) > 30 {
 		ou.PlayRecord = ou.PlayRecord[0:30]
+	}
+}
+
+// IsFavoriteGame checks if a game is in the user's favorites
+func (ou *OnlineUser) IsFavoriteGame(gameId string) bool {
+	return slices.Contains(ou.Favorites, gameId)
+}
+
+// AddFavoriteGame 添加到游戏收藏
+func (ou *OnlineUser) AddFavoriteGame(gameId string) {
+	found := ou.IsFavoriteGame(gameId)
+	if !found {
+		ou.Favorites = append(ou.Favorites, gameId)
+	}
+}
+
+// RemoveFavoriteGame 从游戏收藏中移除
+func (ou *OnlineUser) RemoveFavoriteGame(gameId string) {
+	index := -1
+	for i, id := range ou.Favorites {
+		if id == gameId {
+			index = i
+			break
+		}
+	}
+	if index != -1 {
+		ou.Favorites = append(ou.Favorites[:index], ou.Favorites[index+1:]...)
 	}
 }
 

@@ -12,10 +12,10 @@ type DashFunGame struct {
 	Time        int64             `json:"time" bson:"time"`               //游戏入库时间
 	OpenTime    int64             `json:"openTime" bson:"open_time"`      //游戏开放时间，0表示开放，>0表示到达指定时间后才开放
 	Status      DashFunGameStatus `json:"status" bson:"status"`           //游戏状态
-	NewFlag     int               `json:"-" bson:"new_flag"`              //新游戏标志，会强出现在 New Game List中
-	PopularFlag int               `json:"-" bson:"popular_flag"`          //最流行游戏标志，会强制出现在Popular List中
+	NewFlag     int               `json:"new" bson:"new_flag"`            //新游戏标志，会强出现在 New Game List中
+	PopularFlag int               `json:"popular" bson:"popular_flag"`    //最流行游戏标志，会强制出现在Popular List中
 	SuggestFlag int               `json:"suggest" bson:"suggest_flag"`    //推荐游戏，出现在推荐列表中
-	BannerFlag  int               `json:"-" bson:"banner_flag"`           //首屏游戏，出现在GameCenter顶部
+	BannerFlag  int               `json:"banner" bson:"banner_flag"`      //首屏游戏，出现在GameCenter顶部
 	OpenCount   int               `json:"-" bson:"open_count"`            //游戏被开启的次数
 	ApiSecret   string            `json:"-" bson:"api_secret"`
 }

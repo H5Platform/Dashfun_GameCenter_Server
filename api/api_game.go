@@ -34,13 +34,13 @@ type GameListResult struct {
 	Games    []*data.DashFunGame            `json:"games"`     //游戏id对应的游戏数据详情
 }
 
-// @Summary	telegram用户开启游戏
-// @Tags		Games API
-// @Produce	json
-// @Param	id path string true "开启的游戏Id"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
-// @Router		/api/v1/game/{id} [get]
+//	@Summary	telegram用户开启游戏
+//	@Tags		Games API
+//	@Produce	json
+//	@Param		id	path	string	true	"开启的游戏Id"
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
+//	@Router		/api/v1/game/{id} [get]
 func apiUserStartGame(c *gin.Context) {
 	id := c.Param("id")
 	game, err := gamecenter.Get().FindGame(id)
@@ -55,16 +55,16 @@ func apiUserStartGame(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(game))
 }
 
-// @Summary	用户搜索游戏
-// @Tags		Games API
-// @Produce	json
-// @Param		keyword	body		string									false	"查询关键字"
-// @Param		genre	body		[]int									false	"查询类型"
-// @Param		size	body		int64									false	"每页数量"
-// @Param		page	body		int64									false	"当前页数，从1开始"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
-// @Router		/api/v1/game/search [post]
+//	@Summary	用户搜索游戏
+//	@Tags		Games API
+//	@Produce	json
+//	@Param		keyword	body	string	false	"查询关键字"
+//	@Param		genre	body	[]int	false	"查询类型"
+//	@Param		size	body	int64	false	"每页数量"
+//	@Param		page	body	int64	false	"当前页数，从1开始"
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
+//	@Router		/api/v1/game/search [post]
 func apiUserFindGames(c *gin.Context, user *data.DashFunUser) {
 	req := &UserGameSearchRequest{}
 	if err := c.ShouldBindBodyWithJSON(req); err != nil {
@@ -81,7 +81,7 @@ func apiUserFindGames(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, PageSuccess(games, req.Page, req.Size, totalPages))
 }
 
-// @Summary	获取所有测试游戏
+//	@Summary	获取所有测试游戏
 func apiGetTestingGames(c *gin.Context, user *data.DashFunUser) {
 	games, totalPages, err := gamecenter.Get().FindGamesBackend("", nil, data.DashFunGameStatus_Pending, 1000, 1)
 	if err != nil {
@@ -91,24 +91,24 @@ func apiGetTestingGames(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, PageSuccess(games, 1, 100, totalPages))
 }
 
-// @Summary	获取游戏类型数据
-// @Tags		Games API
-// @Produce	json
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=[]data.DashFunGameGenre}	"DashFunGameGenre"
-// @Router		/api/v1/game/genres [get]
+//	@Summary	获取游戏类型数据
+//	@Tags		Games API
+//	@Produce	json
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=[]data.DashFunGameGenre}	"DashFunGameGenre"
+//	@Router		/api/v1/game/genres [get]
 func apiUserGetGenres(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(gamecenter.Get().GetGameGenres()))
 }
 
-// @Summary 用户保存数据
-// @Tags		Games API
-// @Produce	json
-// @Authorize "tma {token}"
-// @Param		key		body		string								true	"数据存储键值"
-// @Param		data	body		string								true	"要存储的数据"
-// @Success	200		{object}	api.JSONResult{data=bool}	"save result"
-// @Router		/api/v1/game/{id}/data [post]
+//	@Summary	用户保存数据
+//	@Tags		Games API
+//	@Produce	json
+//	@Authorize	"tma {token}"
+//	@Param		key		body		string						true	"数据存储键值"
+//	@Param		data	body		string						true	"要存储的数据"
+//	@Success	200		{object}	api.JSONResult{data=bool}	"save result"
+//	@Router		/api/v1/game/{id}/data [post]
 func apiUserSetData(c *gin.Context, user *data.DashFunUser) {
 	gameId := c.Param("id")
 	req := &UserGameDataRequest{}
@@ -134,13 +134,13 @@ func apiUserSetData(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(req.Key))
 }
 
-// @Summary 用户读取数据
-// @Tags		Games API
-// @Produce	json
-// @Authorize "tma {token}"
-// @Param		key		query		string								true	"要读取的数据键值"
-// @Success	200		{object}	api.JSONResult{data=string}	"save data"
-// @Router		/api/v1/game/{id}/data [get]
+//	@Summary	用户读取数据
+//	@Tags		Games API
+//	@Produce	json
+//	@Authorize	"tma {token}"
+//	@Param		key	query		string						true	"要读取的数据键值"
+//	@Success	200	{object}	api.JSONResult{data=string}	"save data"
+//	@Router		/api/v1/game/{id}/data [get]
 func apiUserGetData(c *gin.Context, user *data.DashFunUser) {
 	gameId := c.Param("id")
 	key, exist := c.GetQuery("key")
@@ -165,13 +165,13 @@ func apiUserGetData(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(saveData))
 }
 
-// @Summary 用户读取数据，同时返回key和data
-// @Tags		Games API
-// @Produce	json
-// @Authorize "tma {token}"
-// @Param		key		query		string								true	"要读取的数据键值"
-// @Success	200		{object}	api.JSONResult{data=UserGetDataResult}	"save data"
-// @Router		/api/v1/game/{id}/data_v2 [get]
+//	@Summary	用户读取数据，同时返回key和data
+//	@Tags		Games API
+//	@Produce	json
+//	@Authorize	"tma {token}"
+//	@Param		key	query		string									true	"要读取的数据键值"
+//	@Success	200	{object}	api.JSONResult{data=UserGetDataResult}	"save data"
+//	@Router		/api/v1/game/{id}/data_v2 [get]
 func apiUserGetData1(c *gin.Context, user *data.DashFunUser) {
 	gameId := c.Param("id")
 	key, exist := c.GetQuery("key")
@@ -196,13 +196,13 @@ func apiUserGetData1(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(&UserGetDataResult{Key: key, Data: saveData}))
 }
 
-// @Summary 用户获取game-center首页的各个gameList
-// @Tags		Games API
-// @Produce	json
-// @Param		list_type		query		[]number								"要获取的gameList类型，空串=全部获取"
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=api.GameListResult}	"GameListResult"
-// @Router		/api/v1/game/{id}/game_list [get]
+//	@Summary	用户获取game-center首页的各个gameList
+//	@Tags		Games API
+//	@Produce	json
+//	@Param		list_type	query	[]number	"要获取的gameList类型，空串=全部获取"
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=api.GameListResult}	"GameListResult"
+//	@Router		/api/v1/game/{id}/game_list [get]
 func apiGetGameList(c *gin.Context, user *data.DashFunUser) {
 	listTypes, ok := c.GetQueryArray("list_type[]")
 	types := make([]data.GameListType, 0)
@@ -259,14 +259,14 @@ func apiGetGameList(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(result))
 }
 
-// @Summary 用户设置收藏游戏
-// @Tags		Games API
-// @Produce	json
-// @Authorize "tma {token}"
-// @Param		action	body		string								true	"add or remove"
-// @Param		gameId	body		string								true	"游戏Id"
-// @Success	200		{object}	api.JSONResult{data=bool}	"set favorite result"
-// @Router		/api/v1/game/{id}/favorite [post]
+//	@Summary	用户设置收藏游戏
+//	@Tags		Games API
+//	@Produce	json
+//	@Authorize	"tma {token}"
+//	@Param		action	body		string						true	"add or remove"
+//	@Param		gameId	body		string						true	"游戏Id"
+//	@Success	200		{object}	api.JSONResult{data=bool}	"set favorite result"
+//	@Router		/api/v1/game/{id}/favorite [post]
 func apiUserSetFavoriteGame(c *gin.Context, user *data.DashFunUser) {
 	gameId := c.Param("id")
 	action := c.PostForm("action")
@@ -302,12 +302,12 @@ func apiUserSetFavoriteGame(c *gin.Context, user *data.DashFunUser) {
 	c.JSON(http.StatusOK, RSuccess(true))
 }
 
-// @Summary 用户设置收藏游戏
-// @Tags		Games API
-// @Produce	json
-// @Authorize "tma {token}"
-// @Success	200		{object}	api.JSONResult{data=bool}	"set favorite result"
-// @Router		/api/v1/game/{id}/favorite [get]
+//	@Summary	用户设置收藏游戏
+//	@Tags		Games API
+//	@Produce	json
+//	@Authorize	"tma {token}"
+//	@Success	200	{object}	api.JSONResult{data=bool}	"set favorite result"
+//	@Router		/api/v1/game/{id}/favorite [get]
 func apiUserGetFavoriteGame(c *gin.Context, user *data.DashFunUser) {
 	gameId := c.Param("id")
 	isFavorite, err := usercenter.Get().IsUserFavoriteGame(user.Id, gameId)

@@ -26,6 +26,7 @@ type AdminGameDataRequest struct {
 	Genre    []int                  `json:"genre" form:"genre"`                         //游戏类型Id
 	OpenTime int64                  `json:"open_time" form:"open_time" required:"true"` //游戏开放时间
 	Status   data.DashFunGameStatus `json:"status" form:"status"`                       //游戏状态
+	Flags    []int                  `json:"flags" form:"flags"`                         //游戏标志 1: new, 2: popular, 3: suggest, 4: banner
 	//IconUrl    string `json:"iconUrl" form:"iconUrl"`       //游戏图标地址
 	//LogoUrl    string `json:"logoUrl" form:"logoUrl"`       //游戏logo
 	//MainPicUrl string `json:"mainPicUrl" form:"mainPicUrl"` //游戏主图地址 横向比例
@@ -83,6 +84,7 @@ func apiAdminGameCreate(c *gin.Context, op *admin.AdminUser) {
 //	@Param		desc		body		string									false	"游戏介绍"
 //	@Param		url			body		string									false	"游戏链接"
 //	@Param		genre		body		[]int									false	"游戏类型"
+//	@Param		flags		body		[]int									false	"游戏标志"	1:	new,	2:	popular,	3:	suggest,	4:	banner
 //	@Param		open_time	body		int64									true	"游戏开放时间，如果保持不变传入-1，0表示立即开启，>0表示指定开放时间的毫秒数"
 //	@Success	200			{object}	api.JSONResult{data=[]data.DashFunGame}	"DashFunGame"
 //	@Router		/api/v1/admin/game/update [post]
@@ -93,7 +95,7 @@ func apiAdminGameUpdate(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	info, err := gamecenter.Get().UpdateGameInfo(req.Id, req.Name, req.Desc, req.Url, req.Genre, req.OpenTime, req.Status)
+	info, err := gamecenter.Get().UpdateGameInfo(req.Id, req.Name, req.Desc, req.Url, req.Genre, req.OpenTime, req.Status, req.Flags)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return

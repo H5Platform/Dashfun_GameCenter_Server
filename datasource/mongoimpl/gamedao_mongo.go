@@ -171,6 +171,30 @@ func (g *GameDaoMongo) initDB() {
 			Sort:      -1,
 			IndexName: "index_status",
 		},
+		{
+			FieldName: "suggest_flag",
+			Unique:    false,
+			Sort:      -1,
+			IndexName: "index_suggest_flag",
+		},
+		{
+			FieldName: "new_flag",
+			Unique:    false,
+			Sort:      -1,
+			IndexName: "index_new_flag",
+		},
+		{
+			FieldName: "popular_flag",
+			Unique:    false,
+			Sort:      -1,
+			IndexName: "index_popular_flag",
+		},
+		{
+			FieldName: "banner_flag",
+			Unique:    false,
+			Sort:      -1,
+			IndexName: "index_banner_flag",
+		},
 	})
 
 	if err != nil {

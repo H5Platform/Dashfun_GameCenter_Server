@@ -16,6 +16,8 @@ type GameDaoMongo struct {
 	c  *mongo.Collection
 }
 
+var flagKeys = []string{"new", "popular", "suggest", "banner"}
+
 func (g *GameDaoMongo) FindGameList(listType data.GameListType, count int) (games []*data.DashFunGame, err error) {
 	filter := bson.D{}
 	sort := bson.D{{"time", -1}, {"_id", 1}}
@@ -67,7 +69,7 @@ func (g *GameDaoMongo) GetGameByName(gameName string) (*data.DashFunGame, error)
 	return ret, nil
 }
 
-func (g *GameDaoMongo) FindGames(keyword string, genre []int, status data.DashFunGameStatus, size, page int64) (games []*data.DashFunGame, totalPages int, err error) {
+func (g *GameDaoMongo) FindGames(keyword string, genre, flags []int, status data.DashFunGameStatus, size, page int64) (games []*data.DashFunGame, totalPages int, err error) {
 	filter := bson.D{}
 	if keyword != "" {
 		filter = append(filter, bson.E{
@@ -86,6 +88,19 @@ func (g *GameDaoMongo) FindGames(keyword string, genre []int, status data.DashFu
 				{"$all", bson.A{genre}},
 			},
 		})
+	}
+
+	if flags != nil && len(flags) > 0 {
+		for _, flag := range flags {
+			if flag >= 1 && flag <= 4 {
+				filter = append(filter, bson.E{
+					Key: flagKeys[flag-1],
+					Value: bson.D{
+						{"$eq", 1},
+					},
+				})
+			}
+		}
 	}
 
 	if status > data.DashFunGameStatus_NoChange {

@@ -342,7 +342,7 @@ func (gc *GameCenter) FindGames(keyword string, genre []int, size int64, page in
 		size = 10
 	}
 
-	return dao.GetGameDao().FindGames(keyword, genre, data.DashFunGameStatus_Online, size, page)
+	return dao.GetGameDao().FindGames(keyword, genre, nil, data.DashFunGameStatus_Online, size, page)
 }
 
 func (gc *GameCenter) refreshGameList(listType data.GameListType) {
@@ -405,10 +405,11 @@ func (gc *GameCenter) GetGameList(listType data.GameListType) []string {
 //
 // keyword string 	-- 关键字，游戏名字包含
 // genre []int		-- 游戏类型限定
+// flags []int		-- 游戏标志限定
 // status 			-- 游戏状态
 // size int			-- 分页查询，每页数量
 // page int			-- 分页查询，当前页数，从1开始
-func (gc *GameCenter) FindGamesBackend(keyword string, genre []int, status data.DashFunGameStatus, size int64, page int64) (games []*data.DashFunGame, total int, err error) {
+func (gc *GameCenter) FindGamesBackend(keyword string, genre, flags []int, status data.DashFunGameStatus, size int64, page int64) (games []*data.DashFunGame, total int, err error) {
 	if page == 0 {
 		page = 1
 	}
@@ -417,11 +418,15 @@ func (gc *GameCenter) FindGamesBackend(keyword string, genre []int, status data.
 		genre = make([]int, 0)
 	}
 
+	if flags == nil {
+		flags = make([]int, 0)
+	}
+
 	if size == 0 {
 		size = 10
 	}
 
-	return dao.GetGameDao().FindGames(keyword, genre, status, size, page)
+	return dao.GetGameDao().FindGames(keyword, genre, flags, status, size, page)
 }
 
 func (gc *GameCenter) GetGameGenres() []data.DashFunGameGenre {

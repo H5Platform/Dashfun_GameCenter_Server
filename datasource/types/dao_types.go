@@ -29,7 +29,7 @@ type GameDao interface {
 	GetGameById(gameId string) (*data.DashFunGame, error)
 	SaveOrUpdate(game *data.DashFunGame) (*data.DashFunGame, error)
 	GetGameByName(gameName string) (*data.DashFunGame, error)
-	FindGames(keyword string, genre []int, status data.DashFunGameStatus, size, page int64) (games []*data.DashFunGame, totalPages int, err error)
+	FindGames(keyword string, genre, flags []int, status data.DashFunGameStatus, size, page int64) (games []*data.DashFunGame, totalPages int, err error)
 	FindGameList(listType data.GameListType, count int) (games []*data.DashFunGame, err error)
 }
 

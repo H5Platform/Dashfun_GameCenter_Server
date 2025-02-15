@@ -36,6 +36,7 @@ type AdminGameSearchRequest struct {
 	Keyword string                 `form:"keyword"`
 	Genre   []int                  `json:"genre" form:"genre"` //游戏类型Id
 	Status  data.DashFunGameStatus `json:"status" form:"status"`
+	Flag    []int                  `json:"flag" form:"flag"` //游戏标志 1: new, 2: popular, 3: suggest, 4: banner
 	Size    int64                  `form:"size"`
 	Page    int64                  `form:"page"`
 }
@@ -181,6 +182,7 @@ func apiAdminGameUploadImage(c *gin.Context, op *admin.AdminUser) {
 //	@Produce	json
 //	@Param		keyword	body		string									false	"查询关键字"
 //	@Param		genre	body		[]int									false	"查询类型"
+//	@Param		flags	body		[]int									false	"查询标志"
 //	@Param		status	body		data.DashFunGameStatus					false	"查询游戏状态"
 //	@Param		size	body		int64									false	"每页数量"
 //	@Param		page	body		int64									false	"当前页数，从1开始"
@@ -192,7 +194,7 @@ func apiAdminGameSearch(c *gin.Context, op *admin.AdminUser) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
-	games, totalPages, err := gamecenter.Get().FindGamesBackend(req.Keyword, req.Genre, req.Status, req.Size, req.Page)
+	games, totalPages, err := gamecenter.Get().FindGamesBackend(req.Keyword, req.Genre, req.Flag, req.Status, req.Size, req.Page)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return

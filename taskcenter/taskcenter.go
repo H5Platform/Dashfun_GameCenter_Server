@@ -42,6 +42,10 @@ func (t *TaskCenter) init() {
 	tasks := dao.GetTaskDao().FindAllTasks()
 	for _, task := range tasks {
 		t.tasks[task.Id] = task
+		//process old task data
+		if task.Rewards == nil {
+			task.Rewards = append(task.Rewards, task.Reward)
+		}
 	}
 
 	events.UserEnterGameEvents.On(t.onUserEnterGameEvent)
@@ -82,14 +86,14 @@ func (t *TaskCenter) GetTaskByName(taskName string) *data.DashFunTaskData {
 }
 
 func (t *TaskCenter) CreateTaskAutoId(name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
-	condition data.DashFunTaskCondition, reward data.DashFunTaskReward) (*data.DashFunTaskData, error) {
-	return t.CreateTask(t.newTasId(), name, gameId, taskType, category, condition, reward)
+	condition data.DashFunTaskCondition, rewards ...data.DashFunTaskReward) (*data.DashFunTaskData, error) {
+	return t.CreateTask(t.newTasId(), name, gameId, taskType, category, condition, rewards...)
 }
 
 func (t *TaskCenter) CreateTask(taskId, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
-	condition data.DashFunTaskCondition, reward data.DashFunTaskReward) (*data.DashFunTaskData, error) {
+	condition data.DashFunTaskCondition, rewards ...data.DashFunTaskReward) (*data.DashFunTaskData, error) {
 	task, err := dao.GetTaskDao().CreateTask(
-		taskId, name, gameId, taskType, category, condition, reward)
+		taskId, name, gameId, taskType, category, condition, rewards)
 
 	if err != nil {
 		return nil, err
@@ -103,7 +107,7 @@ func (t *TaskCenter) CreateTask(taskId, name, gameId string, taskType data.DashF
 }
 
 func (t *TaskCenter) UpdateTask(taskId string, name string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
-	condition data.DashFunTaskCondition, reward data.DashFunTaskReward, isOpen bool) (*data.DashFunTaskData, error) {
+	condition data.DashFunTaskCondition, reward []data.DashFunTaskReward, isOpen bool) (*data.DashFunTaskData, error) {
 	if taskId == "" {
 		return nil, errors.New("task Id is empty")
 	}
@@ -117,7 +121,7 @@ func (t *TaskCenter) UpdateTask(taskId string, name string, taskType data.DashFu
 	task.Type = taskType
 	task.Category = category
 	task.Condition = condition
-	task.Reward = reward
+	task.Rewards = reward
 	task.Open = isOpen
 	dao.GetTaskDao().SaveOrUpdate(task)
 	return task, nil
@@ -360,11 +364,19 @@ func (t *TaskCenter) GetGameTasksBackend(gameId string) []*data.DashFunTaskData 
 		}
 	}
 
+	slices.SortFunc(ret, func(a, b *data.DashFunTaskData) int {
+		if a.Category != b.Category {
+			return int(a.Category - b.Category)
+		} else {
+			return int(a.CreateTime - b.CreateTime)
+		}
+	})
+
 	return ret
 }
 
-func (t *TaskCenter) SearchTaskBackend(name string, size, page int64) (tasks []*data.DashFunTaskData, totalPage int, err error) {
-	return dao.GetTaskDao().SearchTask(name, size, page)
+func (t *TaskCenter) SearchTaskBackend(gameId, keyword string, size, page int64) (tasks []*data.DashFunTaskData, totalPage int, err error) {
+	return dao.GetTaskDao().SearchTask(gameId, keyword, size, page)
 }
 
 func isDashFunTask(task *data.DashFunTaskData) bool {

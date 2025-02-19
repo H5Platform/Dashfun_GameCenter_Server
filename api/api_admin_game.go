@@ -70,7 +70,11 @@ func apiAdminGameCreate(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	game := gamecenter.Get().CreateGame(req.Name, req.Desc, req.Url, "", "", "", req.Genre)
+	game, err := gamecenter.Get().CreateGame(req.Name, req.Desc, req.Url, "", "", "", req.Genre)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
 	c.JSON(http.StatusOK, RSuccess(game))
 }
 
@@ -225,6 +229,28 @@ func apiAdminGameGet(c *gin.Context, op *admin.AdminUser) {
 	c.JSON(http.StatusOK, RSuccess(game))
 }
 
+// apiAdminGameGetApiSecret
+//
+//	@Summary	获取指定id的游戏数据
+//	@Tags		Admin API
+//	@Produce	json
+//	@Param		game_id	path		string									true	"游戏ID"
+//	@Success	200		{object}	api.JSONResult{data=string}	"ApiSecret"
+//	@Router		/api/v1/admin/game/{game_id}/api_sec [get]
+func apiAdminGameGetApiSecret(c *gin.Context, op *admin.AdminUser) {
+	gameId := c.Param("game_id")
+	if gameId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("game id is required"))
+		return
+	}
+	game, err := gamecenter.Get().FindGame(gameId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(game.ApiSecret))
+}
+
 func getFormFileBytes(form *multipart.Form, name string) ([]byte, error) {
 	data, ok := form.File[name]
 	if ok {
@@ -299,4 +325,5 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "game/update", adminHandlerAuthWrapper(admin.AdminAuth_Game, apiAdminGameUpdate))
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "game/search", adminHandlerAuthWrapper(admin.AdminAuth_Game, apiAdminGameSearch))
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "game/:game_id", adminHandlerAuthWrapper(admin.AdminAuth_Game, apiAdminGameGet))
+	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "game/:game_id/api_sec", adminHandlerAuthWrapper(admin.AdminAuth_Game, apiAdminGameGetApiSecret))
 }

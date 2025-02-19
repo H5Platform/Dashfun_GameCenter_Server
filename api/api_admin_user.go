@@ -220,5 +220,5 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "user/update_base_info", adminHandlerAuthWrapper(admin.AdminAuth_User, apiAdminUpdateUserBaseInfo))
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "user/update_status", adminHandlerAuthWrapper(admin.AdminAuth_User, apiAdminUpdateUserStatus))
 	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "user/search", adminHandlerAuthWrapper(admin.AdminAuth_User, apiAdminSearchUsers))
-	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "/user/active", adminHandlerAuthWrapper(admin.AdminAuth_User, apiAdminActiveUser))
+	web.GetService().RegisterApi(web.ApiModuleAdmin, web.POST, "user/active", adminHandlerAuthWrapper(admin.AdminAuth_User, apiAdminActiveUser))
 }

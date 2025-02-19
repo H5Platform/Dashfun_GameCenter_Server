@@ -32,7 +32,7 @@ const (
 
 const (
 	TaskRewardType_DashFunToken DashFunTaskRewardType = iota + 1 //奖励DashFunToken
-	TaskRewardType_DashFunPoint                                  //奖励dashfun point，用来兑换链上token
+	TaskRewardType_DashFunPoint                                  //奖励dashfun point (XP)，用来兑换链上token
 	TaskRewardType_GamePoint                                     //奖励游戏对应的Point
 )
 
@@ -76,7 +76,8 @@ type DashFunTaskData struct {
 	Type       DashFunTaskType      `json:"task_type" bson:"task_type"`     //任务类型
 	Category   DashFunTaskCategory  `json:"category" bson:"category"`       //任务分类
 	Condition  DashFunTaskCondition `json:"require" bson:"require"`         //任务条件
-	Reward     DashFunTaskReward    `json:"reward" bson:"reward"`           //任务奖励
+	Reward     DashFunTaskReward    `json:"-" bson:"reward"`                //任务奖励，废弃了，用rewards
+	Rewards    []DashFunTaskReward  `json:"rewards" bson:"rewards"`         //任务奖励
 	CreateTime int64                `json:"create_time" bson:"create_time"` //任务创建时间
 }
 

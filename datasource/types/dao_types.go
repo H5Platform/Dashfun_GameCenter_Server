@@ -43,9 +43,10 @@ type TaskDao interface {
 	FindTaskById(id string) (*data.DashFunTaskData, error)
 	FindTaskByName(name string) (*data.DashFunTaskData, error)
 	FindAllTasks() []*data.DashFunTaskData
-	SearchTask(keyword string, size, page int64) (tasks []*data.DashFunTaskData, totalPages int, err error)
+	SearchTask(gameId, keyword string, size, page int64) (tasks []*data.DashFunTaskData, totalPages int, err error)
+	FindTaskByGameId(gameId string) ([]*data.DashFunTaskData, error)
 	SaveOrUpdate(task *data.DashFunTaskData) (*data.DashFunTaskData, error)
-	CreateTask(id, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory, condition data.DashFunTaskCondition, reward data.DashFunTaskReward) (*data.DashFunTaskData, error)
+	CreateTask(id, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory, condition data.DashFunTaskCondition, rewards []data.DashFunTaskReward) (*data.DashFunTaskData, error)
 }
 
 type TaskUserDao interface {

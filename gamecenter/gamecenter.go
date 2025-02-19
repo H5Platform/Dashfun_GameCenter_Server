@@ -1,6 +1,7 @@
 package gamecenter
 
 import (
+	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
@@ -68,13 +69,28 @@ func (gc *GameCenter) processGame(game *data.DashFunGame) {
 		game.ApiSecret = gc.genApiSecret()
 		dao.GetGameDao().SaveOrUpdate(game)
 	}
+	_, existed := coincenter.Get().GetCoinByGame(game.Id)
+	if !existed {
+		_, err := coincenter.Get().CreateCoin("", game.Name, "", "", game.Id, false, 0, make(map[string]string))
+		if err != nil {
+			zap.S().Errorw("Auto CreateCoin failed", "gameId", game.Id, "err", err)
+		}
+	}
 }
 
 // CreateGame
 // 创建一个游戏
-func (gc *GameCenter) CreateGame(name, desc, url, iconUrl, logoUrl, mainPicUrl string, genre []int) *data.DashFunGame {
+func (gc *GameCenter) CreateGame(name, desc, url, iconUrl, logoUrl, mainPicUrl string, genre []int) (*data.DashFunGame, error) {
+	f, err := gc.FindGameByName(name)
+	if err != nil {
+		return nil, err
+	}
+	if f != nil {
+		return nil, errors.New("game name " + name + " already exists")
+	}
+
 	game := &data.DashFunGame{
-		Id:          gc.newGameId(),
+		Id:          "",
 		Name:        name,
 		Desc:        desc,
 		Url:         url,
@@ -91,7 +107,8 @@ func (gc *GameCenter) CreateGame(name, desc, url, iconUrl, logoUrl, mainPicUrl s
 		OpenCount:   0,
 	}
 	gc.processGame(game)
-	return game
+	gc.SaveGame(game)
+	return game, nil
 }
 
 // updateGameImage
@@ -426,7 +443,15 @@ func (gc *GameCenter) FindGamesBackend(keyword string, genre, flags []int, statu
 		size = 10
 	}
 
-	return dao.GetGameDao().FindGames(keyword, genre, flags, status, size, page)
+	games, total, err = dao.GetGameDao().FindGames(keyword, genre, flags, status, size, page)
+
+	if err == nil {
+		for _, game := range games {
+			gc.processGame(game)
+		}
+	}
+
+	return
 }
 
 func (gc *GameCenter) GetGameGenres() []data.DashFunGameGenre {

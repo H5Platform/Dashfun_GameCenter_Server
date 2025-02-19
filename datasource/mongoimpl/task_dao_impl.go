@@ -94,6 +94,34 @@ func (p *TaskDaoMongo) FindTaskById(id string) (*data.DashFunTaskData, error) {
 	return ret, nil
 }
 
+func (p *TaskDaoMongo) FindTaskByGameId(gameId string) ([]*data.DashFunTaskData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var ret []*data.DashFunTaskData
+
+	cur, err := p.c.Find(ctx, bson.M{"game_id": gameId})
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return make([]*data.DashFunTaskData, 0), nil
+	}
+	defer cur.Close(ctx)
+
+	for cur.Next(ctx) {
+		var d data.DashFunTaskData
+		err := cur.Decode(&d)
+
+		if err != nil {
+			return make([]*data.DashFunTaskData, 0), err
+		}
+		ret = append(ret, &d)
+	}
+
+	if err := cur.Err(); err != nil {
+		return make([]*data.DashFunTaskData, 0), err
+	}
+	return ret, nil
+}
+
 func (p *TaskDaoMongo) FindTaskByName(name string) (*data.DashFunTaskData, error) {
 	var ret *data.DashFunTaskData
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -120,18 +148,29 @@ func (p *TaskDaoMongo) SaveOrUpdate(task *data.DashFunTaskData) (*data.DashFunTa
 	return task, nil
 }
 
-func (p *TaskDaoMongo) SearchTask(keyword string, size, page int64) (tasks []*data.DashFunTaskData, totalPages int, err error) {
+func (p *TaskDaoMongo) SearchTask(gameId, keyword string, size, page int64) (tasks []*data.DashFunTaskData, totalPages int, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	filter := bson.D{}
+	//filter = bson.D{
+	//	{
+	//		"$or", bson.A{
+	//			bson.D{{"name", bson.D{{"$regex", keyword}, {"$options", "i"}}}},
+	//			bson.D{{"game_id", keyword}},
+	//		}},
+	//}
+
+	if gameId != "" {
+		filter = append(filter, bson.E{Key: "game_id", Value: gameId})
+	}
 	if keyword != "" {
-		filter = bson.D{
-			{
-				"$or", bson.A{
-					bson.D{{"name", bson.D{{"$regex", keyword}, {"$options", "i"}}}},
-					bson.D{{"game_id", keyword}},
-				}},
-		}
+		filter = append(filter, bson.E{
+			Key: "name",
+			Value: bson.D{
+				{"$regex", keyword},
+				{"$options", "i"},
+			},
+		})
 	}
 
 	skip := (page - 1) * size
@@ -157,7 +196,7 @@ func (p *TaskDaoMongo) SearchTask(keyword string, size, page int64) (tasks []*da
 }
 
 func (p *TaskDaoMongo) CreateTask(id, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
-	condition data.DashFunTaskCondition, reward data.DashFunTaskReward) (*data.DashFunTaskData, error) {
+	condition data.DashFunTaskCondition, rewards []data.DashFunTaskReward) (*data.DashFunTaskData, error) {
 	task := &data.DashFunTaskData{
 		Id:         id,
 		Name:       name,
@@ -166,7 +205,7 @@ func (p *TaskDaoMongo) CreateTask(id, name, gameId string, taskType data.DashFun
 		Type:       taskType,
 		Category:   category,
 		Condition:  condition,
-		Reward:     reward,
+		Rewards:    rewards,
 		CreateTime: time.Now().UnixMilli(),
 	}
 	task, err := p.SaveOrUpdate(task)

@@ -16,14 +16,15 @@ type adminUpdateTaskRequest struct {
 	GameId    string                    `json:"game_id" form:"game_id" required:"false"`
 	Category  data.DashFunTaskCategory  `json:"category" form:"category" required:"true"`
 	Condition data.DashFunTaskCondition `json:"require" form:"require" required:"true"`
-	Reward    data.DashFunTaskReward    `json:"reward" form:"reward" required:"true"`
+	Rewards   []data.DashFunTaskReward  `json:"reward" form:"reward" required:"true"`
 	Open      bool                      `json:"open" form:"open" required:"false"`
 }
 
 type adminTaskSearchRequest struct {
-	Name string `form:"name" required:"true"`
-	Size int64  `form:"size"`
-	Page int64  `form:"page"`
+	GameId  string `form:"game_id"  required:"true"`
+	Keyword string `form:"keyword"`
+	Size    int64  `form:"size"`
+	Page    int64  `form:"page"`
 }
 
 // apiAdminTaskGetForGame
@@ -50,7 +51,8 @@ func apiAdminTaskGetForGame(c *gin.Context, op *admin.AdminUser) {
 //	@Tags		Admin API
 //	@Accept		json
 //	@Produce	json
-//	@Param		name	body		string										true	"任务名字或绑定游戏的ID，任务名字模糊匹配"
+//	@Param		game_id	body		string										true	"任务绑定游戏的ID"
+//	@Param		keyword	body		string										true	"任务名字,模糊匹配"
 //	@Param		size	body		int64										false	"每页数量"
 //	@Param		page	body		int64										false	"当前页数，从1开始"
 //	@Success	200		{object}	api.JSONResult{data=[]data.DashFunTaskData}	"Search Result"
@@ -62,7 +64,7 @@ func apiAdminTaskSearch(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	tasks, totalPage, err := taskcenter.Get().SearchTaskBackend(req.Name, req.Size, req.Page)
+	tasks, totalPage, err := taskcenter.Get().SearchTaskBackend(req.GameId, req.Keyword, req.Size, req.Page)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
@@ -80,8 +82,8 @@ func apiAdminTaskSearch(c *gin.Context, op *admin.AdminUser) {
 //	@Param		name		body		string										true	"任务名称"
 //	@Param		type		body		data.DashFunTaskType						true	"任务类型"
 //	@Param		category	body		data.DashFunTaskCategory					true	"任务分类"
-//	@Param		condition	body		data.DashFunTaskCondition					true	"任务分类"
-//	@Param		reward		body		data.DashFunTaskReward						true	"任务奖励"
+//	@Param		require		body		data.DashFunTaskCondition					true	"任务分类"
+//	@Param		rewards		body		[]data.DashFunTaskReward						true	"任务奖励"
 //	@Param		open		body		bool										true	"任务是否开放"
 //	@Success	200			{object}	api.JSONResult{data=[]data.DashFunTaskData}	"更新后的任务数据"
 //	@Router		/api/v1/admin/task/update [post]
@@ -92,7 +94,14 @@ func apiAdminTaskUpdate(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	task, err := taskcenter.Get().UpdateTask(req.Id, req.Name, req.Type, req.Category, req.Condition, req.Reward, req.Open)
+	exist := taskcenter.Get().GetTaskByName(req.Name)
+
+	if exist != nil && exist.Id != req.Id {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError("task name already exist"))
+		return
+	}
+
+	task, err := taskcenter.Get().UpdateTask(req.Id, req.Name, req.Type, req.Category, req.Condition, req.Rewards, req.Open)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
@@ -111,7 +120,7 @@ func apiAdminTaskUpdate(c *gin.Context, op *admin.AdminUser) {
 //	@Param		type		body		data.DashFunTaskType						true	"任务类型"
 //	@Param		category	body		data.DashFunTaskCategory					true	"任务分类"
 //	@Param		condition	body		data.DashFunTaskCondition					true	"任务分类"
-//	@Param		reward		body		data.DashFunTaskReward						true	"任务奖励"
+//	@Param		rewards		body		[]data.DashFunTaskReward						true	"任务奖励"
 //	@Success	200			{object}	api.JSONResult{data=[]data.DashFunTaskData}	"新增的任务数据"
 //	@Router		/api/v1/admin/task/create [post]
 func apiAdminTaskCreate(c *gin.Context, op *admin.AdminUser) {
@@ -121,7 +130,14 @@ func apiAdminTaskCreate(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	task, err := taskcenter.Get().CreateTaskAutoId(req.Name, req.GameId, req.Type, req.Category, req.Condition, req.Reward)
+	exist := taskcenter.Get().GetTaskByName(req.Name)
+
+	if exist != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError("task name already exist"))
+		return
+	}
+
+	task, err := taskcenter.Get().CreateTaskAutoId(req.Name, req.GameId, req.Type, req.Category, req.Condition, req.Rewards...)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return

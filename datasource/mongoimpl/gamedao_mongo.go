@@ -16,7 +16,7 @@ type GameDaoMongo struct {
 	c  *mongo.Collection
 }
 
-var flagKeys = []string{"new", "popular", "suggest", "banner"}
+var flagKeys = []string{"new_flag", "popular_flag", "suggest_flag", "banner_flag"}
 
 func (g *GameDaoMongo) FindGameList(listType data.GameListType, count int) (games []*data.DashFunGame, err error) {
 	filter := bson.D{}
@@ -90,16 +90,20 @@ func (g *GameDaoMongo) FindGames(keyword string, genre, flags []int, status data
 		})
 	}
 
+	//if flags != nil && len(flags) > 0 {
+	//	flagFilters := bson.A{}
+	//	for _, flag := range flags {
+	//		flagFilters = append(flagFilters, bson.E{Key: flagKeys[flag-1], Value: 1})
+	//	}
+	//	filter = append(filter, bson.E{
+	//		Key:   "$or",
+	//		Value: flagFilters,
+	//	})
+	//}
+
 	if flags != nil && len(flags) > 0 {
 		for _, flag := range flags {
-			if flag >= 1 && flag <= 4 {
-				filter = append(filter, bson.E{
-					Key: flagKeys[flag-1],
-					Value: bson.D{
-						{"$eq", 1},
-					},
-				})
-			}
+			filter = append(filter, bson.E{Key: flagKeys[flag-1], Value: 1})
 		}
 	}
 

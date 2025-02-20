@@ -90,7 +90,7 @@ func (gc *GameCenter) CreateGame(name, desc, url, iconUrl, logoUrl, mainPicUrl s
 	}
 
 	game := &data.DashFunGame{
-		Id:          "",
+		Id:          gc.newGameId(),
 		Name:        name,
 		Desc:        desc,
 		Url:         url,

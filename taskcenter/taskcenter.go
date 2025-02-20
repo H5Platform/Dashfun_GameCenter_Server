@@ -355,7 +355,7 @@ func (t *TaskCenter) GetGameTasksBackend(gameId string) []*data.DashFunTaskData 
 	ret := make([]*data.DashFunTaskData, 0)
 
 	for _, task := range t.tasks {
-		if gameId == "" {
+		if gameId == "" || gameId == "-1" {
 			if isDashFunTask(task) {
 				ret = append(ret, task)
 			}

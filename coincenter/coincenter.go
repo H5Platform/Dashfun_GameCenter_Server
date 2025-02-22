@@ -137,10 +137,13 @@ func (c *CoinCenter) CreateCoin(id, name, symbol, desc, bindGameId string, canWi
 	return coin, nil
 }
 
-func (c *CoinCenter) UpdateCoin(name, desc, Symbol string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error) {
-	coin, exist := c.GetCoinByName(name)
+func (c *CoinCenter) UpdateCoin(id, name, desc, Symbol string, canWithdraw bool, minWithdraw float32, chainAddr map[string]string) (*data.CoinData, error) {
+	coin, exist := c.GetCoinById(id)
 	if !exist {
 		return nil, errors.New("coin " + name + " not found")
+	}
+	if name != "" {
+		coin.Name = name
 	}
 	if desc != "" {
 		coin.Desc = desc
@@ -148,7 +151,7 @@ func (c *CoinCenter) UpdateCoin(name, desc, Symbol string, canWithdraw bool, min
 	if Symbol != "" {
 		coin.Symbol = Symbol
 	}
-	
+
 	coin.CanWithdraw = canWithdraw
 	if minWithdraw > 0 {
 		coin.MinWithdraw = minWithdraw

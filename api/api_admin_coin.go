@@ -80,7 +80,7 @@ func apiAdminCoinUpdate(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	coin, err := coincenter.Get().UpdateCoin(req.Name, req.Desc, req.Symbol, req.CanWithdraw, req.MinWithdraw, req.ChainAddr)
+	coin, err := coincenter.Get().UpdateCoin(req.Id, req.Name, req.Desc, req.Symbol, req.CanWithdraw, req.MinWithdraw, req.ChainAddr)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return

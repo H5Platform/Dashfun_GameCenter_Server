@@ -13,16 +13,16 @@ type CoinData struct {
 }
 
 type CoinUserData struct {
-	UserId     string  `json:"user_id" bson:"user_id"`
-	CoinId     string  `json:"coin_id" bson:"coin_id"`
-	Amount     float32 `json:"amount" bson:"amount"`
-	CreateTime int64   `json:"create_time" bson:"create_time"`
+	UserId     string `json:"user_id" bson:"user_id"`
+	CoinId     string `json:"coin_id" bson:"coin_id"`
+	Amount     int32  `json:"amount" bson:"amount"`
+	CreateTime int64  `json:"create_time" bson:"create_time"`
 }
 
 // CoinUserRecordData 用户coin变化记录
 type CoinUserRecordData struct {
-	UserId string  `json:"user_id" bson:"user_id"`
-	CoinId string  `json:"coin_id" bson:"coin_id"`
-	Change float32 `json:"change" bson:"change"`
-	Time   int64   `json:"time" bson:"time"`
+	UserId string `json:"user_id" bson:"user_id"`
+	CoinId string `json:"coin_id" bson:"coin_id"`
+	Change int32  `json:"change" bson:"change"`
+	Time   int64  `json:"time" bson:"time"`
 }

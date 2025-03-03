@@ -4,6 +4,8 @@ import (
 	_ "dashfun_gamecenter/_initdata"
 	_ "dashfun_gamecenter/api"
 	"dashfun_gamecenter/config"
+	"dashfun_gamecenter/invitecenter"
+	"dashfun_gamecenter/leaderboardcenter"
 	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/tgbot"
 	"dashfun_gamecenter/web"
@@ -52,6 +54,8 @@ func main() {
 	zap.ReplaceGlobals(logger)
 	tgbot.Get()
 	taskcenter.Get()
+	invitecenter.Get()
+	leaderboardcenter.Get()
 
 	logger.Info("dashfun gamecenter started")
 	//ton.Get()

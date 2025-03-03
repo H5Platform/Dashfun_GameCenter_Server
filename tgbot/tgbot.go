@@ -63,7 +63,7 @@ func Bot() *bot.Bot {
 	return Get().bot
 }
 
-func (t *TGBot) GetUserPhotoUrl(userId int64) string {
+func (t *TGBot) GetUserPhotoFilePath(userId int64) string {
 	tgbot := t.bot
 
 	photos, err := tgbot.GetUserProfilePhotos(context.TODO(), &bot.GetUserProfilePhotosParams{
@@ -83,9 +83,22 @@ func (t *TGBot) GetUserPhotoUrl(userId int64) string {
 			//头像获取失败
 			return ""
 		} else {
-			photoUrl := fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", config.GetConfig().TG.Token, file.FilePath)
+			photoUrl := file.FilePath
 			return photoUrl
 		}
+	}
+}
+
+func (t *TGBot) GetUserPhotoUrlByFile(file string) string {
+	return fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", config.GetConfig().TG.Token, file)
+}
+
+func (t *TGBot) GetUserPhotoUrl(userId int64) string {
+	path := t.GetUserPhotoFilePath(userId)
+	if path == "" {
+		return ""
+	} else {
+		return t.GetUserPhotoUrlByFile(path)
 	}
 }
 

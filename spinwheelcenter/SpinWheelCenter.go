@@ -167,7 +167,7 @@ func (s *SpinWheelCenter) UserClaimReward(userId, gameId string) (*data.SpinWhee
 		return nil, errors.New("invalid spin reward type")
 	}
 
-	_, err = coincenter.Get().AddUserCoinAmount(userId, coin.Id, float32(reward.RewardValue))
+	_, err = coincenter.Get().AddUserCoinAmount(userId, coin.Id, int32(reward.RewardValue))
 	if err != nil {
 		return nil, err
 	}

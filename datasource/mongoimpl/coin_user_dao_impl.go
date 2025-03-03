@@ -3,6 +3,7 @@ package mongoimpl
 import (
 	"context"
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/datasource/types"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -34,6 +35,19 @@ func (cd *CoinUserDaoMongo) initDB() {
 	}
 
 	_, err := c.Indexes().CreateOne(context.TODO(), indexModel)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = CreateIndexes(c, []IndexInfo{
+		{
+			FieldName: "coin_id",
+			Unique:    false,
+			Sort:      1,
+			IndexName: "index_coin_id",
+		},
+	})
 
 	if err != nil {
 		log.Fatal(err)
@@ -84,4 +98,10 @@ func (cd *CoinUserDaoMongo) GetAllUserCoins(userId string) ([]*data.CoinUserData
 		return nil, err
 	}
 	return ret, nil
+}
+
+// GetCoinUserDataCursor 获取的指定coin的用户数据游标，用于恢复leaderboard
+func (cd *CoinUserDaoMongo) GetCoinUserDataCursor(coinId string, batchSize int32) (types.Cursor[data.CoinUserData], error) {
+	ret, err := newMongoCursor[data.CoinUserData](cd.c, &bson.D{{"coin_id", coinId}}, batchSize)
+	return ret, err
 }

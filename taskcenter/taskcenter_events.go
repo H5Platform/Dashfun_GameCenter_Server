@@ -13,6 +13,26 @@ func (t *TaskCenter) onUserLogin(user *data.OnlineUser) {
 	if err != nil {
 		zap.S().Errorw("LoadAllTaskUserData Error", "user", user.User.Id, "err", err)
 	}
+	//完成登陆DashFun的任务
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+	for _, task := range t.tasks {
+		if task.Open && isDashFunTask(task) {
+			userData, err := t.GetTaskUserData(user.User.Id, task.Id)
+			if err != nil {
+				zap.S().Errorw("GetTaskUserData Error", "user", user.User.Id, "task", task.Id, "err", err)
+				continue
+			}
+
+			if task.Condition.Type == data.TaskCondition_EnterDashFun {
+				changed := t.taskRecordEnterDashFun(user.User, task, userData)
+				if changed {
+					userData.Time = time.Now().UnixMilli()
+					t.saveTaskUserData(userData)
+				}
+			}
+		}
+	}
 }
 
 func (t *TaskCenter) onUserLogout(user *data.OnlineUser) {
@@ -67,6 +87,10 @@ func (t *TaskCenter) onGameReportPlayerLevelUp(evt *events.EventPlayerLevelUp) {
 
 			switch task.Condition.Type {
 			case data.TaskCondition_LevelUp:
+				if isDashFunTask(task) {
+					//按任务条件指定的游戏id绑定
+				}
+
 				changed = t.taskRecordPlayerLevelUp(user, task, userData, game.Id, evt.Level)
 				break
 			}
@@ -110,6 +134,10 @@ func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
 			case data.TaskCondition_PlayRandomGame:
 				//进行任意游戏
 				changed = t.taskRecordPlayRandomGame(user, task, userData, game.Id)
+				break
+			case data.TaskCondition_PlaySpecificGame:
+				//进行指定游戏
+				changed = t.taskRecordPlaySpecificGame(user, task, userData, game.Id)
 				break
 			case data.TaskCondition_LevelUp:
 				break

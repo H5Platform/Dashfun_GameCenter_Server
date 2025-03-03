@@ -37,6 +37,8 @@ const (
 	ApiModuleGameReport  = "game_report"
 	ApiModuleAdmin       = "admin"
 	ApiModuleAdminSearch = "admin_search"
+	ApiModuleLeaderboard = "leaderboard"
+	ApiModuleFriends     = "friends"
 )
 
 type ApiNode struct {
@@ -119,7 +121,7 @@ func TGLoginCheckMiddleware(excludePaths ...string) gin.HandlerFunc {
 			_, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token, true)
 			if errors.Is(err, apperrors.ErrUserDoesNotExist) {
 				//用户调用api时没有在在线用户列表中，有可能由于重启服务器导致，重新进行用户登录
-				usercenter.Get().TGUserLogin(auth.Token)
+				usercenter.Get().TGUserLogin(auth.Token, "")
 			}
 		}
 	}

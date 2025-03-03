@@ -46,3 +46,5 @@ func GetUserSaveDataDao() types.DashFunUserSaveDataDao {
 func GetUserPlayRecordDao() types.DashFunUserPlayRecordDao {
 	return daoImpl.GetUserPlayRecordDao()
 }
+
+func GetInvitedUserDao() types.InvitedUserDao { return daoImpl.GetInvitedUserDao() }

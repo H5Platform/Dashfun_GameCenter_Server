@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 var client *mongo.Client
@@ -28,6 +29,7 @@ type DaoImplMongo struct {
 	spinWheelUserDao      types.SpinWheelUserDao
 	userSaveDataDao       types.DashFunUserSaveDataDao
 	userPlayRecordDao     types.DashFunUserPlayRecordDao
+	invitedUserDao        types.InvitedUserDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
@@ -46,6 +48,7 @@ func NewDaoImplMongo() *DaoImplMongo {
 		spinWheelUserDao:      GetSpinWheelUserDaoMongo(),
 		userSaveDataDao:       GetUserSaveDataDaoMongo(),
 		userPlayRecordDao:     GetUserPlayRecordDaoMongo(),
+		invitedUserDao:        GetInvitedUserDaoMongo(),
 	}
 }
 
@@ -70,6 +73,9 @@ func (d *DaoImplMongo) GetSpinWheelUserDao() types.SpinWheelUserDao      { retur
 func (d *DaoImplMongo) GetUserSaveDataDao() types.DashFunUserSaveDataDao { return d.userSaveDataDao }
 func (d *DaoImplMongo) GetUserPlayRecordDao() types.DashFunUserPlayRecordDao {
 	return d.userPlayRecordDao
+}
+func (d *DaoImplMongo) GetInvitedUserDao() types.InvitedUserDao {
+	return d.invitedUserDao
 }
 
 func GetMongoDatabase() *mongo.Database {
@@ -139,4 +145,45 @@ func CreateIndexes(c *mongo.Collection, indexes []IndexInfo) error {
 	}
 
 	return nil
+}
+
+type MongoCursor[T any] struct {
+	c      *mongo.Collection
+	cursor *mongo.Cursor
+}
+
+func (c *MongoCursor[T]) Next(ctx context.Context) bool {
+	return c.cursor.Next(ctx)
+}
+
+func (c *MongoCursor[T]) Data() (*T, error) {
+	var ret T
+	err := c.cursor.Decode(&ret)
+	if err != nil {
+		return nil, err
+	}
+	return &ret, nil
+}
+
+func (c *MongoCursor[T]) Close() {
+	c.cursor.Close(context.Background())
+}
+
+func newMongoCursor[T any](c *mongo.Collection, filter *bson.D, batchSize int32) (*MongoCursor[T], error) {
+	mc := &MongoCursor[T]{
+		c: c,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if filter == nil {
+		filter = &bson.D{}
+	}
+	opt := options.Find().SetBatchSize(batchSize)
+	cursor, err := c.Find(ctx, filter, opt)
+
+	if err != nil {
+		return nil, err
+	}
+	mc.cursor = cursor
+	return mc, nil
 }

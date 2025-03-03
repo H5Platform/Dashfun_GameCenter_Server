@@ -25,6 +25,7 @@ type DashFunUser struct {
 	LoginTime     int64             `json:"login_time" bson:"login_time"`         //登录时间
 	LogoffTime    int64             `json:"logoff_time" bson:"logoff_time"`       //登出时间
 	WalletAddress map[string]string `json:"wallet_address" bson:"wallet_address"` //钱包地址 key=网络，value=地址
+	ReferrerId    string            `json:"referrer_id" bson:"referrer_id"`       //推荐人id
 }
 
 type TGInfo struct {

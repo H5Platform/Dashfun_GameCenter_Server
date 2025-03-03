@@ -15,13 +15,16 @@ const (
 )
 
 const (
-	TaskCondition_PlayRandomGame DashFunTaskConditionType = iota + 1 //玩任意游戏指定次数
-	TaskCondition_PlayGame                                           //玩指定游戏指定次数，游戏id在task中指定
-	TaskCondition_LevelUp                                            //在指定游戏中升级到指定等级
-	TaskCondition_JoinTGChannel                                      //加入指定的tg channel
-	TaskCondition_FollowX                                            //Follow X
-	TaskCondition_SpendTGStars                                       //在TG中花费星星
-	TaskCondition_BindWallet                                         //绑定钱包
+	TaskCondition_PlayRandomGame   DashFunTaskConditionType = iota + 1 //玩任意游戏指定次数
+	TaskCondition_PlayGame                                             //玩指定游戏指定次数，游戏id在task中指定
+	TaskCondition_LevelUp                                              //在指定游戏中升级到指定等级，如果任务绑定了游戏id，那么只有在指定游戏中升级才算，如果任务绑定了dashfun，那么需要再任务条件中指定游戏Id
+	TaskCondition_JoinTGChannel                                        //加入指定的tg channel
+	TaskCondition_FollowX                                              //Follow X
+	TaskCondition_SpendTGStars                                         //在TG中花费星星
+	TaskCondition_BindWallet                                           //绑定钱包
+	TaskCondition_PlaySpecificGame                                     //玩指定游戏，游戏id在task condition中指定，绑定给dashfun用
+	TaskCondition_InviteFriends                                        //邀请好友
+	TaskCondition_EnterDashFun                                         //进入dashfun，登陆就算
 )
 
 const (
@@ -57,7 +60,7 @@ const (
 
 type DashFunTaskReward struct {
 	RewardType DashFunTaskRewardType `json:"reward_type" bson:"reward_type"` //奖励类型
-	Amount     float32               `json:"amount" bson:"amount"`           //奖励数量
+	Amount     int32                 `json:"amount" bson:"amount"`           //奖励数量
 }
 
 type DashFunTaskCondition struct {

@@ -54,6 +54,24 @@ type TonConfig struct {
 	IsTest         bool   `yaml:"is_test"`
 }
 
+type RedisCfg struct {
+	Address  string `yaml:"address"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
+}
+
+type RewardPoint struct {
+	InviteUserType int `yaml:"invite_user_type"` //邀请用户类型, 1=新用户，2=老用户,3=非活跃用户(登录时间超过90天)
+	RewardPoint    int `yaml:"reward_point"`     //奖励的积分xp
+	RewardCoin     int `yaml:"reward_coin"`      //奖励的金币
+}
+
+// InviteCfg 邀请用户奖励配置
+type InviteCfg struct {
+	PointRequired int           `yaml:"point_required"` //被邀请的用户，达到指定积分后，才算邀请成功
+	PointReward   []RewardPoint `yaml:"point_reward"`   //每个成功被邀请的用户奖励的分数
+}
+
 type Config struct {
 	Base          *BaseConfig       `yaml:"base"`
 	Mongo         *MongoConfig      `yaml:"mongo"`
@@ -64,6 +82,8 @@ type Config struct {
 	AdminCfg      *AdminConfig      `yaml:"admin_cfg"`
 	TencentCosCfg *TencentCosConfig `yaml:"tencent_cos"`
 	TonCfg        *TonConfig        `yaml:"ton_cfg"`
+	RedisCfg      *RedisCfg         `yaml:"redis_cfg"`
+	InviteCfg     *InviteCfg        `yaml:"invite_cfg"`
 }
 
 var config *Config

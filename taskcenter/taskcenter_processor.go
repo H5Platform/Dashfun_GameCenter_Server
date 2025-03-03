@@ -101,6 +101,17 @@ func (t *TaskCenter) UserVerifyTGChannel(user *data.DashFunUser, taskId string, 
 	return userData, nil
 }
 
+func (t *TaskCenter) taskRecordEnterDashFun(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData) bool {
+	ret := false
+	if task.Condition.Type == data.TaskCondition_EnterDashFun && userData.Status == data.TaskStatus_InProgress {
+		if isDashFunTask(task) && userData.Status == data.TaskStatus_InProgress {
+			userData.Status = data.TaskStatus_Completed
+			ret = true
+		}
+	}
+	return ret
+}
+
 func (t *TaskCenter) taskVerifyFollowX(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
 	ret := false
 	if task.Condition.Type == data.TaskCondition_FollowX {
@@ -169,6 +180,25 @@ func (t *TaskCenter) taskRecordPlayGame(user *data.DashFunUser, task *data.DashF
 	ret := false
 	if task.Condition.Type == data.TaskCondition_PlayGame {
 		if task.GameId == gameId && userData.Status == data.TaskStatus_InProgress {
+			if userData.Progress < task.Condition.Count {
+				userData.Progress = userData.Progress + 1
+				ret = true
+			}
+			if userData.Progress >= task.Condition.Count {
+				userData.Status = data.TaskStatus_Completed
+				ret = true
+			}
+		}
+	}
+	return ret
+}
+
+// taskRecordPlaySpecificGame 给玩家记录一次指定游戏的次数
+func (t *TaskCenter) taskRecordPlaySpecificGame(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
+	//玩指定游戏
+	ret := false
+	if task.Condition.Type == data.TaskCondition_PlaySpecificGame {
+		if task.Condition.Condition == gameId && userData.Status == data.TaskStatus_InProgress {
 			if userData.Progress < task.Condition.Count {
 				userData.Progress = userData.Progress + 1
 				ret = true

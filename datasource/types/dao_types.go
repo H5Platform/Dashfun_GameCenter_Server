@@ -1,6 +1,9 @@
 package types
 
-import "dashfun_gamecenter/datasource/data"
+import (
+	"context"
+	"dashfun_gamecenter/datasource/data"
+)
 
 type DaoImpl interface {
 	GetUserDao() UserDao
@@ -17,6 +20,7 @@ type DaoImpl interface {
 	GetSpinWheelUserDao() SpinWheelUserDao
 	GetUserSaveDataDao() DashFunUserSaveDataDao
 	GetUserPlayRecordDao() DashFunUserPlayRecordDao
+	GetInvitedUserDao() InvitedUserDao
 }
 
 type UserDao interface {
@@ -67,6 +71,7 @@ type CoinDao interface {
 type CoinUserDao interface {
 	SaveOrUpdate(user *data.CoinUserData) (*data.CoinUserData, error)
 	GetAllUserCoins(userId string) ([]*data.CoinUserData, error)
+	GetCoinUserDataCursor(coinId string, batchSize int32) (Cursor[data.CoinUserData], error)
 }
 
 type CoinRecordDao interface {
@@ -93,4 +98,16 @@ type DashFunUserSaveDataDao interface {
 type DashFunUserPlayRecordDao interface {
 	SaveOrUpdate(user *data.DashFunUserPlayRecord) (*data.DashFunUserPlayRecord, error)
 	GetUserPlayRecord(userId string) (*data.DashFunUserPlayRecord, error)
+}
+
+type InvitedUserDao interface {
+	FindInvitedByUserId(userId string) ([]*data.InvitedUserData, error)
+	FindInvitedByInvitedUserId(userId string) ([]*data.InvitedUserData, error)
+	SaveOrUpdate(user *data.InvitedUserData) (*data.InvitedUserData, error)
+}
+
+type Cursor[T any] interface {
+	Next(ctx context.Context) bool
+	Data() (*T, error)
+	Close()
 }

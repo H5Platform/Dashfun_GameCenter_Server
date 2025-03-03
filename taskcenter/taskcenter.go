@@ -255,7 +255,7 @@ func (t *TaskCenter) UserClaimReward(user *data.DashFunUser, taskId string) (*da
 
 	if userData.Status == data.TaskStatus_Completed {
 		//可领取奖励
-		t.addTaskReward(task, userData)
+		t.addTaskRewards(task, userData)
 		return userData, nil
 	} else {
 		err = errors.New("task status error")
@@ -264,30 +264,39 @@ func (t *TaskCenter) UserClaimReward(user *data.DashFunUser, taskId string) (*da
 	}
 }
 
-func (t *TaskCenter) addTaskReward(task *data.DashFunTaskData, userData *data.DashFunTaskUserData) {
-	//add reward
+func (t *TaskCenter) addTaskReward(taskId, gameId string, reward *data.DashFunTaskReward, userData *data.DashFunTaskUserData) bool {
 	c := coincenter.Get()
 	var coin *data.CoinData
 	var exist bool
 
-	if task.Reward.RewardType == data.TaskRewardType_GamePoint {
+	if reward.RewardType == data.TaskRewardType_GamePoint {
 		//查找游戏对应的coin信息
-		coin, exist = c.GetCoinByGame(task.GameId)
+		coin, exist = c.GetCoinByGame(gameId)
 	} else {
-		coin, exist = c.GetCoinByName(data.TaskRewardType2CoinName(task.Reward.RewardType))
+		coin, exist = c.GetCoinByName(data.TaskRewardType2CoinName(reward.RewardType))
 		if !exist {
-			zap.S().Errorw("task reward type coin not found", "task", task)
-			return
+			zap.S().Errorw("task reward type coin not found", "task", taskId)
+			return false
 		}
 	}
 
-	_, err := coincenter.Get().AddUserCoinAmount(userData.UserId, coin.Id, task.Reward.Amount)
+	_, err := coincenter.Get().AddUserCoinAmount(userData.UserId, coin.Id, reward.Amount)
 	if err != nil {
-		zap.S().Errorw("AddUserCoinAmount err", "task", task, "error", err)
-		return
+		zap.S().Errorw("AddUserCoinAmount err", "task", taskId, "error", err)
+		return false
 	}
 
-	zap.S().Infow("User Claimed Task Reward", "task", task.Id+"-"+task.Name, "reward", task.Reward.Amount, "coin", coin.Name)
+	zap.S().Infow("User Claimed Task Reward", "task", taskId, "reward", reward.Amount, "coin", coin.Name)
+	return true
+}
+
+func (t *TaskCenter) addTaskRewards(task *data.DashFunTaskData, userData *data.DashFunTaskUserData) {
+	//add reward
+	for _, reward := range task.Rewards {
+		if !t.addTaskReward(task.Id, task.GameId, &reward, userData) {
+			return
+		}
+	}
 
 	//change user data
 	userData.Status = data.TaskStatus_Claimed

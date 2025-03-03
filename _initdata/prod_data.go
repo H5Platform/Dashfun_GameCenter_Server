@@ -96,36 +96,44 @@ func makeProdSpinWheel() {
 }
 
 func makeProdCoins() {
-	gameName := "War Three Kingdoms"
-	w3kt, err := gamecenter.Get().FindGameByName(gameName)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//gameName := "War Three Kingdoms"
+	//w3kt, err := gamecenter.Get().FindGameByName(gameName)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	c := coincenter.Get()
 	_, exist := c.GetCoinByName("DashFunCoin")
 	if !exist {
-		_, err := c.CreateCoin("", "DashFunCoin", "Dash", "DashFun Coin", "", true, 100, make(map[string]string))
+		_, err := c.CreateCoin("", "DashFunCoin", "Coin", "DashFun Coin", "", true, 100, make(map[string]string))
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	_, exist = c.GetCoinByName("DashFunPoint")
+	_, exist = c.GetCoinByName("DashFunPoint") //XP
 	if !exist {
-		_, err := c.CreateCoin("", "DashFunPoint", "Point", "DashFun Point", "", false, 0, make(map[string]string))
+		_, err := c.CreateCoin("", "DashFunPoint", "DXP", "DashFun XP", "", false, 0, make(map[string]string))
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	_, exist = c.GetCoinByName("W3KPoint")
+	_, exist = c.GetCoinByName("DashFunDiamond") //XP
 	if !exist {
-		_, err := c.CreateCoin("", "W3KPoint", "W3KPoint", "W3K Point", w3kt.Id, false, 0, make(map[string]string))
+		_, err := c.CreateCoin("", "DashFunDiamond", "Diamond", "DashFun Diamond", "", false, 0, make(map[string]string))
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
+
+	//_, exist = c.GetCoinByName("W3KPoint")
+	//if !exist {
+	//	_, err := c.CreateCoin("", "W3KPoint", "W3KPoint", "W3K Point", w3kt.Id, false, 0, make(map[string]string))
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//}
 
 	_, exist = c.GetCoinByName("TestPoint")
 	if !exist {

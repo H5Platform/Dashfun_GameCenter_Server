@@ -124,21 +124,22 @@ func makeTestCoins() {
 		}
 	}
 
-	_, exist = c.GetCoinByName("DashFunPoint")
+	_, exist = c.GetCoinByName("DashFunPoint") //XP
 	if !exist {
-		_, err := c.CreateCoin("", "DashFunPoint", "DFP", "DashFun Point", "", false, 0, make(map[string]string))
+		_, err := c.CreateCoin("", "DashFunPoint", "DXP", "DashFun XP", "", false, 0, make(map[string]string))
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	_, exist = c.GetCoinByName("W3KPoint")
+	_, exist = c.GetCoinByName("DashFunDiamond") //XP
 	if !exist {
-		_, err := c.CreateCoin("", "W3KPoint", "W3KP", "W3K Point", "LocalTest", false, 0, make(map[string]string))
+		_, err := c.CreateCoin("", "DashFunDiamond", "Diamond", "DashFun Diamond", "", false, 0, make(map[string]string))
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
+
 }
 
 func makeTestTask() {
@@ -156,7 +157,7 @@ func makeTestTask() {
 			},
 			data.DashFunTaskReward{
 				RewardType: data.TaskRewardType_GamePoint,
-				Amount:     0.5,
+				Amount:     1,
 			},
 		)
 		if err != nil {

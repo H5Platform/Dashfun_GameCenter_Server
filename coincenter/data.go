@@ -35,7 +35,7 @@ func newCoinsUserData(userId string) *CoinsUserData {
 	}
 }
 
-func newCoinUserRecordData(userId, coinId string, amount float32) *data.CoinUserRecordData {
+func newCoinUserRecordData(userId, coinId string, amount int32) *data.CoinUserRecordData {
 	ret := &data.CoinUserRecordData{
 		UserId: userId,
 		CoinId: coinId,

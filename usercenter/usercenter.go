@@ -1,7 +1,6 @@
 package usercenter
 
 import (
-	"crypto/md5"
 	"dashfun_gamecenter/apperrors"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/dao"
@@ -13,7 +12,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/dgryski/go-identicon"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"github.com/tonkeeper/tongo/ton"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -69,6 +67,10 @@ func (uc *UserCenter) newUserId() string {
 	return strconv.FormatInt(id, 36)
 }
 
+func (uc *UserCenter) RequestUserId() string {
+	return uc.newUserId()
+}
+
 // UserEnterGame 用户点击了Play按钮进入游戏
 func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUser, error) {
 	user, err := uc.GetDashFunUserByTgAuthData(tgAuthData, false)
@@ -100,7 +102,7 @@ func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUse
 	return user, nil
 }
 
-func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
+func (uc *UserCenter) TGUserLogin(tgAuthData string, referrerId string) (*data.OnlineUser, error) {
 	initData, err := parseInitData(tgAuthData, 0)
 	if err != nil {
 		return nil, err
@@ -114,6 +116,19 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 
 	tgUser := initData.User
 	//photoUrl := tgbot.Get().GetUserPhotoUrl(tgUser.ID)
+
+	var referrer *data.DashFunUser
+
+	if referrerId != "" {
+		referrer, err = uc.GetDashFunUser(referrerId)
+		if err != nil || referrer == nil {
+			referrerId = ""
+		}
+	} else {
+		referrer = nil
+	}
+
+	newCreate := false
 
 	if user == nil {
 		//create new user
@@ -129,6 +144,7 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 			LogoffTime:  0,
 		}
 		_, err = ud.SaveOrUpdate(user)
+		newCreate = true
 		if err != nil {
 			zap.S().Errorw("save user error", "user", user, "err", err)
 			return nil, err
@@ -139,6 +155,13 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 		user.LoginTime = time.Now().UnixMilli()
 		//update display name
 		user.DisplayName = fmt.Sprintf("%s %s", tgUser.FirstName, tgUser.LastName)
+		//update avatar info
+		photoFile := tgbot.Get().GetUserPhotoFilePath(tgUser.ID)
+		if photoFile != "" {
+			user.AvatarUrl = "TG-" + photoFile
+		} else {
+			user.AvatarUrl = ""
+		}
 	}
 
 	var playRecord []*data.PlayGameRecord
@@ -162,6 +185,18 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string) (*data.OnlineUser, error) {
 		InitData: initData,
 	}, playRecord, favorites)
 
+	if referrerId != "" && user.Id != referrerId {
+		//check referrer
+		if user.ReferrerId == "" {
+			//用户没有推荐人，设置推荐人 (由于用户可被多次邀请，此处只是记录首次邀请人id)
+			user.ReferrerId = referrerId
+		}
+		events.UserReferrerEvents.Emit(&events.UserReferrerEvent{
+			User:        user,
+			Referrer:    referrer,
+			IsNewCreate: newCreate,
+		})
+	}
 	_, err = ud.SaveOrUpdate(user)
 	if err != nil {
 		zap.S().Errorw("save user error", "user", user, "err", err)
@@ -228,7 +263,7 @@ func (uc *UserCenter) GetDashFunUser(userId string) (*data.DashFunUser, error) {
 	}
 	if user == nil {
 		zap.S().Errorw("User Not Found By UserId", "userId", userId)
-		return nil, errors.New("user does not exist")
+		return nil, apperrors.ErrUserDoesNotExist
 	}
 
 	return user, nil
@@ -400,38 +435,62 @@ func (uc *UserCenter) UserGetPlayRecord(userId string) []*data.PlayGameRecord {
 	return ou.PlayRecord
 }
 
+func (uc *UserCenter) GetUserChannelHeadData(userId, photoPath string) []byte {
+	prefix := photoPath[:3]
+	filePath := photoPath[3:]
+	if prefix == "TG-" {
+		filePath = tgbot.Get().GetUserPhotoUrlByFile(filePath)
+		resp, err := http.Get(filePath)
+		if err == nil {
+			defer resp.Body.Close()
+			d, err := io.ReadAll(resp.Body)
+			if err == nil {
+				return d
+			}
+		}
+	}
+	return nil
+}
+
 func (uc *UserCenter) GetUserHeadAvatar(userId string) []byte {
 	ou := uc.onlineUsers.FindUser(userId)
 	if ou == nil {
 		zap.S().Errorw("User Not Found", "userId", userId)
 		return nil
 	}
-	if ou.Header == nil {
-		photoUrl := tgbot.Get().GetUserPhotoUrl(ou.TGInfo.InitData.User.ID)
-		if photoUrl == "" {
-			//用户没有头像
-		} else {
-			resp, err := http.Get(photoUrl)
+	//暂时不做缓存
+	// if ou.Header == nil {
+	// photoUrl := tgbot.Get().GetUserPhotoUrl(ou.TGInfo.InitData.User.ID)
+
+	photoUrl := ou.User.AvatarUrl
+	if photoUrl == "" {
+		//用户没有头像
+	} else {
+		//prefix还没用，后面可能会根据prefix区分渠道，使用不同的头像获取方式
+		//prefix := photoUrl[:3]
+		filePath := tgbot.Get().GetUserPhotoUrlByFile(photoUrl[3:])
+
+		resp, err := http.Get(filePath)
+		if err == nil {
+			defer resp.Body.Close()
+			d, err := io.ReadAll(resp.Body)
 			if err == nil {
-				defer resp.Body.Close()
-				d, err := io.ReadAll(resp.Body)
-				if err == nil {
-					ou.Header = d
-				}
+				ou.Header = d
 			}
 		}
 	}
+	//}
 
-	if ou.Header == nil {
-		//根据用户id生成一个头像
-		hash16 := md5.Sum([]byte(userId))
-		hash := hash16[:]
-		salt16 := md5.Sum([]byte(userId + "SALT"))
-		salt := salt16[:]
-
-		icon := identicon.New7x7(salt).Render(hash)
-		ou.Header = icon
-	}
+	//if ou.Header == nil {
+	//	//根据用户id生成一个头像
+	//	hash16 := md5.Sum([]byte(userId))
+	//	hash := hash16[:]
+	//	salt16 := md5.Sum([]byte(userId + "SALT"))
+	//	salt := salt16[:]
+	//
+	//	icon := identicon.New7x7(salt).Render(hash)
+	//	ou.Header = icon
+	//}
 
 	return ou.Header
 }

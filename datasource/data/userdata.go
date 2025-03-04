@@ -4,6 +4,7 @@ import (
 	"dashfun_gamecenter/apperrors"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"slices"
+	"sync"
 	"time"
 )
 
@@ -62,7 +63,8 @@ type OnlineUser struct {
 	TGInfo *TGInfo
 	//用户在各个游戏中存储的数据
 	//GameId -> *UserSaveData
-	SaveData map[string]*UserSaveData
+	SaveData     map[string]*UserSaveData
+	SaveDataLock sync.RWMutex
 	//用户的游戏记录
 	PlayRecord []*PlayGameRecord
 	//用户的收藏游戏id
@@ -136,6 +138,8 @@ func (ou *OnlineUser) GetGameSaveData(gameId, key string) (string, error) {
 }
 
 func (ou *OnlineUser) SetGameSaveData(gameId, key, saveData string) {
+	ou.SaveDataLock.Lock()
+	defer ou.SaveDataLock.Unlock()
 	save, ok := ou.SaveData[gameId]
 	if !ok {
 		save = &UserSaveData{

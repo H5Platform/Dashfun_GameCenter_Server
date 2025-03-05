@@ -29,7 +29,8 @@ type GameCenter struct {
 	id2games   map[string]*data.DashFunGame
 	name2games map[string]*data.DashFunGame
 
-	gameList map[data.GameListType][]string
+	gameList     map[data.GameListType][]string
+	gameListLock sync.RWMutex
 }
 
 func Get() *GameCenter {
@@ -193,7 +194,10 @@ func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, op
 		update = true
 	}
 
+	changedList := make([]data.GameListType, 0)
 	if len(flags) > 0 {
+
+		oldFlgs := []int{game.NewFlag, game.PopularFlag, game.SuggestFlag, game.BannerFlag}
 		game.NewFlag = 0
 		game.PopularFlag = 0
 		game.SuggestFlag = 0
@@ -202,12 +206,24 @@ func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, op
 			switch flag {
 			case 1:
 				game.NewFlag = 1
+				if oldFlgs[0] != 1 {
+					changedList = append(changedList, data.GameListType_New)
+				}
 			case 2:
 				game.PopularFlag = 1
+				if oldFlgs[1] != 1 {
+					changedList = append(changedList, data.GameListType_Popular)
+				}
 			case 3:
 				game.SuggestFlag = 1
+				if oldFlgs[2] != 1 {
+					changedList = append(changedList, data.GameListType_Suggest)
+				}
 			case 4:
 				game.BannerFlag = 1
+				if oldFlgs[3] != 1 {
+					changedList = append(changedList, data.GameListType_Banner)
+				}
 			}
 		}
 		update = true
@@ -217,6 +233,14 @@ func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, op
 		_, err := gc.SaveGame(game)
 		if err != nil {
 			return nil, err
+		}
+
+		if len(changedList) > 0 {
+			gc.gameListLock.Lock()
+			defer gc.gameListLock.Unlock()
+			for _, listType := range changedList {
+				gc.refreshGameList(listType)
+			}
 		}
 	}
 	return game, nil
@@ -377,40 +401,42 @@ func (gc *GameCenter) refreshGameList(listType data.GameListType) {
 
 // UpdateGameFlagBackend
 // 后台更新游戏flag接口
-func (gc *GameCenter) UpdateGameFlagBackend(id string, newFlag, popularFlag, suggestFlag, bannerFlag int) {
-	game, err := gc.FindGame(id)
-	if err != nil {
-		return
-	}
-
-	changedList := make([]data.GameListType, 0)
-
-	if game.NewFlag != newFlag {
-		game.NewFlag = newFlag
-		changedList = append(changedList, data.GameListType_New)
-	}
-	if game.PopularFlag != popularFlag {
-		game.PopularFlag = popularFlag
-		changedList = append(changedList, data.GameListType_Popular)
-	}
-	if game.SuggestFlag != suggestFlag {
-		game.SuggestFlag = suggestFlag
-		changedList = append(changedList, data.GameListType_Suggest)
-	}
-	if game.BannerFlag != bannerFlag {
-		game.BannerFlag = bannerFlag
-		changedList = append(changedList, data.GameListType_Banner)
-	}
-
-	if len(changedList) > 0 {
-		gc.SaveGame(game)
-		for _, listType := range changedList {
-			gc.refreshGameList(listType)
-		}
-	}
-}
+//func (gc *GameCenter) UpdateGameFlagBackend(id string, newFlag, popularFlag, suggestFlag, bannerFlag int) {
+//	game, err := gc.FindGame(id)
+//	if err != nil {
+//		return
+//	}
+//
+//	changedList := make([]data.GameListType, 0)
+//
+//	if game.NewFlag != newFlag {
+//		game.NewFlag = newFlag
+//		changedList = append(changedList, data.GameListType_New)
+//	}
+//	if game.PopularFlag != popularFlag {
+//		game.PopularFlag = popularFlag
+//		changedList = append(changedList, data.GameListType_Popular)
+//	}
+//	if game.SuggestFlag != suggestFlag {
+//		game.SuggestFlag = suggestFlag
+//		changedList = append(changedList, data.GameListType_Suggest)
+//	}
+//	if game.BannerFlag != bannerFlag {
+//		game.BannerFlag = bannerFlag
+//		changedList = append(changedList, data.GameListType_Banner)
+//	}
+//
+//	if len(changedList) > 0 {
+//		gc.SaveGame(game)
+//		for _, listType := range changedList {
+//			gc.refreshGameList(listType)
+//		}
+//	}
+//}
 
 func (gc *GameCenter) GetGameList(listType data.GameListType) []string {
+	gc.gameListLock.RLock()
+	defer gc.gameListLock.RUnlock()
 	return gc.gameList[listType]
 }
 

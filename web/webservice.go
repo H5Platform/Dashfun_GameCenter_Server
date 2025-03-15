@@ -39,6 +39,7 @@ const (
 	ApiModuleAdminSearch = "admin_search"
 	ApiModuleLeaderboard = "leaderboard"
 	ApiModuleFriends     = "friends"
+	ApiModuleRecharge    = "recharge"
 )
 
 type ApiNode struct {

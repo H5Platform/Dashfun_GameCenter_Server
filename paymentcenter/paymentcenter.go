@@ -21,6 +21,8 @@ import (
 var once sync.Once
 var instance *PaymentCenter
 
+// PaymentCenter 支付中心
+// 用于处理支付相关的逻辑，支付只能用DashFunDiamond，不足需要到充值中心充值
 type PaymentCenter struct {
 	idGen *snowflake.Worker
 }

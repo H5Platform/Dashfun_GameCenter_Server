@@ -21,6 +21,7 @@ type DaoImpl interface {
 	GetUserSaveDataDao() DashFunUserSaveDataDao
 	GetUserPlayRecordDao() DashFunUserPlayRecordDao
 	GetInvitedUserDao() InvitedUserDao
+	GetRechargeDao() RechargeDao
 }
 
 type UserDao interface {
@@ -41,6 +42,12 @@ type PaymentDao interface {
 	FindPaymentById(id string) (*data.DashFunPaymentData, error)
 	SaveOrUpdate(game *data.DashFunPaymentData) (*data.DashFunPaymentData, error)
 	CreatePayment(id, userId, gameId, paymentId, title, desc, payload, currency string, from data.PaymentFrom, price int, extraData string) (*data.DashFunPaymentData, error)
+}
+
+type RechargeDao interface {
+	SaveOrUpdate(recharge *data.DashFunRechargeData) (*data.DashFunRechargeData, error)
+	FindRechargeById(rechargeId string) (*data.DashFunRechargeData, error)
+	CreateRecharge(id, userId string, from data.RechargeFrom, price int, diamond int, payload, message string, createAt int64) (*data.DashFunRechargeData, error)
 }
 
 type TaskDao interface {

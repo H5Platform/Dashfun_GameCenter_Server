@@ -1,6 +1,7 @@
 package usercenter
 
 import (
+	"context"
 	"dashfun_gamecenter/apperrors"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/dao"
@@ -12,11 +13,13 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/allegro/bigcache/v3"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"github.com/tonkeeper/tongo/ton"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,6 +31,7 @@ import (
 type UserCenter struct {
 	onlineUsers *OnlineUsers
 	idGen       *snowflake.Worker
+	avatarCache *bigcache.BigCache
 }
 
 var onceUserCenter sync.Once
@@ -35,31 +39,49 @@ var instUserCenter *UserCenter
 
 func Get() *UserCenter {
 	onceUserCenter.Do(func() {
-		instUserCenter = &UserCenter{
-			onlineUsers: newOnlineUsers(),
-			idGen:       snowflake.Must(snowflake.GetWorker(data.WorkerUserId)),
-		}
+		instUserCenter = &UserCenter{}
+		instUserCenter.init()
 	})
 	return instUserCenter
 }
 
 func parseInitData(tgAuthData string, expIn time.Duration) (*initdata.InitData, error) {
+
 	token := config.GetConfig().TG.Token
 	testIdx := strings.LastIndex(token, "/test")
 	if testIdx >= 0 {
 		token = token[:testIdx]
 	}
-	err := initdata.Validate(tgAuthData, token, expIn)
-	if err != nil {
-		return nil, err
-	}
-
 	initData, err := initdata.Parse(tgAuthData)
 	if err != nil {
 		return nil, err
 	}
 
+	if !config.IsProd() {
+		//非生产环境下，如果FirstName==Test并且id以999开头，则不验证，且做为测试账户登录
+		if initData.User.FirstName == "Test" && strings.HasPrefix(strconv.Itoa(int(initData.User.ID)), "999") {
+			return &initData, nil
+		}
+	}
+
+	err = initdata.Validate(tgAuthData, token, expIn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &initData, nil
+}
+
+func (uc *UserCenter) init() {
+	uc.onlineUsers = newOnlineUsers()
+	uc.idGen = snowflake.Must(snowflake.GetWorker(data.WorkerUserId))
+	cfg := bigcache.DefaultConfig(1 * time.Hour)
+	cfg.CleanWindow = 30 * time.Minute
+	cache, err := bigcache.New(context.Background(), cfg)
+	if err != nil {
+		log.Panicln(err.Error())
+	}
+	uc.avatarCache = cache
 }
 
 func (uc *UserCenter) newUserId() string {
@@ -156,12 +178,7 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string, referrerId string) (*data.O
 		//update display name
 		user.DisplayName = fmt.Sprintf("%s %s", tgUser.FirstName, tgUser.LastName)
 		//update avatar info
-		photoFile := tgbot.Get().GetUserPhotoFilePath(tgUser.ID)
-		if photoFile != "" {
-			user.AvatarUrl = "TG-" + photoFile
-		} else {
-			user.AvatarUrl = ""
-		}
+		uc.updateUserAvatar(user)
 	}
 
 	var playRecord []*data.PlayGameRecord
@@ -212,6 +229,25 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string, referrerId string) (*data.O
 	}
 
 	return ou, nil
+}
+
+func (uc *UserCenter) updateUserAvatar(user *data.DashFunUser) {
+	photoFile := uc.getUserAvatarUrl(user)
+	user.AvatarUrl = photoFile
+}
+
+func (uc *UserCenter) getUserAvatarUrl(user *data.DashFunUser) string {
+	tgId, err := strconv.ParseInt(user.ChannelId, 10, 64)
+	if err != nil {
+		return ""
+	}
+	photoFile := tgbot.Get().GetUserPhotoFilePath(tgId)
+	if photoFile != "" {
+		photoFile = "TG-" + photoFile
+	} else {
+		photoFile = ""
+	}
+	return photoFile
 }
 
 // GetDashFunUserByTgAuthData 根据用户的tgAuthData，找到对应的DashFunUser
@@ -435,32 +471,61 @@ func (uc *UserCenter) UserGetPlayRecord(userId string) []*data.PlayGameRecord {
 	return ou.PlayRecord
 }
 
-func (uc *UserCenter) GetUserChannelHeadData(userId, photoPath string) []byte {
+func (uc *UserCenter) getUserPhoto(photoPath string) ([]byte, error) {
 	prefix := photoPath[:3]
 	filePath := photoPath[3:]
 	if prefix == "TG-" {
 		filePath = tgbot.Get().GetUserPhotoUrlByFile(filePath)
+		zap.S().Infow("Get User Photo", "filePath", filePath)
 		resp, err := http.Get(filePath)
 		if err == nil {
 			defer resp.Body.Close()
 			d, err := io.ReadAll(resp.Body)
 			if err == nil {
-				return d
+				str := string(d)
+				if strings.HasPrefix(str, "{\"ok\":false") {
+					zap.S().Errorw("User Photo Not Found", "filePath", filePath, "data", str)
+					//用户头像不存在，需要更新
+					return nil, apperrors.ErrUserPhotoNotExist
+				}
+				return d, nil
 			}
 		}
 	}
-	return nil
+	return nil, nil
+}
+
+func (uc *UserCenter) GetUserChannelHeadData(userId string) []byte {
+	avatarCached, err := uc.avatarCache.Get(userId)
+	if err == nil {
+		return avatarCached
+	}
+	user, err := uc.GetDashFunUser(userId)
+	if err != nil {
+		zap.S().Errorw("User Not Found", "userId", userId)
+		return nil
+	}
+	photoPath := uc.getUserAvatarUrl(user)
+	bytes, err := uc.getUserPhoto(photoPath)
+	if errors.Is(err, apperrors.ErrUserPhotoNotExist) {
+		return nil
+	}
+	uc.avatarCache.Set(userId, bytes)
+	return bytes
 }
 
 func (uc *UserCenter) GetUserHeadAvatar(userId string) []byte {
+	avatarCached, err := uc.avatarCache.Get(userId)
+	if err == nil {
+		return avatarCached
+	}
 	ou := uc.onlineUsers.FindUser(userId)
 	if ou == nil {
 		zap.S().Errorw("User Not Found", "userId", userId)
 		return nil
 	}
-	//暂时不做缓存
-	// if ou.Header == nil {
-	// photoUrl := tgbot.Get().GetUserPhotoUrl(ou.TGInfo.InitData.User.ID)
+
+	var avatar []byte = nil
 
 	photoUrl := ou.User.AvatarUrl
 	if photoUrl == "" {
@@ -475,7 +540,8 @@ func (uc *UserCenter) GetUserHeadAvatar(userId string) []byte {
 			defer resp.Body.Close()
 			d, err := io.ReadAll(resp.Body)
 			if err == nil {
-				ou.Header = d
+				uc.avatarCache.Set(userId, d)
+				avatar = d
 			}
 		}
 	}
@@ -492,5 +558,6 @@ func (uc *UserCenter) GetUserHeadAvatar(userId string) []byte {
 	//	ou.Header = icon
 	//}
 
-	return ou.Header
+	//return ou.Header
+	return avatar
 }

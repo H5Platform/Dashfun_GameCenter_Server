@@ -44,26 +44,51 @@ redis_cfg:
   db: 1
 
 invite_cfg:
-    # 被邀请的用户，达到指定积分后，才算邀请成功
-    point_required: 200
-    # 每个成功被邀请的用户奖励的分数
-    point_reward:
-      - {
-          #新用户奖励
-          invite_user_type: 1,
-          reward_point: 300,
-          reward_coin: 1500,
-      }
-      - {
-          #老用户奖励
-          invite_user_type: 2,
-          reward_point: 10,
-          reward_coin: 150,
-      }
-      - {
-          #非活跃用户奖励
-          invite_user_type: 3,
-          reward_point: 50,
-          reward_coin: 500,
-      }
+  # 被邀请的用户，达到指定积分后，才算邀请成功
+  point_required: 200
+  # 每个成功被邀请的用户奖励的分数
+  point_reward:
+    - {
+      #新用户奖励
+      invite_user_type: 1,
+      reward_point: 300,
+      reward_coin: 1500,
+    }
+    - {
+      #老用户奖励
+      invite_user_type: 2,
+      reward_point: 10,
+      reward_coin: 150,
+    }
+    - {
+      #非活跃用户奖励
+      invite_user_type: 3,
+      reward_point: 50,
+      reward_coin: 500,
+    }
 
+recharge_cfg:
+  open: true
+  options:
+    # price: 价格，单位美分，必须整数, diamond: 钻石数量，基本汇率 100美分=50 Diamond
+    # price_off: 折扣，100 = 10% off, 1=0.1% off
+    - { price: 199, price_ios: 259, price_android: 259, tg_star: 100, diamond: 100, price_off: 0 }
+    - { price: 299, price_ios: 389, price_android: 389, tg_star: 150, diamond: 150, price_off: 0 }
+    - { price: 499, price_ios: 649, price_android: 649, tg_star: 250, diamond: 250, price_off: 2 }
+    - { price: 699, price_ios: 899, price_android: 899, tg_star: 350, diamond: 350, price_off: 3 }
+    - { price: 999, price_ios: 1299, price_android: 1299, tg_star: 500, diamond: 500, price_off: 5 }
+    - { price: 1999, price_ios: 2599, price_android: 2599, tg_star: 1000, diamond: 1000, price_off: 10 }
+    - { price: 2999, price_ios: 3899, price_android: 3899, tg_star: 1500, diamond: 1500, price_off: 15 }
+    - { price: 4999, price_ios: 6499, price_android: 6499, tg_star: 2500, diamond: 2500, price_off: 20 }
+    - { price: 9999, price_ios: 12999, price_android: 12999, tg_star: 5000, diamond: 5000, price_off: 30 }
+    - { price: 19999, price_ios: 25999, price_android: 25999, tg_star: 10000, diamond: 10000, price_off: 45 }
+    - { price: 49999, price_ios: 64999, price_android: 64999, tg_star: 25000, diamond: 25000, price_off: 60 }
+    - { price: 99999, price_ios: 129999, price_android: 129999, tg_star: 50000, diamond: 50000, price_off: 75 }
+    - { price: 199999, price_ios: 259999, price_android: 259999, tg_star: 100000, diamond: 100000, price_off: 90 }
+    - { price: 299999, price_ios: 389999, price_android: 389999, tg_star: 150000, diamond: 150000, price_off: 100 }
+
+stripe_cfg:
+  public_key: pk_test_51R19FGGEcpOcso4vBV8InQCt5HA1b7iHihKMXaUBIisdMHybfTyFvxQEW6qnmOrvzahoPRiwwFPOcUoP7cRaLmOs00iYMIL3nK
+  secret_key: ${stripe_secret_key}
+  webhook_key: ${stripe_webhook_key}
+  return_host: http://localhost:5175/

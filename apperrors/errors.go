@@ -9,6 +9,12 @@ var (
 	ErrOnlineUserNotExist = newError("user does not online")
 
 	ErrUserGameSaveDataNotExisted = newError("User Game Save Data Not Existed")
+
+	ErrRechargeOrderNotFound   = newError("order not found")
+	ErrRechargeOrderStatus     = newError("order status error")
+	ErrRechargeOrderCantCancel = newError("you can't cancel this order")
+
+	ErrUserPhotoNotExist = newError("user photo not exist")
 )
 
 func newError(msg string) error {

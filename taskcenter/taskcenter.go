@@ -8,7 +8,6 @@ import (
 	"dashfun_gamecenter/snowflake"
 	"errors"
 	"go.uber.org/zap"
-	"log"
 	"slices"
 	"strconv"
 	"sync"
@@ -396,5 +395,4 @@ func isDashFunTask(task *data.DashFunTaskData) bool {
 }
 
 func init() {
-	log.Printf("new task id %s \n", Get().newTasId())
 }

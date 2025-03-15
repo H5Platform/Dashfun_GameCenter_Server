@@ -72,6 +72,26 @@ type InviteCfg struct {
 	PointReward   []RewardPoint `yaml:"point_reward"`   //每个成功被邀请的用户奖励的分数
 }
 
+type RechargeOption struct {
+	Price        int `yaml:"price"`         //价格，单位美分，浏览器统一价格
+	PriceIos     int `yaml:"price_ios"`     //价格，单位美分，AppStore价格
+	PriceAndroid int `yaml:"price_android"` //价格，单位美分，AndroidStore价格
+	PriceOff     int `yaml:"price_off"`     //折扣(100 = 10% off, 500 = 50% off)
+	TGStar       int `yaml:"tg_star"`       //对应TG星星数量
+	Diamond      int `yaml:"diamond"`       //对应钻石数量
+}
+
+type RechargeCfg struct {
+	Open    bool             `yaml:"open"`    //是否开启充值
+	Options []RechargeOption `yaml:"options"` //充值选项
+}
+type StripeConfig struct {
+	PublicKey  string `yaml:"public_key"`
+	SecretKey  string `yaml:"secret_key"`
+	ReturnHost string `yaml:"return_host"`
+	WebhookKey string `yaml:"webhook_key"`
+}
+
 type Config struct {
 	Base          *BaseConfig       `yaml:"base"`
 	Mongo         *MongoConfig      `yaml:"mongo"`
@@ -84,6 +104,8 @@ type Config struct {
 	TonCfg        *TonConfig        `yaml:"ton_cfg"`
 	RedisCfg      *RedisCfg         `yaml:"redis_cfg"`
 	InviteCfg     *InviteCfg        `yaml:"invite_cfg"`
+	RechargeCfg   *RechargeCfg      `yaml:"recharge_cfg"`
+	StripeCfg     *StripeConfig     `yaml:"stripe_cfg"`
 }
 
 var config *Config

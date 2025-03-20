@@ -111,7 +111,7 @@ func apiGetRechargeOrderDetails(c *gin.Context) {
 		return
 	}
 
-	coin, _ := coincenter.Get().GetCoinByName("DashFunDiamond")
+	coin := coincenter.Get().GetDashFunDiamond()
 	userCoinData := coincenter.Get().GetCoinUserData(order.UserId, coin.Id)
 
 	detail := &RechargeOrderDetail{

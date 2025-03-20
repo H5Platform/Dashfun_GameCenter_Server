@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -305,6 +306,7 @@ func (t *TaskCenter) addTaskRewards(task *data.DashFunTaskData, userData *data.D
 // GetUserTaskInfo 获取用户的任务信息
 // 返回用户在对应游戏中可用的任务列表，以及任务对应的进度
 // gameId == "all" 时返回所有任务数据
+// gameId == "" | "-1" | "DashFun" 返回DashFun的公共任务
 func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *data.UserTaskInfo {
 	userId := user.Id
 	tasks := make([]*data.DashFunTaskData, 0)             //可用任务列表
@@ -314,7 +316,8 @@ func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *dat
 	defer t.tasksLock.RUnlock()
 
 	for _, task := range t.tasks {
-		if task.Open && (isDashFunTask(task) || task.GameId == gameId || gameId == "all") {
+		// 250320修改，游戏的任务列表中不在下发DashFun的任务
+		if task.Open && ((isDashFunTask(task) && (gameId == "" || gameId == "-1" || strings.EqualFold(gameId, "dashfun"))) || task.GameId == gameId || gameId == "all") {
 			userData, err := t.GetTaskUserData(userId, task.Id)
 			if err != nil {
 				zap.S().Errorw("get user task data error", "user", userId, "task", task)

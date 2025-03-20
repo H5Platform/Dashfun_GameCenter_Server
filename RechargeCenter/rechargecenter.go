@@ -42,7 +42,7 @@ func (r *RechargeCenter) init() {
 }
 
 func (r *RechargeCenter) processPaidOrders() {
-	diamond, _ := coincenter.Get().GetCoinByName("DashFunDiamond")
+	diamond := coincenter.Get().GetDashFunDiamond()
 	for {
 		order := <-r.processingOrdersChn
 		//发放钻石

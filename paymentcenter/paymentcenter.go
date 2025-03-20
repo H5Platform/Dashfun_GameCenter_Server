@@ -2,6 +2,7 @@ package paymentcenter
 
 import (
 	"context"
+	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
@@ -128,7 +129,88 @@ func (p *PaymentCenter) FindPayment(id string) (*data.DashFunPaymentData, error)
 	return pd, nil
 }
 
-// RequestTGPayment 请求使用tg支付
+func (p *PaymentCenter) RequestDashFunPayment(userId, gameId, title, desc, payload string, price int, isTesting bool) (*data.DashFunPaymentData, error) {
+	id := p.newPaymentId()
+	currency := "DFD" //DashFunDiamond
+	from := data.DashFunPaymentFrom_DashFun
+	if isTesting {
+		currency = "TEST"
+		from = data.DashFunPaymentFrom_TEST
+	}
+	payment, err := dao.GetPaymentDao().CreatePayment(id, userId, gameId, "", title, desc, payload, currency, from, price, "")
+	zap.S().Infow("RequestDashFunPayment", "Payment", payment, "error", err)
+	if err != nil {
+		return nil, err
+	}
+	return payment, nil
+}
+
+func (p *PaymentCenter) ConfirmDashFunPayment(paymentId string, opUserId string) (*data.DashFunPaymentData, error) {
+	payment, err := p.FindPayment(paymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	if payment.Status > data.DashFunPaymentStatus_Pending {
+		zap.S().Errorw("ConfirmDashFunPayment Failed", "Payment", payment, "error", "Status Not Pending")
+		return payment, nil
+	}
+
+	if payment.UserId != opUserId {
+		zap.S().Errorw("ConfirmDashFunPayment Failed", "Payment", payment, "User", opUserId, "error", "User Not Match")
+		payment.Status = data.DashFunPaymentStatus_Failed
+		payment.Message = "User Not Match"
+		dao.GetPaymentDao().SaveOrUpdate(payment)
+		return payment, nil
+	}
+
+	user, err := usercenter.Get().GetDashFunUser(payment.UserId)
+	if err != nil {
+		zap.S().Errorw("RequestTestPayment Get User Failed", "Payment", payment, "error", err)
+		payment.Status = data.DashFunPaymentStatus_Failed
+		payment.Message = err.Error()
+		dao.GetPaymentDao().SaveOrUpdate(payment)
+		return payment, err
+	}
+
+	game, err := gamecenter.Get().FindGame(payment.GameId)
+	if err != nil {
+		zap.S().Errorw("RequestTestPayment Find Game Failed", "Payment", payment, "error")
+		payment.Status = data.DashFunPaymentStatus_Failed
+		payment.Message = err.Error()
+		dao.GetPaymentDao().SaveOrUpdate(payment)
+		return payment, err
+	}
+
+	//扣费
+	diamond := coincenter.Get().GetDashFunDiamond()
+	_, err = coincenter.Get().DecUserCoinAmount(user.Id, diamond.Id, int32(payment.Price))
+
+	if err != nil {
+		zap.S().Errorw("Dec DashFunDiamond Failed", "Payment", payment.Id, "error", err)
+		payment.Status = data.DashFunPaymentStatus_Failed
+		payment.Message = err.Error()
+		dao.GetPaymentDao().SaveOrUpdate(payment)
+		return payment, err
+	}
+
+	payment.Status = data.DashFunPaymentStatus_Paid
+	payment.PaidAt = time.Now().UnixMilli()
+
+	_, err = dao.GetPaymentDao().SaveOrUpdate(payment)
+	if err != nil {
+		return nil, err
+	}
+	events.UserPaymentEvents.Emit(&events.EventUserPayment{
+		User:    user,
+		Game:    game,
+		Payment: payment,
+	})
+
+	return payment, nil
+}
+
+// RequestTGPayment 请求使用tg支付，暂时不用了，统一使用DashFun支付
 func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc string, price int, isTesting bool) (*data.DashFunPaymentData, error) {
 	//向tg bot请求一个新的Invoice
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*10)

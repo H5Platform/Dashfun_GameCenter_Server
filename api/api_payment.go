@@ -14,7 +14,7 @@ type PaymentRequest struct {
 	GameId  string `form:"game_id" binding:"required"`
 	Title   string `form:"title" binding:"required"`
 	Desc    string `form:"desc" binding:"required"`
-	Payload string `form:"payload" binding:"required"`
+	Payload string `form:"payload"`
 	Price   int    `form:"price" binding:"required"`
 }
 
@@ -41,6 +41,66 @@ type PaymentResponse struct {
 // @Success	200	{object}	api.JSONResult{data=api.PaymentResponse}	"payment info"
 // @Router		/api/v1/payment/request [get]
 func apiUserRequestPayment(c *gin.Context, user *data.DashFunUser) {
+	req := &PaymentRequest{}
+	err := c.ShouldBindQuery(req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	//tgAuthData := c.GetHeader("authorization")
+	//authParts := strings.Split(tgAuthData, " ")
+	//if len(authParts) < 2 {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError("Unauthorized"))
+	//	return
+	//}
+	//
+	//user, err := usercenter.Get().GetDashFunUserByTgAuthData(authParts[1])
+	//if err != nil {
+	//	c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+	//	return
+	//}
+
+	game, err := gamecenter.Get().FindGame(req.GameId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+	if game == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("game %s not found", req.GameId)))
+		return
+	}
+
+	payment, err := paymentcenter.Get().RequestDashFunPayment(user.Id, req.GameId, req.Title, req.Desc, req.Payload, req.Price, game.IsTesting())
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, RSuccess(PaymentResponse{
+		PaymentId:   payment.Id,
+		InvoiceLink: "", //DashFun支付不需要InvoiceLink
+	}))
+}
+
+func apiUserConfirmPayment(c *gin.Context, user *data.DashFunUser) {
+	paymentId := c.PostForm("payment_id")
+	if paymentId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("payment_id is required"))
+		return
+	}
+
+	payment, err := paymentcenter.Get().ConfirmDashFunPayment(paymentId, user.Id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, RSuccess(payment))
+}
+
+// 请求TG支付订单，暂时不用了，统一使用DashFun支付
+func apiUserRequestTGPayment(c *gin.Context, user *data.DashFunUser) {
 	req := &PaymentRequest{}
 	err := c.ShouldBindQuery(req)
 	if err != nil {
@@ -112,5 +172,6 @@ func apiGetPayment(c *gin.Context) {
 
 func init() {
 	web.GetService().RegisterApi(web.ApiModulePayment, web.GET, "request", userHandlerAuthWrapper(apiUserRequestPayment))
+	web.GetService().RegisterApi(web.ApiModulePayment, web.POST, "confirm", userHandlerAuthWrapper(apiUserConfirmPayment))
 	web.GetService().RegisterApi(web.ApiModulePayment, web.GET, "get", apiGetPayment)
 }

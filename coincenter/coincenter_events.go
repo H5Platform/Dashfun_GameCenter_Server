@@ -1,6 +1,7 @@
 package coincenter
 
 import (
+	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
 	"go.uber.org/zap"
 )
@@ -11,6 +12,16 @@ func (c *CoinCenter) onUserLogin(user *data.OnlineUser) {
 	if err != nil {
 		zap.S().Errorw("loadUserCoins failed", "user", user.User.Id, "err", err)
 	}
+
+	if config.IsTest() || config.IsDev() {
+		//测试环境下，给用户赠送一些coin
+		diamond := c.GetDashFunDiamond()
+		userData := c.GetCoinUserData(user.User.Id, diamond.Id)
+		if userData.Amount < 500 {
+			c.AddUserCoinAmount(user.User.Id, diamond.Id, 1000)
+		}
+	}
+
 }
 
 func (c *CoinCenter) onUserOff(user *data.DashFunUser) {

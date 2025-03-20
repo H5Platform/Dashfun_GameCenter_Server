@@ -15,6 +15,8 @@ var (
 	ErrRechargeOrderCantCancel = newError("you can't cancel this order")
 
 	ErrUserPhotoNotExist = newError("user photo not exist")
+
+	ErrPaymentNotEnoughBalance = newError("not enough balance")
 )
 
 func newError(msg string) error {

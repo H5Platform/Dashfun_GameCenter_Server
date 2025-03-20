@@ -72,7 +72,8 @@ func (p *TaskDaoMongo) FindAllTasks() []*data.DashFunTaskData {
 		err := cur.Decode(&d)
 
 		if err != nil {
-			return make([]*data.DashFunTaskData, 0)
+			log.Printf("decode task %s error: %v\n", d.Id, err)
+			continue
 		}
 		ret = append(ret, &d)
 	}

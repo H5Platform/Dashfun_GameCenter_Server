@@ -116,6 +116,9 @@ func (gc *GameCenter) CreateGame(name, desc, url, iconUrl, logoUrl, mainPicUrl s
 // 更新指定的游戏图片，上传到cos，并更新game数据
 func (gc *GameCenter) updateGameImage(game *data.DashFunGame, img []byte, imgType string) error {
 	imgName := ""
+
+	uploadName := imgType + ".png"
+
 	switch imgType {
 	case "icon":
 		imgName = game.IconUrl
@@ -125,8 +128,9 @@ func (gc *GameCenter) updateGameImage(game *data.DashFunGame, img []byte, imgTyp
 		imgName = game.MainPicUrl
 	}
 
-	if imgName == "" {
-		imgName = tencentcos.Get().NextName() + ".png"
+	// 250320修改，统一游戏图片名称，方便引用
+	if imgName == "" || imgName != uploadName {
+		imgName = imgType + ".png"
 	}
 	key := "images/" + game.Id + "/" + imgName
 	_, err := tencentcos.Get().UploadData(key, img, "image/png")

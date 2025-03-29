@@ -86,7 +86,7 @@ func (uc *UserCenter) init() {
 
 func (uc *UserCenter) newUserId() string {
 	id := uc.idGen.NextId()
-	return strconv.FormatInt(id, 36)
+	return "ur" + strconv.FormatInt(id, 36)
 }
 
 func (uc *UserCenter) RequestUserId() string {

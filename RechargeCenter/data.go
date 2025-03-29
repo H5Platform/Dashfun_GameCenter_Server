@@ -1,11 +1,6 @@
 package RechargeCenter
 
-type RechargePlatformOptionPriceType int
-
-const (
-	RechargePlatformOptionPriceTypeUSD RechargePlatformOptionPriceType = iota + 1
-	RechargePlatformOptionPriceTypeTGStar
-)
+import "dashfun_gamecenter/datasource/data"
 
 type RechargePlatformOption struct {
 	Price    int `json:"price"`     //价格，单位美分,tg平台是星星数量
@@ -14,6 +9,6 @@ type RechargePlatformOption struct {
 }
 
 type RechargePlatformOptions struct {
-	PriceType RechargePlatformOptionPriceType `json:"price_type"`
-	Options   []RechargePlatformOption        `json:"options"`
+	PriceType data.RechargePlatformOptionPriceType `json:"price_type"`
+	Options   []RechargePlatformOption             `json:"options"`
 }

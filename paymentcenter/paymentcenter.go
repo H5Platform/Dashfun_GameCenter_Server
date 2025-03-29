@@ -38,12 +38,18 @@ func Get() *PaymentCenter {
 
 func (p *PaymentCenter) init() {
 	p.idGen = snowflake.Must(snowflake.GetWorker(data.WorkerPaymentId))
-	events.TGPreCheckoutQueryEvents.On(p.onPreCheckoutQueryEvent)
-	events.TGSuccessfulPaymentEvents.On(p.onPaymentSuccessEvent)
+	events.TGPreCheckoutQueryEvents.On(p.onTGPreCheckoutQueryEvent)
+	events.TGSuccessfulPaymentEvents.On(p.onTGPaymentSuccessEvent)
 }
 
-func (p *PaymentCenter) onPaymentSuccessEvent(message *models.Message) {
+func (p *PaymentCenter) onTGPaymentSuccessEvent(message *models.Message) {
 	paymentId := message.SuccessfulPayment.InvoicePayload
+
+	//pi开头的才是支付订单
+	if !strings.HasPrefix(paymentId, "pi") {
+		return
+	}
+
 	payment, err := p.FindPayment(paymentId)
 	if err != nil {
 		zap.S().Errorw("SuccessfulPayment Received, payment data get error", "paymentId", paymentId, "error", err, "Message", message)
@@ -75,7 +81,7 @@ func (p *PaymentCenter) onPaymentSuccessEvent(message *models.Message) {
 		return
 	}
 
-	events.UserPaymentEvents.Emit(&events.EventUserPayment{
+	events.UserTGPaymentEvents.Emit(&events.EventUserPayment{
 		User:    user,
 		Game:    game,
 		Payment: payment,
@@ -83,8 +89,14 @@ func (p *PaymentCenter) onPaymentSuccessEvent(message *models.Message) {
 
 }
 
-func (p *PaymentCenter) onPreCheckoutQueryEvent(query *models.PreCheckoutQuery) {
+func (p *PaymentCenter) onTGPreCheckoutQueryEvent(query *models.PreCheckoutQuery) {
 	paymentId := query.InvoicePayload
+
+	//pi开头的才是支付订单
+	if !strings.HasPrefix(paymentId, "pi") {
+		return
+	}
+
 	payment, err := p.FindPayment(paymentId)
 	b := tgbot.Bot()
 	if err != nil {
@@ -116,7 +128,7 @@ func (p *PaymentCenter) onPreCheckoutQueryEvent(query *models.PreCheckoutQuery) 
 
 func (p *PaymentCenter) newPaymentId() string {
 	id := p.idGen.NextId()
-	return strconv.FormatInt(id, 36)
+	return "pi" + strconv.FormatInt(id, 36)
 }
 
 func (p *PaymentCenter) FindPayment(id string) (*data.DashFunPaymentData, error) {
@@ -134,7 +146,7 @@ func (p *PaymentCenter) RequestDashFunPayment(userId, gameId, title, desc, paylo
 	currency := "DFD" //DashFunDiamond
 	from := data.DashFunPaymentFrom_DashFun
 	if isTesting {
-		currency = "TEST"
+		currency = "DFD_TEST"
 		from = data.DashFunPaymentFrom_TEST
 	}
 	payment, err := dao.GetPaymentDao().CreatePayment(id, userId, gameId, "", title, desc, payload, currency, from, price, "")
@@ -210,8 +222,8 @@ func (p *PaymentCenter) ConfirmDashFunPayment(paymentId string, opUserId string)
 	return payment, nil
 }
 
-// RequestTGPayment 请求使用tg支付，暂时不用了，统一使用DashFun支付
-func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc string, price int, isTesting bool) (*data.DashFunPaymentData, error) {
+// RequestTGPayment 请求使用tg支付
+func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc, payload string, price int, isTesting bool) (*data.DashFunPaymentData, error) {
 	//向tg bot请求一个新的Invoice
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancelFunc()
@@ -247,13 +259,13 @@ func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc string, pri
 		paymentId = invoiceLink
 	}
 
-	currency := "XTR"
+	currency := "TG_XTR"
 	from := data.DashFunPaymentFrom_TG
 	if isTesting {
-		currency = "TEST"
+		currency = "TG_XTR_TEST"
 		from = data.DashFunPaymentFrom_TEST
 	}
-	payment, err := dao.GetPaymentDao().CreatePayment(id, userId, gameId, paymentId, title, desc, "", currency, from, price, invoiceLink)
+	payment, err := dao.GetPaymentDao().CreatePayment(id, userId, gameId, paymentId, title, desc, payload, currency, from, price, invoiceLink)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +287,7 @@ func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc string, pri
 			zap.S().Errorw("RequestTestPayment Find Game Failed", "Payment", payment, "error")
 			return payment, nil
 		}
-		events.UserPaymentEvents.Emit(&events.EventUserPayment{
+		events.UserTGPaymentEvents.Emit(&events.EventUserPayment{
 			User:    user,
 			Game:    game,
 			Payment: payment,

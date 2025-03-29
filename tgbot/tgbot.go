@@ -187,7 +187,20 @@ func testHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	u, _ := url.Parse(botLink() + "/Games")
 	//q := u.Query()
 	//q.Set("startapp", "test-"+base64.StdEncoding.EncodeToString([]byte(msg[1])))
-	u.RawQuery = "startapp=test-" + base64.StdEncoding.EncodeToString([]byte(msg[1]))
+
+	//gzip url
+	//var buf bytes.Buffer
+	//gz := gzip.NewWriter(&buf)
+	//_, err := gz.Write([]byte(msg[1]))
+	//defer gz.Close()
+	//if err != nil {
+	//	zap.S().Errorw("gzip write error", "error", err)
+	//	return
+	//}
+
+	u.RawQuery = "startapp=test-" + base64.RawURLEncoding.EncodeToString([]byte(msg[1]))
+	//base64.StdEncoding.EncodeToString(buf.Bytes())
+	//base64.StdEncoding.EncodeToString([]byte(msg[1]))
 	gameLink := u.String()
 
 	zap.S().Infow("Test", "gameLink", gameLink)

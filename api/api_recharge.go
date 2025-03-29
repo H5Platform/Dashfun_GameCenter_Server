@@ -66,7 +66,7 @@ func apiRequestRechargeOrder(c *gin.Context, user *data.DashFunUser) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, RSuccess(order.Id))
+	c.JSON(http.StatusOK, RSuccess(order))
 }
 
 func apiCancelRechargeOrder(c *gin.Context, user *data.DashFunUser) {
@@ -138,7 +138,7 @@ func apiStripeCreateCheckoutSession(c *gin.Context) {
 		return
 	}
 
-	if order.Status != data.DashFunRechargeStatus_Created && order.Status != data.DashFunRechargeStatus_Pending {
+	if order.PriceType != data.RechargePlatformOptionPriceTypeUSD || (order.Status != data.DashFunRechargeStatus_Created && order.Status != data.DashFunRechargeStatus_Pending) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(apperrors.ErrRechargeOrderStatus.Error()))
 		return
 	}

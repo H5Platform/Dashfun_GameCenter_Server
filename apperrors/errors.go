@@ -10,9 +10,10 @@ var (
 
 	ErrUserGameSaveDataNotExisted = newError("User Game Save Data Not Existed")
 
-	ErrRechargeOrderNotFound   = newError("order not found")
-	ErrRechargeOrderStatus     = newError("order status error")
-	ErrRechargeOrderCantCancel = newError("you can't cancel this order")
+	ErrRechargeOrderCreateFailed = newError("order create failed")
+	ErrRechargeOrderNotFound     = newError("order not found")
+	ErrRechargeOrderStatus       = newError("order status error")
+	ErrRechargeOrderCantCancel   = newError("you can't cancel this order")
 
 	ErrUserPhotoNotExist = newError("user photo not exist")
 

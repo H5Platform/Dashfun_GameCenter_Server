@@ -120,7 +120,7 @@ func apiUserGetPlayRecord(c *gin.Context, user *data.DashFunUser) {
 // @Success	200	{object}	api.JSONResult{data=[]byte}	"avatar png"
 // @Router		/api/v1/user/avatar [get]
 func apiUserGetHeadPhoto(c *gin.Context, user *data.DashFunUser) {
-	headerData := usercenter.Get().GetUserHeadAvatar(user.Id)
+	headerData := usercenter.Get().GetUserChannelHeadData(user.Id)
 	if headerData == nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError("no avatar"))
 		return

@@ -1,17 +1,24 @@
 package RechargeCenter
 
 import (
+	"context"
 	"dashfun_gamecenter/apperrors"
 	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/snowflake"
+	"dashfun_gamecenter/tgbot"
 	"errors"
+	"fmt"
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/stripe/stripe-go/v81"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -23,6 +30,17 @@ var instance *RechargeCenter
 type RechargeCenter struct {
 	idGen               *snowflake.Worker
 	processingOrdersChn chan *data.DashFunRechargeData //已经支付完毕，还没有发放钻石的订单队列
+}
+
+var telegramPlatforms = []string{"ios", "android", "tdesktop"}
+
+func isTelegram(platform string) bool {
+	for _, p := range telegramPlatforms {
+		if strings.EqualFold(platform, p) {
+			return true
+		}
+	}
+	return false
 }
 
 func Get() *RechargeCenter {
@@ -39,8 +57,83 @@ func (r *RechargeCenter) init() {
 	stripe.Key = config.GetConfig().StripeCfg.SecretKey
 	r.processingOrdersChn = make(chan *data.DashFunRechargeData, 100)
 	go r.processPaidOrders()
+
+	events.TGPreCheckoutQueryEvents.On(r.onTGPreCheckoutQueryEvent)
+	events.TGSuccessfulPaymentEvents.On(r.onTGPaymentSuccessEvent)
 }
 
+func (r *RechargeCenter) onTGPreCheckoutQueryEvent(query *models.PreCheckoutQuery) {
+	rechargeId := query.InvoicePayload
+
+	//rc开头的才是充值订单
+	if !strings.HasPrefix(rechargeId, "rc") {
+		return
+	}
+
+	rechargeOrder, err := r.GetRechargeOrder(rechargeId)
+	b := tgbot.Bot()
+	if err != nil {
+		zap.S().Errorw("get recharge data error", "error", err, "rechargeId", rechargeId, "preCheckOutQuery", query)
+		b.AnswerPreCheckoutQuery(context.TODO(), &bot.AnswerPreCheckoutQueryParams{
+			PreCheckoutQueryID: query.ID,
+			OK:                 false,
+			ErrorMessage:       err.Error(),
+		})
+		return
+	}
+
+	_, err = b.AnswerPreCheckoutQuery(context.TODO(), &bot.AnswerPreCheckoutQueryParams{
+		PreCheckoutQueryID: query.ID,
+		OK:                 true,
+		ErrorMessage:       "",
+	})
+
+	if err == nil {
+		rechargeOrder.Status = data.DashFunRechargeStatus_Pending
+		dao.GetRechargeDao().SaveOrUpdate(rechargeOrder)
+	} else {
+		zap.S().Errorw("Answer Pre Checkout Query Failed", "error", err, "rechargeId", rechargeId, "preCheckOutQuery", query)
+		rechargeOrder.Status = data.DashFunRechargeStatus_Failed
+		rechargeOrder.Message = err.Error()
+		dao.GetRechargeDao().SaveOrUpdate(rechargeOrder)
+	}
+}
+
+func (r *RechargeCenter) onTGPaymentSuccessEvent(message *models.Message) {
+	paymentId := message.SuccessfulPayment.InvoicePayload
+
+	//rc开头的才是充值订单
+	if !strings.HasPrefix(paymentId, "rc") {
+		return
+	}
+	payment, err := r.GetRechargeOrder(paymentId)
+	if err != nil {
+		zap.S().Errorw("SuccessfulPayment Received, recharge data get error", "rechargeId", paymentId, "error", err, "Message", message)
+		return
+	}
+
+	if payment.Status != data.DashFunRechargeStatus_Pending {
+		zap.S().Errorw("SuccessfulPayment Received, recharge data status error", "rechargeId", paymentId, "error", "status incorrect", "Message", message)
+		return
+	}
+
+	payment.Status = data.DashFunRechargeStatus_Paid
+	payment.Message = message.SuccessfulPayment.TelegramPaymentChargeID
+	payment.PaidAt = time.Now().UnixMilli()
+	_, err = dao.GetRechargeDao().SaveOrUpdate(payment)
+	if err != nil {
+		zap.S().Errorw("Save Recharge Data Failed", "Recharge", payment, "error", err, "Message", message)
+		return
+	}
+	b := tgbot.Bot()
+	b.SendMessage(context.TODO(), &bot.SendMessageParams{
+		ChatID: message.Chat.ID,
+		Text:   "Thank you for your purchase\n" + strconv.Itoa(message.SuccessfulPayment.TotalAmount) + " Stars"},
+	)
+	//发送订单到处理队列
+	r.processingOrdersChn <- payment
+
+}
 func (r *RechargeCenter) processPaidOrders() {
 	diamond := coincenter.Get().GetDashFunDiamond()
 	for {
@@ -60,24 +153,22 @@ func (r *RechargeCenter) processPaidOrders() {
 
 func (r *RechargeCenter) newRechargeOrderId() string {
 	id := r.idGen.NextId()
-	return strconv.FormatInt(id, 36)
+	return "rc" + strconv.FormatInt(id, 36)
 }
 
 func (r *RechargeCenter) GetRechargePlatformOptions(platform string) RechargePlatformOptions {
 	var options []RechargePlatformOption
-	priceType := RechargePlatformOptionPriceTypeUSD
+	priceType := data.RechargePlatformOptionPriceTypeUSD
 
-	//统一使用usd支付了
-	//if platform == "ios" || platform == "android" {
-	//	priceType = RechargePlatformOptionPriceTypeTGStar //目前ios和android都是tg的miniapp用户，使用星星支付
-	//}
+	if isTelegram(platform) {
+		priceType = data.RechargePlatformOptionPriceTypeTGStar //目前ios和android都是tg的miniapp用户，使用星星支付
+	}
 
 	for _, option := range config.GetConfig().RechargeCfg.Options {
 		price := option.Price
-		//暂时不用区分平台了，都用美元支付，而且是统一用浏览器支付，所以不需要区分是否是appstore的渠道
-		//if platform == "ios" || platform == "android" { //目前ios和android都是tg的miniapp用户，使用星星支付
-		//	price = option.TGStar
-		//}
+		if isTelegram(platform) { //目前ios和android都是tg的miniapp用户，使用星星支付
+			price = option.TGStar
+		}
 		options = append(options, RechargePlatformOption{
 			Price:    price,
 			Diamond:  option.Diamond,
@@ -94,23 +185,67 @@ func (r *RechargeCenter) GetRechargePlatformOptions(platform string) RechargePla
 }
 
 func (r *RechargeCenter) CreateRechargeOrder(userId string, rechargeOption config.RechargeOption, platform string, from data.RechargeFrom) (*data.DashFunRechargeData, error) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancelFunc()
+
 	d := dao.GetRechargeDao()
-	finalPrice := r.GetRechargePrice(rechargeOption, platform)
-	recharge, err := d.CreateRecharge(r.newRechargeOrderId(), userId, from, finalPrice, rechargeOption.Diamond, "", "", time.Now().Unix())
-	if err == nil {
+	//user, err := usercenter.Get().GetDashFunUser(userId)
+	//
+	//if err != nil {
+	//	zap.S().Errorw("CreateRechargeOrder Get User Failed", "UserId", userId, "error", err)
+	//	return nil, err
+	//}
+	finalPrice, priceType := r.GetRechargePrice(rechargeOption, platform)
+	recharge, err := d.CreateRecharge(r.newRechargeOrderId(), userId, from, finalPrice, priceType, rechargeOption.Diamond, "", "", time.Now().Unix())
+	if err != nil {
 		zap.S().Infow("CreateRechargeOrder", "recharge", recharge)
+		return nil, err
 	}
+	if recharge == nil {
+		return nil, apperrors.ErrRechargeOrderCreateFailed
+	}
+
+	if priceType == data.RechargePlatformOptionPriceTypeTGStar {
+		title := fmt.Sprintf("%d Diamonds", rechargeOption.Diamond)
+		//tgstar支付，直接向bot请求payment
+		invoiceLink, err := tgbot.Bot().CreateInvoiceLink(ctx, &bot.CreateInvoiceLinkParams{
+			Title:         title,
+			Description:   fmt.Sprintf("%d Diamonds", rechargeOption.Diamond),
+			Payload:       recharge.Id,
+			ProviderToken: "",
+			Currency:      "XTR",
+			Prices: []models.LabeledPrice{
+				{
+					Label:  title,
+					Amount: finalPrice,
+				},
+			},
+		})
+
+		if err != nil {
+			zap.S().Errorw("CreateRechargeOrder Create Invoice Failed", "UserId", userId, "error", err)
+			return nil, err
+		}
+
+		recharge.ChannelPayId = invoiceLink
+		d.SaveOrUpdate(recharge)
+	}
+
 	return recharge, err
 }
 
-func (r *RechargeCenter) GetRechargePrice(rechargeOption config.RechargeOption, platform string) int {
+func (r *RechargeCenter) GetRechargePrice(rechargeOption config.RechargeOption, platform string) (int, data.RechargePlatformOptionPriceType) {
 	price := rechargeOption.Price
-	//暂时不用区分平台了，都用美元支付，而且是统一用浏览器支付，所以不需要区分是否是appstore的渠道
+	priceType := data.RechargePlatformOptionPriceTypeUSD
+	if isTelegram(platform) {
+		price = rechargeOption.TGStar
+		priceType = data.RechargePlatformOptionPriceTypeTGStar
+	}
 	finalPrice := price
 	if rechargeOption.PriceOff > 0 {
 		finalPrice = price * (1000 - rechargeOption.PriceOff) / 1000
 	}
-	return finalPrice
+	return finalPrice, priceType
 }
 
 func (r *RechargeCenter) GetRechargeOrder(id string) (*data.DashFunRechargeData, error) {

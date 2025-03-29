@@ -34,4 +34,5 @@ var UserReferrerEvents = NewEvent[*UserReferrerEvent]()
 var UserReferSuccessEvents = NewEvent[*data.InvitedUserData]()
 
 var UserPaymentEvents = NewEvent[*EventUserPayment]()
+var UserTGPaymentEvents = NewEvent[*EventUserPayment]()
 var UserBindAddressEvents = NewEvent[*EventUserBindWallet]()

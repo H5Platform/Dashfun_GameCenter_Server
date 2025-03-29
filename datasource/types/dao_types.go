@@ -47,7 +47,7 @@ type PaymentDao interface {
 type RechargeDao interface {
 	SaveOrUpdate(recharge *data.DashFunRechargeData) (*data.DashFunRechargeData, error)
 	FindRechargeById(rechargeId string) (*data.DashFunRechargeData, error)
-	CreateRecharge(id, userId string, from data.RechargeFrom, price int, diamond int, payload, message string, createAt int64) (*data.DashFunRechargeData, error)
+	CreateRecharge(id, userId string, from data.RechargeFrom, price int, priceType data.RechargePlatformOptionPriceType, diamond int, payload, message string, createAt int64) (*data.DashFunRechargeData, error)
 }
 
 type TaskDao interface {

@@ -131,7 +131,7 @@ func apiUserRequestTGPayment(c *gin.Context, user *data.DashFunUser) {
 		return
 	}
 
-	payment, err := paymentcenter.Get().RequestTGPayment(user.Id, req.GameId, req.Title, req.Desc, req.Price, game.IsTesting())
+	payment, err := paymentcenter.Get().RequestTGPayment(user.Id, req.GameId, req.Title, req.Desc, req.Payload, req.Price, game.IsTesting())
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
 		return
@@ -172,6 +172,7 @@ func apiGetPayment(c *gin.Context) {
 
 func init() {
 	web.GetService().RegisterApi(web.ApiModulePayment, web.GET, "request", userHandlerAuthWrapper(apiUserRequestPayment))
+	web.GetService().RegisterApi(web.ApiModulePayment, web.GET, "request/tg", userHandlerAuthWrapper(apiUserRequestTGPayment))
 	web.GetService().RegisterApi(web.ApiModulePayment, web.POST, "confirm", userHandlerAuthWrapper(apiUserConfirmPayment))
 	web.GetService().RegisterApi(web.ApiModulePayment, web.GET, "get", apiGetPayment)
 }

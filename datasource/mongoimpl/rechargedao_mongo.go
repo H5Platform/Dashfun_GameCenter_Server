@@ -31,7 +31,7 @@ func (p *RechargeDaoMongo) FindRechargeById(id string) (*data.DashFunRechargeDat
 	return ret, nil
 }
 
-func (p *RechargeDaoMongo) CreateRecharge(id, userId string, from data.RechargeFrom, price int, diamond int,
+func (p *RechargeDaoMongo) CreateRecharge(id, userId string, from data.RechargeFrom, price int, priceType data.RechargePlatformOptionPriceType, diamond int,
 	payload, message string, createAt int64) (*data.DashFunRechargeData, error) {
 	recharge := &data.DashFunRechargeData{
 		Id:           id,
@@ -39,6 +39,7 @@ func (p *RechargeDaoMongo) CreateRecharge(id, userId string, from data.RechargeF
 		ChannelPayId: "",
 		From:         from,
 		Price:        price,
+		PriceType:    priceType,
 		Diamond:      diamond,
 		Payload:      payload,
 		Message:      message,
@@ -72,6 +73,12 @@ func (p *RechargeDaoMongo) initDB() {
 			Unique:    false,
 			Sort:      1,
 			IndexName: "index_user_id",
+		},
+		{
+			FieldName: "price_type",
+			Unique:    false,
+			Sort:      1,
+			IndexName: "index_price_type",
 		},
 		{
 			FieldName: "create_at",

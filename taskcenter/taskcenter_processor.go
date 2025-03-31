@@ -112,6 +112,42 @@ func (t *TaskCenter) taskRecordEnterDashFun(user *data.DashFunUser, task *data.D
 	return ret
 }
 
+func (t *TaskCenter) taskRecordDailyLogin(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData) bool {
+	ret := false
+
+	if task.Condition.Type == data.TaskCondition_DailyLogin && userData.Status == data.TaskStatus_InProgress {
+		save := data.TaskSaveDailyLogin{
+			Days:     0,
+			NextTime: time.Now().UnixMilli(),
+		}
+
+		if userData.SaveData != "" {
+			err := json.Unmarshal([]byte(userData.SaveData), &save)
+			if err != nil {
+				zap.S().Errorw("unmarshal task daily login fail", err, err.Error(), "user", user.Id, "task", task.Id, "game", task.GameId, "savedata", userData.SaveData)
+				ret = false
+				return ret
+			}
+		}
+
+		currentTime := time.Now().UnixMilli()
+		if currentTime > save.NextTime {
+			save.Days++
+			nextDay := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day()+1, 0, 0, 0, 0, time.Now().Location())
+			save.NextTime = nextDay.UnixMilli()
+		}
+		if save.Days >= task.Condition.Count {
+			userData.Progress = save.Days
+			userData.Status = data.TaskStatus_Completed
+		} else {
+			userData.Progress = save.Days
+		}
+		ret = true
+	}
+
+	return ret
+}
+
 func (t *TaskCenter) taskVerifyFollowX(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
 	ret := false
 	if task.Condition.Type == data.TaskCondition_FollowX {

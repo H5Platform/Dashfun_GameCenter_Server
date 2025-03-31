@@ -24,12 +24,16 @@ func (t *TaskCenter) onUserLogin(user *data.OnlineUser) {
 				continue
 			}
 
-			if task.Condition.Type == data.TaskCondition_EnterDashFun {
-				changed := t.taskRecordEnterDashFun(user.User, task, userData)
-				if changed {
-					userData.Time = time.Now().UnixMilli()
-					t.saveTaskUserData(userData)
-				}
+			changed := false
+			switch task.Condition.Type {
+			case data.TaskCondition_EnterDashFun:
+				changed = t.taskRecordEnterDashFun(user.User, task, userData)
+			case data.TaskCondition_DailyLogin:
+				changed = t.taskRecordDailyLogin(user.User, task, userData)
+			}
+			if changed {
+				userData.Time = time.Now().UnixMilli()
+				t.saveTaskUserData(userData)
 			}
 		}
 	}

@@ -53,6 +53,7 @@ func (t *TaskCenter) init() {
 	events.PlayerLevelUpEvents.On(t.onGameReportPlayerLevelUp)
 	events.UserPaymentEvents.On(t.onUserPayment)
 	events.UserBindAddressEvents.On(t.onUserBindAddress)
+	events.UserReferrerEvents.On(t.onUserReferrer)
 }
 
 func (t *TaskCenter) newTasId() string {
@@ -338,7 +339,10 @@ func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *dat
 		} else {
 			saveA := dataMap[a.Id]
 			saveB := dataMap[b.Id]
-			if saveA == nil || saveB == nil {
+
+			if a.Priority != b.Priority {
+				return a.Priority - b.Priority
+			} else if saveA == nil || saveB == nil {
 				return int(a.CreateTime - b.CreateTime)
 			} else {
 				if (saveA.Status != saveB.Status) && (saveA.Status == data.TaskStatus_Claimed || saveB.Status == data.TaskStatus_Claimed) {

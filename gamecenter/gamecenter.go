@@ -61,7 +61,7 @@ func (gc *GameCenter) init() {
 
 func (gc *GameCenter) newGameId() string {
 	id := gc.idGen.NextId()
-	return strconv.FormatInt(id, 36)
+	return "gm" + strconv.FormatInt(id, 36)
 }
 
 func (gc *GameCenter) processGame(game *data.DashFunGame) {

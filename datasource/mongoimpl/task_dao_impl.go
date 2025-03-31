@@ -38,7 +38,7 @@ func (p *TaskDaoMongo) initDB() {
 		},
 		{
 			FieldName: "name",
-			Unique:    true,
+			Unique:    false,
 			Sort:      1,
 			IndexName: "index_name",
 		},
@@ -48,6 +48,11 @@ func (p *TaskDaoMongo) initDB() {
 			Sort:      1,
 			IndexName: "index_task_type",
 		},
+		{
+			FieldName: "priority",
+			Unique:    false,
+			Sort:      1,
+			IndexName: "index_priority"},
 	})
 
 	if err != nil {

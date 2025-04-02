@@ -7,6 +7,7 @@ import (
 	"dashfun_gamecenter/web"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -167,6 +168,7 @@ func apiGetPayment(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("gameId or userId not match"))
 		return
 	}
+	zap.S().Infow("get payment result", "payment", payment)
 	c.JSON(http.StatusOK, RSuccess(payment))
 }
 

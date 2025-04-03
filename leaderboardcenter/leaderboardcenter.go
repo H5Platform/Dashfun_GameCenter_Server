@@ -450,6 +450,9 @@ func (l *LeaderboardCenter) onUserCoinChanged(event events.UserCoinChangedEvent)
 }
 
 func (l *LeaderboardCenter) updateUserCoinAmount(userId string, amount int32) {
+	if amount <= 0 {
+		return
+	}
 	rdb := rediscenter.Get()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()

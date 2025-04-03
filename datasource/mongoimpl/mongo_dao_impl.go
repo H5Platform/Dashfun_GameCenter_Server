@@ -30,6 +30,7 @@ type DaoImplMongo struct {
 	userSaveDataDao       types.DashFunUserSaveDataDao
 	userPlayRecordDao     types.DashFunUserPlayRecordDao
 	invitedUserDao        types.InvitedUserDao
+	rechargeDao           types.RechargeDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
@@ -49,6 +50,7 @@ func NewDaoImplMongo() *DaoImplMongo {
 		userSaveDataDao:       GetUserSaveDataDaoMongo(),
 		userPlayRecordDao:     GetUserPlayRecordDaoMongo(),
 		invitedUserDao:        GetInvitedUserDaoMongo(),
+		rechargeDao:           GetRechargeDaoMongo(),
 	}
 }
 
@@ -76,6 +78,9 @@ func (d *DaoImplMongo) GetUserPlayRecordDao() types.DashFunUserPlayRecordDao {
 }
 func (d *DaoImplMongo) GetInvitedUserDao() types.InvitedUserDao {
 	return d.invitedUserDao
+}
+func (d *DaoImplMongo) GetRechargeDao() types.RechargeDao {
+	return d.rechargeDao
 }
 
 func GetMongoDatabase() *mongo.Database {

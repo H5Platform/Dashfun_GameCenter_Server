@@ -9,3 +9,8 @@ type TaskSaveDataFollowX struct {
 	RandomCount int `json:"random_count"` //随机让用户进行check的次数
 	CheckCount  int `json:"check_count"`  //已经check了的次数
 }
+
+type TaskSaveDailyLogin struct {
+	Days     int   `json:"days"`      //连续登录的天数
+	NextTime int64 `json:"next_time"` //下次计算登录次数的时间
+}

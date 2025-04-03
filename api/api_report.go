@@ -45,7 +45,11 @@ func verifyGame(params map[string]string, game *data.DashFunGame, md5Value strin
 	md5v := md5.Sum([]byte(queryString))
 	md5Str := fmt.Sprintf("%x", md5v)
 
-	return strings.EqualFold(md5Str, md5Value)
+	result := strings.EqualFold(md5Str, md5Value)
+	if !result {
+		zap.S().Infow("verifyGame", "params", params, "sign", md5Value, "queryString", queryString, "expecting md5", md5Str)
+	}
+	return result
 }
 
 type GameReportReq struct {

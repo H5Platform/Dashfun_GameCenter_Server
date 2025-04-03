@@ -112,6 +112,42 @@ func (t *TaskCenter) taskRecordEnterDashFun(user *data.DashFunUser, task *data.D
 	return ret
 }
 
+func (t *TaskCenter) taskRecordDailyLogin(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData) bool {
+	ret := false
+
+	if task.Condition.Type == data.TaskCondition_DailyLogin && userData.Status == data.TaskStatus_InProgress {
+		save := data.TaskSaveDailyLogin{
+			Days:     0,
+			NextTime: time.Now().UnixMilli(),
+		}
+
+		if userData.SaveData != "" {
+			err := json.Unmarshal([]byte(userData.SaveData), &save)
+			if err != nil {
+				zap.S().Errorw("unmarshal task daily login fail", err, err.Error(), "user", user.Id, "task", task.Id, "game", task.GameId, "savedata", userData.SaveData)
+				ret = false
+				return ret
+			}
+		}
+
+		currentTime := time.Now().UnixMilli()
+		if currentTime > save.NextTime {
+			save.Days++
+			nextDay := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day()+1, 0, 0, 0, 0, time.Now().Location())
+			save.NextTime = nextDay.UnixMilli()
+		}
+		if save.Days >= task.Condition.Count {
+			userData.Progress = save.Days
+			userData.Status = data.TaskStatus_Completed
+		} else {
+			userData.Progress = save.Days
+		}
+		ret = true
+	}
+
+	return ret
+}
+
 func (t *TaskCenter) taskVerifyFollowX(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, gameId string) bool {
 	ret := false
 	if task.Condition.Type == data.TaskCondition_FollowX {
@@ -275,7 +311,7 @@ func (t *TaskCenter) taskRecordPlayerLevelUp(user *data.DashFunUser, task *data.
 }
 
 func (t *TaskCenter) taskRecordUserPayment(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, payment *data.DashFunPaymentData, gameId string) bool {
-	if task.Condition.Type == data.TaskCondition_SpendTGStars && userData.Status == data.TaskStatus_InProgress {
+	if task.Condition.Type == data.TaskCondition_SpendDiamonds && userData.Status == data.TaskStatus_InProgress {
 		ret := false
 		if userData.Progress < task.Condition.Count {
 			userData.Progress = userData.Progress + payment.Price
@@ -295,6 +331,22 @@ func (t *TaskCenter) taskVerifyWalletAddress(user *data.DashFunUser, task *data.
 		ret := false
 		addr, ok := user.WalletAddress[task.Condition.Condition]
 		if ok && len(addr) > 0 {
+			userData.Status = data.TaskStatus_Completed
+			ret = true
+		}
+		return ret
+	}
+	return false
+}
+
+func (t *TaskCenter) taskRecordInviteFriend(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData) bool {
+	if task.Condition.Type == data.TaskCondition_InviteFriends && userData.Status == data.TaskStatus_InProgress {
+		ret := false
+		if userData.Progress < task.Condition.Count {
+			userData.Progress = userData.Progress + 1
+			ret = true
+		}
+		if userData.Progress >= task.Condition.Count {
 			userData.Status = data.TaskStatus_Completed
 			ret = true
 		}

@@ -82,6 +82,12 @@ func (p *PaymentDaoMongo) initDB() {
 			Sort:      -1,
 			IndexName: "index_create_at",
 		},
+		{
+			FieldName: "currency",
+			Unique:    false,
+			Sort:      -1,
+			IndexName: "index_create_at",
+		},
 	})
 
 	if err != nil {

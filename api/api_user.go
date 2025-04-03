@@ -120,7 +120,7 @@ func apiUserGetPlayRecord(c *gin.Context, user *data.DashFunUser) {
 // @Success	200	{object}	api.JSONResult{data=[]byte}	"avatar png"
 // @Router		/api/v1/user/avatar [get]
 func apiUserGetHeadPhoto(c *gin.Context, user *data.DashFunUser) {
-	headerData := usercenter.Get().GetUserHeadAvatar(user.Id)
+	headerData := usercenter.Get().GetUserChannelHeadData(user.Id)
 	if headerData == nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError("no avatar"))
 		return
@@ -157,15 +157,16 @@ func apiUserGetUserInfo(c *gin.Context, user *data.DashFunUser) {
 // @param		photo_path	query	string	true	"用户Photo Link"
 // @Success	200	{object}	api.JSONResult{data=[]byte}	"avatar png"
 // @Router		/api/v1/user/{id}/avatar [get]
-func apiUserTgAvatar(c *gin.Context, user *data.DashFunUser) {
+func apiUserTgAvatar(c *gin.Context) {
 	userId := c.Param("id")
-	photoPath := c.Query("photo_path")
+	//目前photoPath不可行，需要每次都从tg获取
+	_ = c.Query("photo_path")
 	if userId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("param id is required"))
 		return
 	}
 
-	d := usercenter.Get().GetUserChannelHeadData(userId, photoPath)
+	d := usercenter.Get().GetUserChannelHeadData(userId)
 	if d == nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError("no avatar"))
 		return
@@ -181,5 +182,5 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "play_record", userHandlerAuthWrapper(apiUserGetPlayRecord))
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, "avatar", userHandlerAuthWrapper(apiUserGetHeadPhoto))
 	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, ":id/info", userHandlerAuthWrapper(apiUserGetUserInfo))
-	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, ":id/avatar", userHandlerAuthWrapper(apiUserTgAvatar))
+	web.GetService().RegisterApi(web.ApiModuleUser, web.GET, ":id/avatar", apiUserTgAvatar)
 }

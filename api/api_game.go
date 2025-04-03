@@ -7,7 +7,6 @@ import (
 	"dashfun_gamecenter/web"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
@@ -126,7 +125,7 @@ func apiUserSetData(c *gin.Context, user *data.DashFunUser) {
 		return
 	}
 	_, err = usercenter.Get().UserSaveData(user.Id, gameId, req.Key, req.Data, game.IsTesting())
-	zap.S().Infow("save user data", "user", user.Id, "key", req.Key, "save", req.Data)
+	//	zap.S().Infow("save user data", "user", user.Id, "key", req.Key, "save", req.Data)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return

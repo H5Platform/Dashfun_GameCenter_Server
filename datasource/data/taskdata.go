@@ -20,11 +20,15 @@ const (
 	TaskCondition_LevelUp                                              //在指定游戏中升级到指定等级，如果任务绑定了游戏id，那么只有在指定游戏中升级才算，如果任务绑定了dashfun，那么需要再任务条件中指定游戏Id
 	TaskCondition_JoinTGChannel                                        //加入指定的tg channel
 	TaskCondition_FollowX                                              //Follow X
-	TaskCondition_SpendTGStars                                         //在TG中花费星星
+	TaskCondition_SpendDiamonds                                        //在DashFun中花费Diamond (原来的在tg中花费星星)
 	TaskCondition_BindWallet                                           //绑定钱包
 	TaskCondition_PlaySpecificGame                                     //玩指定游戏，游戏id在task condition中指定，绑定给dashfun用
 	TaskCondition_InviteFriends                                        //邀请好友
 	TaskCondition_EnterDashFun                                         //进入dashfun，登陆就算
+	TaskCondition_DailyLogin                                           //每日连续登录
+	TaskCondition_Recharge                                             //充值
+	TaskCondition_SpendTGStar                                          //在tg中花费星星
+	TaskCondition_LeaderboardRank                                      //在leaderboard中排名
 )
 
 const (
@@ -72,16 +76,18 @@ type DashFunTaskCondition struct {
 
 // DashFunTaskData 任务数据
 type DashFunTaskData struct {
-	Id         string               `json:"id" bson:"_id"`                  //任务ID
-	Name       string               `json:"name" bson:"name"`               //任务名称
-	Open       bool                 `json:"open" bson:"open"`               //任务是否开启
-	GameId     string               `json:"game_id" bson:"game_id"`         //绑定游戏id，-1或""表示不限制游戏
-	Type       DashFunTaskType      `json:"task_type" bson:"task_type"`     //任务类型
-	Category   DashFunTaskCategory  `json:"category" bson:"category"`       //任务分类
-	Condition  DashFunTaskCondition `json:"require" bson:"require"`         //任务条件
-	Reward     DashFunTaskReward    `json:"-" bson:"reward"`                //任务奖励，废弃了，用rewards
-	Rewards    []DashFunTaskReward  `json:"rewards" bson:"rewards"`         //任务奖励
-	CreateTime int64                `json:"create_time" bson:"create_time"` //任务创建时间
+	Id         string               `json:"id" bson:"_id"`                    //任务ID
+	Priority   int                  `json:"priority" bson:"priority"`         //任务优先级，越小越靠前
+	ShowInGame bool                 `json:"show_in_game" bson:"show_in_game"` //是否在游戏中显示，只针对平台任务，有些平台任务希望在游戏中同时出现
+	Name       string               `json:"name" bson:"name"`                 //任务名称
+	Open       bool                 `json:"open" bson:"open"`                 //任务是否开启
+	GameId     string               `json:"game_id" bson:"game_id"`           //绑定游戏id，-1或""表示不限制游戏
+	Type       DashFunTaskType      `json:"task_type" bson:"task_type"`       //任务类型
+	Category   DashFunTaskCategory  `json:"category" bson:"category"`         //任务分类
+	Condition  DashFunTaskCondition `json:"require" bson:"require"`           //任务条件
+	Reward     DashFunTaskReward    `json:"-" bson:"reward"`                  //任务奖励，废弃了，用rewards
+	Rewards    []DashFunTaskReward  `json:"rewards" bson:"rewards"`           //任务奖励
+	CreateTime int64                `json:"create_time" bson:"create_time"`   //任务创建时间
 }
 
 // DashFunTaskUserData 用户任务数据

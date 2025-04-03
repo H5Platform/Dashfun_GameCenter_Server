@@ -446,7 +446,9 @@ func (l *LeaderboardCenter) needLoad() bool {
 }
 
 func (l *LeaderboardCenter) onUserCoinChanged(event events.UserCoinChangedEvent) {
-	l.updateUserCoinAmount(event.UserId, event.UserData.Amount)
+	if event.Coin.Name == "DashFunPoint" {
+		l.updateUserCoinAmount(event.UserId, event.UserData.Amount)
+	}
 }
 
 func (l *LeaderboardCenter) updateUserCoinAmount(userId string, amount int32) {

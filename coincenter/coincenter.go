@@ -1,6 +1,7 @@
 package coincenter
 
 import (
+	"dashfun_gamecenter/apperrors"
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
@@ -114,6 +115,16 @@ func (c *CoinCenter) GetCoinByName(coinName string) (*data.CoinData, bool) {
 	return coin, ok
 }
 
+func (c *CoinCenter) GetDashFunDiamond() *data.CoinData {
+	coin, _ := c.GetCoinByName("DashFunDiamond")
+	return coin
+}
+
+func (c *CoinCenter) GetDashFunXp() *data.CoinData {
+	coin, _ := c.GetCoinByName("DashFunPoint")
+	return coin
+}
+
 func (c *CoinCenter) GetDashFunCoins() (ret []*data.CoinData) {
 	for _, coin := range c.coins {
 		if coin.BindGameId == "" || coin.BindGameId == "DashFun" {
@@ -209,7 +220,7 @@ func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount int32) (*da
 	coinData := c.GetCoinUserData(userId, coinId)
 	if amount > 0 {
 		if coinData.Amount < amount {
-			err := errors.New("not enough balance")
+			err := apperrors.ErrPaymentNotEnoughBalance
 			zap.S().Errorw("dec user coin amount error", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount, "err", err)
 			return nil, err
 		}

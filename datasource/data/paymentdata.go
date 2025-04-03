@@ -5,6 +5,7 @@ type PaymentStatus int
 
 const (
 	DashFunPaymentFrom_TEST PaymentFrom = iota
+	DashFunPaymentFrom_DashFun
 	DashFunPaymentFrom_TG
 )
 

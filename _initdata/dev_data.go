@@ -304,7 +304,7 @@ func makeTestTask() {
 		//创建测试任务
 		taskc, err := t.CreateTask(taskId, "Spend 5 stars", "LocalTest", data.TaskType_Daily, data.TaskCategory_Challenges,
 			data.DashFunTaskCondition{
-				Type:      data.TaskCondition_SpendTGStars,
+				Type:      data.TaskCondition_SpendDiamonds,
 				Count:     5,
 				Condition: "",
 				Link:      "",
@@ -326,7 +326,7 @@ func makeTestTask() {
 		//创建测试任务
 		taskc, err := t.CreateTask(taskId, "Spend 500 stars", "LocalTest", data.TaskType_Daily, data.TaskCategory_Challenges,
 			data.DashFunTaskCondition{
-				Type:      data.TaskCondition_SpendTGStars,
+				Type:      data.TaskCondition_SpendDiamonds,
 				Count:     500,
 				Condition: "",
 				Link:      "",
@@ -349,7 +349,7 @@ func makeTestTask() {
 		//创建测试任务
 		taskc, err := t.CreateTask(taskId, "Spend 50000 stars", "LocalTest", data.TaskType_Daily, data.TaskCategory_Challenges,
 			data.DashFunTaskCondition{
-				Type:      data.TaskCondition_SpendTGStars,
+				Type:      data.TaskCondition_SpendDiamonds,
 				Count:     50000,
 				Condition: "",
 				Link:      "",

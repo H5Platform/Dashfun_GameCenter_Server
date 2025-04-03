@@ -24,12 +24,16 @@ func (t *TaskCenter) onUserLogin(user *data.OnlineUser) {
 				continue
 			}
 
-			if task.Condition.Type == data.TaskCondition_EnterDashFun {
-				changed := t.taskRecordEnterDashFun(user.User, task, userData)
-				if changed {
-					userData.Time = time.Now().UnixMilli()
-					t.saveTaskUserData(userData)
-				}
+			changed := false
+			switch task.Condition.Type {
+			case data.TaskCondition_EnterDashFun:
+				changed = t.taskRecordEnterDashFun(user.User, task, userData)
+			case data.TaskCondition_DailyLogin:
+				changed = t.taskRecordDailyLogin(user.User, task, userData)
+			}
+			if changed {
+				userData.Time = time.Now().UnixMilli()
+				t.saveTaskUserData(userData)
 			}
 		}
 	}
@@ -56,7 +60,7 @@ func (t *TaskCenter) onUserPayment(evt *events.EventUserPayment) {
 			}
 
 			switch task.Condition.Type {
-			case data.TaskCondition_SpendTGStars:
+			case data.TaskCondition_SpendDiamonds:
 				changed = t.taskRecordUserPayment(user, task, userData, payment, payment.GameId)
 			}
 
@@ -171,6 +175,37 @@ func (t *TaskCenter) onUserBindAddress(evt *events.EventUserBindWallet) {
 				if task.Condition.Condition == evt.Chain {
 					changed = t.taskVerifyWalletAddress(user, task, userData)
 				}
+				break
+			}
+
+			if changed {
+				userData.Time = time.Now().UnixMilli()
+				t.saveTaskUserData(userData)
+			}
+		}
+	}
+}
+
+// onUserReferrer 用户邀请成功
+func (t *TaskCenter) onUserReferrer(event *events.UserReferrerEvent) {
+	user := event.Referrer
+
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+
+	for _, task := range t.tasks {
+		if task.Open && (isDashFunTask(task)) {
+			changed := false
+			userData, err := t.GetTaskUserData(user.Id, task.Id)
+			if err != nil {
+				zap.S().Errorw("GetTaskUserData Error", "user", user.Id, "task", task.Id, "err", err)
+				continue
+			}
+
+			switch task.Condition.Type {
+			case data.TaskCondition_InviteFriends:
+				//邀请好友
+				changed = t.taskRecordInviteFriend(user, task, userData)
 				break
 			}
 

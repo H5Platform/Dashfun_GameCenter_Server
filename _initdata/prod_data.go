@@ -468,7 +468,7 @@ func makeProdTasks() {
 	//	//创建测试任务
 	//	taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Daily, data.TaskCategory_Daily,
 	//		data.DashFunTaskCondition{
-	//			Type:      data.TaskCondition_SpendTGStars,
+	//			Type:      data.TaskCondition_SpendDiamonds,
 	//			Count:     100,
 	//			Condition: "",
 	//			Link:      "",
@@ -491,7 +491,7 @@ func makeProdTasks() {
 	//	//创建测试任务
 	//	taskc, err := t.CreateTaskAutoId(taskName, w3kt.Id, data.TaskType_Daily, data.TaskCategory_Daily,
 	//		data.DashFunTaskCondition{
-	//			Type:      data.TaskCondition_SpendTGStars,
+	//			Type:      data.TaskCondition_SpendDiamonds,
 	//			Count:     1000,
 	//			Condition: "",
 	//			Link:      "",
@@ -537,7 +537,7 @@ func makeSpendStarTasks(game *data.DashFunGame) {
 		//创建测试任务
 		taskc, err := t.CreateTaskAutoId(taskName, game.Id, data.TaskType_Daily, data.TaskCategory_Daily,
 			data.DashFunTaskCondition{
-				Type:      data.TaskCondition_SpendTGStars,
+				Type:      data.TaskCondition_SpendDiamonds,
 				Count:     100,
 				Condition: "",
 				Link:      "",
@@ -559,7 +559,7 @@ func makeSpendStarTasks(game *data.DashFunGame) {
 		//创建测试任务
 		taskc, err := t.CreateTaskAutoId(taskName, game.Id, data.TaskType_Daily, data.TaskCategory_Daily,
 			data.DashFunTaskCondition{
-				Type:      data.TaskCondition_SpendTGStars,
+				Type:      data.TaskCondition_SpendDiamonds,
 				Count:     200,
 				Condition: "",
 				Link:      "",
@@ -581,7 +581,7 @@ func makeSpendStarTasks(game *data.DashFunGame) {
 		//创建测试任务
 		taskc, err := t.CreateTaskAutoId(taskName, game.Id, data.TaskType_7Days, data.TaskCategory_Weekly,
 			data.DashFunTaskCondition{
-				Type:      data.TaskCondition_SpendTGStars,
+				Type:      data.TaskCondition_SpendDiamonds,
 				Count:     1000,
 				Condition: "",
 				Link:      "",

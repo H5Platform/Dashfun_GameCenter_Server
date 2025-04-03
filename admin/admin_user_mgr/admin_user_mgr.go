@@ -344,12 +344,20 @@ func (mgr *AdminUserMgr) UpdateUserStatus(userId string, status admin.AdminUserS
 	}
 
 	if user.Status != status {
-		user.Status = status
-		saveUser, err := dao.GetAdminUserDao().SaveUser(user)
-		if err != nil {
-			return nil, err
+		if status == admin.AdminStatus_ResetPassword {
+			err := mgr.ResetUserPassword(user)
+			if err != nil {
+				return nil, err
+			}
+			return user, nil
+		} else {
+			user.Status = status
+			saveUser, err := dao.GetAdminUserDao().SaveUser(user)
+			if err != nil {
+				return nil, err
+			}
+			return saveUser, nil
 		}
-		return saveUser, nil
 	}
 	return user, nil
 }

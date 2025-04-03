@@ -38,7 +38,7 @@ func (p *TaskDaoMongo) initDB() {
 		},
 		{
 			FieldName: "name",
-			Unique:    true,
+			Unique:    false,
 			Sort:      1,
 			IndexName: "index_name",
 		},
@@ -48,6 +48,11 @@ func (p *TaskDaoMongo) initDB() {
 			Sort:      1,
 			IndexName: "index_task_type",
 		},
+		{
+			FieldName: "priority",
+			Unique:    false,
+			Sort:      1,
+			IndexName: "index_priority"},
 	})
 
 	if err != nil {
@@ -72,7 +77,8 @@ func (p *TaskDaoMongo) FindAllTasks() []*data.DashFunTaskData {
 		err := cur.Decode(&d)
 
 		if err != nil {
-			return make([]*data.DashFunTaskData, 0)
+			log.Printf("decode task %s error: %v\n", d.Id, err)
+			continue
 		}
 		ret = append(ret, &d)
 	}

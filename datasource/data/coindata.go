@@ -24,5 +24,7 @@ type CoinUserRecordData struct {
 	UserId string `json:"user_id" bson:"user_id"`
 	CoinId string `json:"coin_id" bson:"coin_id"`
 	Change int32  `json:"change" bson:"change"`
+	Reason string `json:"reason" bson:"reason"` //变化原因
+	Info   string `json:"info" bson:"info"`     //变化信息
 	Time   int64  `json:"time" bson:"time"`
 }

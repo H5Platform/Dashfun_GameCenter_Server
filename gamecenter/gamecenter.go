@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -128,15 +129,27 @@ func (gc *GameCenter) updateGameImage(game *data.DashFunGame, img []byte, imgTyp
 		imgName = game.MainPicUrl
 	}
 
-	// 250320修改，统一游戏图片名称，方便引用
+	version := 1
+
+	// 提取版本号
+	if idx := strings.Index(imgName, "?v="); idx != -1 {
+		if v, err := strconv.Atoi(imgName[idx+3:]); err == nil {
+			version = v
+		}
+		imgName = imgName[:idx]
+	}
+
 	if imgName == "" || imgName != uploadName {
 		imgName = imgType + ".png"
 	}
+
 	key := "images/" + game.Id + "/" + imgName
 	_, err := tencentcos.Get().UploadData(key, img, "image/png")
 	if err != nil {
 		return err
 	}
+
+	imgName = imgName + "?v=" + strconv.Itoa(version+1)
 
 	switch imgType {
 	case "icon":

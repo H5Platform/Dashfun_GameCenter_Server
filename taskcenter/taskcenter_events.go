@@ -29,7 +29,7 @@ func (t *TaskCenter) onUserLogin(user *data.OnlineUser) {
 			case data.TaskCondition_EnterDashFun:
 				changed = t.taskRecordEnterDashFun(user.User, task, userData)
 			case data.TaskCondition_DailyLogin:
-				changed = t.taskRecordDailyLogin(user.User, task, userData)
+				changed = t.taskRecordDailyLogin(user.User.Id, task, userData)
 			}
 			if changed {
 				userData.Time = time.Now().UnixMilli()
@@ -41,6 +41,62 @@ func (t *TaskCenter) onUserLogin(user *data.OnlineUser) {
 
 func (t *TaskCenter) onUserLogout(user *data.OnlineUser) {
 
+}
+
+func (t *TaskCenter) onUserLeaderboardChanged(evt *events.UserLeaderboardEvent) {
+
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+
+	for _, task := range t.tasks {
+		if task.Open && (isDashFunTask(task) || task.GameId == evt.Id) {
+			changed := false
+			userData, err := t.GetTaskUserData(evt.UserId, task.Id)
+			if err != nil {
+				zap.S().Errorw("GetTaskUserData Error", "user", evt.UserId, "task", task.Id, "err", err)
+				continue
+			}
+
+			switch task.Condition.Type {
+			case data.TaskCondition_LeaderboardRank:
+				changed = t.taskRecordUserLeaderboardChanged(task, userData, evt.Rank, evt.Score)
+			}
+
+			if changed {
+				userData.Time = time.Now().UnixMilli()
+				t.saveTaskUserData(userData)
+			}
+		}
+	}
+}
+
+func (t *TaskCenter) onUserRecharge(evt *events.EventUserRecharge) {
+	user := evt.User
+	recharge := evt.Recharge
+
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+
+	for _, task := range t.tasks {
+		if task.Open && (isDashFunTask(task) || task.GameId == recharge.GameId) {
+			changed := false
+			userData, err := t.GetTaskUserData(user.Id, task.Id)
+			if err != nil {
+				zap.S().Errorw("GetTaskUserData Error", "user", user.Id, "task", task.Id, "err", err)
+				continue
+			}
+
+			switch task.Condition.Type {
+			case data.TaskCondition_Recharge:
+				changed = t.taskRecordUserRecharge(user, task, userData, recharge)
+			}
+
+			if changed {
+				userData.Time = time.Now().UnixMilli()
+				t.saveTaskUserData(userData)
+			}
+		}
+	}
 }
 
 func (t *TaskCenter) onUserPayment(evt *events.EventUserPayment) {
@@ -61,7 +117,13 @@ func (t *TaskCenter) onUserPayment(evt *events.EventUserPayment) {
 
 			switch task.Condition.Type {
 			case data.TaskCondition_SpendDiamonds:
-				changed = t.taskRecordUserPayment(user, task, userData, payment, payment.GameId)
+				if payment.Currency == data.PaymentCurrency_DFD || payment.Currency == data.PaymentCurrency_DFD_TEST {
+					changed = t.taskRecordUserPayment(user, task, userData, payment, payment.GameId)
+				}
+			case data.TaskCondition_SpendTGStar:
+				if payment.Currency == data.PaymentCurrency_TG_STAR || payment.Currency == data.PaymentCurrency_TG_STAR_TEST {
+					changed = t.taskRecordUserTGPayment(user, task, userData, payment, payment.GameId)
+				}
 			}
 
 			if changed {
@@ -70,7 +132,6 @@ func (t *TaskCenter) onUserPayment(evt *events.EventUserPayment) {
 			}
 		}
 	}
-
 }
 
 func (t *TaskCenter) onGameReportPlayerLevelUp(evt *events.EventPlayerLevelUp) {
@@ -92,7 +153,7 @@ func (t *TaskCenter) onGameReportPlayerLevelUp(evt *events.EventPlayerLevelUp) {
 			switch task.Condition.Type {
 			case data.TaskCondition_LevelUp:
 				if isDashFunTask(task) {
-					//按任务条件指定的游戏id绑定
+					// 按任务条件指定的游戏id绑定
 				}
 
 				changed = t.taskRecordPlayerLevelUp(user, task, userData, game.Id, evt.Level)
@@ -109,7 +170,7 @@ func (t *TaskCenter) onGameReportPlayerLevelUp(evt *events.EventPlayerLevelUp) {
 
 // onUserEnterGameEvent 用户点击了Play按钮进入了游戏
 func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
-	//t.processTasks(evt.User, evt.Game)
+	// t.processTasks(evt.User, evt.Game)
 	user := evt.User
 	game := evt.Game
 
@@ -127,20 +188,20 @@ func (t *TaskCenter) onUserEnterGameEvent(evt *events.EventUserEnterGame) {
 
 			switch task.Condition.Type {
 			case data.TaskCondition_JoinTGChannel:
-				//加入tg channel
-				//@2024-11-07 改为用户手动点击验证了
+				// 加入tg channel
+				// @2024-11-07 改为用户手动点击验证了
 				// changed = t.taskVerifyTGChannel(user, task, userData, game.Id)
 				break
 			case data.TaskCondition_PlayGame:
-				//进行指定游戏
+				// 进行指定游戏
 				changed = t.taskRecordPlayGame(user, task, userData, game.Id)
 				break
 			case data.TaskCondition_PlayRandomGame:
-				//进行任意游戏
+				// 进行任意游戏
 				changed = t.taskRecordPlayRandomGame(user, task, userData, game.Id)
 				break
 			case data.TaskCondition_PlaySpecificGame:
-				//进行指定游戏
+				// 进行指定游戏
 				changed = t.taskRecordPlaySpecificGame(user, task, userData, game.Id)
 				break
 			case data.TaskCondition_LevelUp:
@@ -204,7 +265,7 @@ func (t *TaskCenter) onUserReferrer(event *events.UserReferrerEvent) {
 
 			switch task.Condition.Type {
 			case data.TaskCondition_InviteFriends:
-				//邀请好友
+				// 邀请好友
 				changed = t.taskRecordInviteFriend(user, task, userData)
 				break
 			}

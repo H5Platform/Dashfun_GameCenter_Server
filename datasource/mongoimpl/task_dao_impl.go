@@ -201,11 +201,13 @@ func (p *TaskDaoMongo) SearchTask(gameId, keyword string, size, page int64) (tas
 	return tasks, totalPages, nil
 }
 
-func (p *TaskDaoMongo) CreateTask(id, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
+func (p *TaskDaoMongo) CreateTask(id, name, gameId string, showInGame bool, priority int, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
 	condition data.DashFunTaskCondition, rewards []data.DashFunTaskReward) (*data.DashFunTaskData, error) {
 	task := &data.DashFunTaskData{
 		Id:         id,
+		Priority:   priority,
 		Name:       name,
+		ShowInGame: showInGame,
 		Open:       true,
 		GameId:     gameId,
 		Type:       taskType,

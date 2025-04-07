@@ -32,7 +32,7 @@ func (p *PaymentDaoMongo) FindPaymentById(id string) (*data.DashFunPaymentData, 
 	return ret, nil
 }
 
-func (p *PaymentDaoMongo) CreatePayment(id, userId, gameId, paymentId, title, desc, payload, currency string, from data.PaymentFrom, price int, extraData string) (*data.DashFunPaymentData, error) {
+func (p *PaymentDaoMongo) CreatePayment(id, userId, gameId, paymentId, title, desc, payload string, currency data.PaymentCurrency, from data.PaymentFrom, price int, extraData string) (*data.DashFunPaymentData, error) {
 	payment := &data.DashFunPaymentData{
 		Id:          id,
 		UserId:      userId,

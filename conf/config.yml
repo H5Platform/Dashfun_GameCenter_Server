@@ -45,26 +45,26 @@ redis_cfg:
 
 invite_cfg:
   # 被邀请的用户，达到指定积分后，才算邀请成功
-  point_required: 200
+  point_required: 5000
   # 每个成功被邀请的用户奖励的分数
   point_reward:
     - {
       #新用户奖励
       invite_user_type: 1,
-      reward_point: 300,
-      reward_coin: 1500,
+      reward_point: 100,
+      reward_coin: 0,
     }
     - {
       #老用户奖励
       invite_user_type: 2,
       reward_point: 10,
-      reward_coin: 150,
+      reward_coin: 0,
     }
     - {
       #非活跃用户奖励
       invite_user_type: 3,
-      reward_point: 50,
-      reward_coin: 500,
+      reward_point: 10,
+      reward_coin: 0,
     }
 
 recharge_cfg:

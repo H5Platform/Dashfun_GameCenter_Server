@@ -6,6 +6,7 @@ import (
 	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	"fmt"
@@ -18,9 +19,10 @@ import (
 )
 
 type CreateOrderRequest struct {
-	Platform            string `json:"platform"`
-	RechargeOptionIndex int    `json:"recharge_option_index"` //充值选项索引，对应RechargeCfg中的索引
-	Channel             string `json:"channel"`               //当前充值渠道
+	Platform            string `json:"platform" required:"true"`              //充值平台，ios, android, tdesktop, browser
+	RechargeOptionIndex int    `json:"recharge_option_index" required:"true"` //充值选项索引，对应RechargeCfg中的索引
+	Channel             string `json:"channel" required:"true"`               //当前充值渠道
+	GameId              string `json:"game_id"`                               //当前所在的游戏，空串表示是DashFun平台
 }
 
 type RechargeOrderDetail struct {
@@ -55,13 +57,22 @@ func apiRequestRechargeOrder(c *gin.Context, user *data.DashFunUser) {
 		return
 	}
 
+	if req.GameId != "" {
+		//验证游戏
+		_, err := gamecenter.Get().FindGame(req.GameId)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+			return
+		}
+	}
+
 	option := config.GetConfig().RechargeCfg.Options[idx]
 
 	from := data.DashFunRechargeFrom_TG
 	if req.Channel == "test" && !config.IsProd() {
 		from = data.DashFunRechargeFrom_TEST
 	}
-	order, err := RechargeCenter.Get().CreateRechargeOrder(user.Id, option, req.Platform, from)
+	order, err := RechargeCenter.Get().CreateRechargeOrder(user.Id, option, req.Platform, req.GameId, from)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return

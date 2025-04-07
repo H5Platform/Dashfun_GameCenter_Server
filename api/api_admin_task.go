@@ -10,14 +10,16 @@ import (
 )
 
 type adminUpdateTaskRequest struct {
-	Id        string                    `json:"id" form:"id" required:"false"`
-	Name      string                    `json:"name" form:"name" required:"true"`
-	Type      data.DashFunTaskType      `json:"task_type" form:"task_type" required:"true"`
-	GameId    string                    `json:"game_id" form:"game_id" required:"false"`
-	Category  data.DashFunTaskCategory  `json:"category" form:"category" required:"true"`
-	Condition data.DashFunTaskCondition `json:"require" form:"require" required:"true"`
-	Rewards   []data.DashFunTaskReward  `json:"reward" form:"reward" required:"true"`
-	Open      bool                      `json:"open" form:"open" required:"false"`
+	Id         string                    `json:"id" form:"id" required:"false"`
+	Name       string                    `json:"name" form:"name" required:"true"`
+	Priority   int                       `json:"priority" form:"priority" required:"true"` //任务优先级，0表示使用默认最低优先级
+	ShowInGame bool                      `json:"show_in_game" form:"show_in_game"`         //是否在游戏中显示，只针对平台任务，有些平台任务希望在游戏中同时出现
+	Type       data.DashFunTaskType      `json:"task_type" form:"task_type" required:"true"`
+	GameId     string                    `json:"game_id" form:"game_id" required:"false"`
+	Category   data.DashFunTaskCategory  `json:"category" form:"category" required:"true"`
+	Condition  data.DashFunTaskCondition `json:"require" form:"require" required:"true"`
+	Rewards    []data.DashFunTaskReward  `json:"reward" form:"reward" required:"true"`
+	Open       bool                      `json:"open" form:"open" required:"false"`
 }
 
 type adminTaskSearchRequest struct {
@@ -94,14 +96,14 @@ func apiAdminTaskUpdate(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	exist := taskcenter.Get().GetTaskByName(req.Name)
+	//exist := taskcenter.Get().GetTaskByName(req.Name)
 
-	if exist != nil && exist.Id != req.Id {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, RError("task name already exist"))
-		return
-	}
+	//if exist != nil && exist.Id != req.Id {
+	//	c.AbortWithStatusJSON(http.StatusInternalServerError, RError("task name already exist"))
+	//	return
+	//}
 
-	task, err := taskcenter.Get().UpdateTask(req.Id, req.Name, req.Type, req.Category, req.Condition, req.Rewards, req.Open)
+	task, err := taskcenter.Get().UpdateTask(req.Id, req.Name, req.ShowInGame, req.Priority, req.Type, req.Category, req.Condition, req.Rewards, req.Open)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
@@ -130,14 +132,14 @@ func apiAdminTaskCreate(c *gin.Context, op *admin.AdminUser) {
 		return
 	}
 
-	exist := taskcenter.Get().GetTaskByName(req.Name)
+	//exist := taskcenter.Get().GetTaskByName(req.Name)
+	//
+	//if exist != nil {
+	//	c.AbortWithStatusJSON(http.StatusInternalServerError, RError("task name already exist"))
+	//	return
+	//}
 
-	if exist != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, RError("task name already exist"))
-		return
-	}
-
-	task, err := taskcenter.Get().CreateTaskAutoId(req.Name, req.GameId, req.Type, req.Category, req.Condition, req.Rewards...)
+	task, err := taskcenter.Get().CreateTaskAutoId1(req.Name, req.GameId, req.ShowInGame, req.Priority, req.Type, req.Category, req.Condition, req.Rewards...)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return

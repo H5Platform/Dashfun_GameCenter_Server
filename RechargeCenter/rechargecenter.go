@@ -10,6 +10,7 @@ import (
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/snowflake"
 	"dashfun_gamecenter/tgbot"
+	"dashfun_gamecenter/usercenter"
 	"errors"
 	"fmt"
 	"github.com/go-telegram/bot"
@@ -57,6 +58,15 @@ func (r *RechargeCenter) init() {
 	stripe.Key = config.GetConfig().StripeCfg.SecretKey
 	r.processingOrdersChn = make(chan *data.DashFunRechargeData, 100)
 	go r.processPaidOrders()
+
+	paidOrders, err := dao.GetRechargeDao().GetOrdersByStatus(data.DashFunRechargeStatus_Paid)
+	if err != nil {
+		zap.S().Errorw("Get Paid Orders Failed", "error", err)
+	} else {
+		for _, order := range paidOrders {
+			r.processingOrdersChn <- order
+		}
+	}
 
 	events.TGPreCheckoutQueryEvents.On(r.onTGPreCheckoutQueryEvent)
 	events.TGSuccessfulPaymentEvents.On(r.onTGPaymentSuccessEvent)
@@ -139,7 +149,7 @@ func (r *RechargeCenter) processPaidOrders() {
 	for {
 		order := <-r.processingOrdersChn
 		//发放钻石
-		_, err := coincenter.Get().AddUserCoinAmount(order.UserId, diamond.Id, int32(order.Diamond))
+		_, err := coincenter.Get().AddUserCoinAmount(order.UserId, diamond.Id, int32(order.Diamond), "TopUp", order.Id)
 		if err != nil {
 			zap.S().Errorw("AddUserCoinAmount failed", "order", order.Id, "err", err)
 		}
@@ -147,7 +157,19 @@ func (r *RechargeCenter) processPaidOrders() {
 		order.Status = data.DashFunRechargeStatus_Completed
 		dao.GetRechargeDao().SaveOrUpdate(order)
 
+		user, _ := usercenter.Get().GetDashFunUser(order.UserId)
+		var game *data.DashFunGame = nil
+
+		if order.GameId != "" {
+			game, _ = dao.GetGameDao().GetGameById(order.GameId)
+		}
+
 		zap.S().Infow("recharge order completed", "order", order.Id, "price", order.Price, "diamond", order.Diamond)
+		events.UserRechargeEvents.Emit(&events.EventUserRecharge{
+			User:     user,
+			Game:     game,
+			Recharge: order,
+		})
 	}
 }
 
@@ -184,7 +206,7 @@ func (r *RechargeCenter) GetRechargePlatformOptions(platform string) RechargePla
 	return ret
 }
 
-func (r *RechargeCenter) CreateRechargeOrder(userId string, rechargeOption config.RechargeOption, platform string, from data.RechargeFrom) (*data.DashFunRechargeData, error) {
+func (r *RechargeCenter) CreateRechargeOrder(userId string, rechargeOption config.RechargeOption, platform, gameId string, from data.RechargeFrom) (*data.DashFunRechargeData, error) {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancelFunc()
 
@@ -196,7 +218,7 @@ func (r *RechargeCenter) CreateRechargeOrder(userId string, rechargeOption confi
 	//	return nil, err
 	//}
 	finalPrice, priceType := r.GetRechargePrice(rechargeOption, platform)
-	recharge, err := d.CreateRecharge(r.newRechargeOrderId(), userId, from, finalPrice, priceType, rechargeOption.Diamond, "", "", time.Now().Unix())
+	recharge, err := d.CreateRecharge(r.newRechargeOrderId(), userId, from, gameId, finalPrice, priceType, rechargeOption.Diamond, "", "", time.Now().Unix())
 	if err != nil {
 		zap.S().Infow("CreateRechargeOrder", "recharge", recharge)
 		return nil, err

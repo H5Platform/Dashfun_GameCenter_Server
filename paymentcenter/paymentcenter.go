@@ -143,10 +143,10 @@ func (p *PaymentCenter) FindPayment(id string) (*data.DashFunPaymentData, error)
 
 func (p *PaymentCenter) RequestDashFunPayment(userId, gameId, title, desc, payload string, price int, isTesting bool) (*data.DashFunPaymentData, error) {
 	id := p.newPaymentId()
-	currency := "DFD" //DashFunDiamond
+	currency := data.PaymentCurrency_DFD //DashFunDiamond
 	from := data.DashFunPaymentFrom_DashFun
 	if isTesting {
-		currency = "DFD_TEST"
+		currency = data.PaymentCurrency_DFD_TEST
 		from = data.DashFunPaymentFrom_TEST
 	}
 	payment, err := dao.GetPaymentDao().CreatePayment(id, userId, gameId, "", title, desc, payload, currency, from, price, "")
@@ -196,7 +196,7 @@ func (p *PaymentCenter) ConfirmDashFunPayment(paymentId string, opUserId string)
 
 	//扣费
 	diamond := coincenter.Get().GetDashFunDiamond()
-	_, err = coincenter.Get().DecUserCoinAmount(user.Id, diamond.Id, int32(payment.Price))
+	_, err = coincenter.Get().DecUserCoinAmount(user.Id, diamond.Id, int32(payment.Price), "Purchase", payment.Id)
 
 	if err != nil {
 		zap.S().Errorw("Dec DashFunDiamond Failed", "Payment", payment.Id, "error", err)
@@ -259,10 +259,10 @@ func (p *PaymentCenter) RequestTGPayment(userId, gameId, title, desc, payload st
 		paymentId = invoiceLink
 	}
 
-	currency := "TG_XTR"
+	currency := data.PaymentCurrency_TG_STAR
 	from := data.DashFunPaymentFrom_TG
 	if isTesting {
-		currency = "TG_XTR_TEST"
+		currency = data.PaymentCurrency_TG_STAR_TEST
 		from = data.DashFunPaymentFrom_TEST
 	}
 	payment, err := dao.GetPaymentDao().CreatePayment(id, userId, gameId, paymentId, title, desc, payload, currency, from, price, invoiceLink)

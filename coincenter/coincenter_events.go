@@ -18,7 +18,7 @@ func (c *CoinCenter) onUserLogin(user *data.OnlineUser) {
 		diamond := c.GetDashFunDiamond()
 		userData := c.GetCoinUserData(user.User.Id, diamond.Id)
 		if userData.Amount < 500 {
-			c.AddUserCoinAmount(user.User.Id, diamond.Id, 1000)
+			c.AddUserCoinAmount(user.User.Id, diamond.Id, 1000, "Test", "")
 		}
 	}
 

@@ -468,4 +468,18 @@ func (l *LeaderboardCenter) updateUserCoinAmount(userId string, amount int32) {
 	if err != nil {
 		zap.S().Errorw("redis ZAdd failed", "error", err.Error())
 	}
+
+	rank, err := rdb.ZRevRank(ctx, leaderboardKey, userId).Result()
+	if err != nil {
+		zap.S().Errorw("redis ZRevRank failed", "error", err.Error())
+		return
+	}
+
+	events.UserLeaderboardEvents.Emit(&events.UserLeaderboardEvent{
+		Id:     "",
+		UserId: userId,
+		Rank:   rank + 1,
+		Score:  float64(amount),
+	})
+
 }

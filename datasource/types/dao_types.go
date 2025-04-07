@@ -41,13 +41,14 @@ type GameDao interface {
 type PaymentDao interface {
 	FindPaymentById(id string) (*data.DashFunPaymentData, error)
 	SaveOrUpdate(game *data.DashFunPaymentData) (*data.DashFunPaymentData, error)
-	CreatePayment(id, userId, gameId, paymentId, title, desc, payload, currency string, from data.PaymentFrom, price int, extraData string) (*data.DashFunPaymentData, error)
+	CreatePayment(id, userId, gameId, paymentId, title, desc, payload string, currency data.PaymentCurrency, from data.PaymentFrom, price int, extraData string) (*data.DashFunPaymentData, error)
 }
 
 type RechargeDao interface {
 	SaveOrUpdate(recharge *data.DashFunRechargeData) (*data.DashFunRechargeData, error)
 	FindRechargeById(rechargeId string) (*data.DashFunRechargeData, error)
-	CreateRecharge(id, userId string, from data.RechargeFrom, price int, priceType data.RechargePlatformOptionPriceType, diamond int, payload, message string, createAt int64) (*data.DashFunRechargeData, error)
+	CreateRecharge(id, userId string, from data.RechargeFrom, gameId string, price int, priceType data.RechargePlatformOptionPriceType, diamond int, payload, message string, createAt int64) (*data.DashFunRechargeData, error)
+	GetOrdersByStatus(status data.RechargeStatus) ([]*data.DashFunRechargeData, error)
 }
 
 type TaskDao interface {
@@ -57,7 +58,7 @@ type TaskDao interface {
 	SearchTask(gameId, keyword string, size, page int64) (tasks []*data.DashFunTaskData, totalPages int, err error)
 	FindTaskByGameId(gameId string) ([]*data.DashFunTaskData, error)
 	SaveOrUpdate(task *data.DashFunTaskData) (*data.DashFunTaskData, error)
-	CreateTask(id, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory, condition data.DashFunTaskCondition, rewards []data.DashFunTaskReward) (*data.DashFunTaskData, error)
+	CreateTask(id, name, gameId string, showInGame bool, priority int, taskType data.DashFunTaskType, category data.DashFunTaskCategory, condition data.DashFunTaskCondition, rewards []data.DashFunTaskReward) (*data.DashFunTaskData, error)
 }
 
 type TaskUserDao interface {

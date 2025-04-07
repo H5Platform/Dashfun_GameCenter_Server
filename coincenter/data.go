@@ -35,11 +35,13 @@ func newCoinsUserData(userId string) *CoinsUserData {
 	}
 }
 
-func newCoinUserRecordData(userId, coinId string, amount int32) *data.CoinUserRecordData {
+func newCoinUserRecordData(userId, coinId string, amount int32, reason, info string) *data.CoinUserRecordData {
 	ret := &data.CoinUserRecordData{
 		UserId: userId,
 		CoinId: coinId,
 		Change: amount,
+		Reason: reason,
+		Info:   info,
 		Time:   time.Now().UnixMilli(),
 	}
 	return ret

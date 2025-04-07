@@ -102,13 +102,17 @@ func (i *InviteCenter) onUserCoinChanged(evt events.UserCoinChangedEvent) {
 				xp, _ := coincenter.Get().GetCoinByName("DashFunPoint")
 				coin, _ := coincenter.Get().GetCoinByName("DashFunCoin")
 
-				_, err := coincenter.Get().AddUserCoinAmount(ud.UserId, xp.Id, int32(reward.RewardPoint))
-				if err != nil {
-					zap.S().Errorw("InviteCenter.onUserCoinChanged AddUserCoinAmount failed", "error", err.Error())
+				if reward.RewardPoint > 0 {
+					_, err := coincenter.Get().AddUserCoinAmount(ud.UserId, xp.Id, int32(reward.RewardPoint), "InviteReward", "")
+					if err != nil {
+						zap.S().Errorw("InviteCenter.onUserCoinChanged AddUserCoinAmount failed", "error", err.Error())
+					}
 				}
-				_, err = coincenter.Get().AddUserCoinAmount(ud.UserId, coin.Id, int32(reward.RewardCoin))
-				if err != nil {
-					zap.S().Errorw("InviteCenter.onUserCoinChanged AddUserCoinAmount failed", "error", err.Error())
+				if reward.RewardCoin > 0 {
+					_, err = coincenter.Get().AddUserCoinAmount(ud.UserId, coin.Id, int32(reward.RewardCoin), "InviteReward", "")
+					if err != nil {
+						zap.S().Errorw("InviteCenter.onUserCoinChanged AddUserCoinAmount failed", "error", err.Error())
+					}
 				}
 				events.UserReferSuccessEvents.Emit(ud)
 			}

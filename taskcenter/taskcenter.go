@@ -18,6 +18,8 @@ import (
 var once sync.Once
 var instance *TaskCenter
 
+const TaskPriorityLow = 999999999
+
 type TaskCenter struct {
 	idGen            *snowflake.Worker
 	tasks            map[string]*data.DashFunTaskData
@@ -46,14 +48,21 @@ func (t *TaskCenter) init() {
 		if task.Rewards == nil {
 			task.Rewards = append(task.Rewards, task.Reward)
 		}
+		// Priority 属性是后加的，初始值为0，调整为最低优先级
+		if task.Priority == 0 {
+			task.Priority = TaskPriorityLow
+		}
 	}
 
 	events.UserEnterGameEvents.On(t.onUserEnterGameEvent)
 	events.UserLoginEvents.On(t.onUserLogin)
 	events.PlayerLevelUpEvents.On(t.onGameReportPlayerLevelUp)
 	events.UserPaymentEvents.On(t.onUserPayment)
+	events.UserTGPaymentEvents.On(t.onUserPayment)
 	events.UserBindAddressEvents.On(t.onUserBindAddress)
 	events.UserReferrerEvents.On(t.onUserReferrer)
+	events.UserRechargeEvents.On(t.onUserRecharge)
+	events.UserLeaderboardEvents.On(t.onUserLeaderboardChanged)
 }
 
 func (t *TaskCenter) newTasId() string {
@@ -86,15 +95,33 @@ func (t *TaskCenter) GetTaskByName(taskName string) *data.DashFunTaskData {
 	return task
 }
 
+// CreateTaskAutoId 创建任务，taskId 由系统自动生成，showInGame=false
 func (t *TaskCenter) CreateTaskAutoId(name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
 	condition data.DashFunTaskCondition, rewards ...data.DashFunTaskReward) (*data.DashFunTaskData, error) {
-	return t.CreateTask(t.newTasId(), name, gameId, taskType, category, condition, rewards...)
+	return t.CreateTaskAutoId1(name, gameId, false, TaskPriorityLow, taskType, category, condition, rewards...)
 }
 
+func (t *TaskCenter) CreateTaskAutoId1(name, gameId string, showInGame bool, priority int, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
+	condition data.DashFunTaskCondition, rewards ...data.DashFunTaskReward) (*data.DashFunTaskData, error) {
+	if priority == 0 {
+		priority = TaskPriorityLow
+	}
+	return t.CreateTask1(t.newTasId(), name, gameId, showInGame, priority, taskType, category, condition, rewards...)
+}
+
+// CreateTask 创建任务，taskId 由调用者指定, showInGame=false
 func (t *TaskCenter) CreateTask(taskId, name, gameId string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
 	condition data.DashFunTaskCondition, rewards ...data.DashFunTaskReward) (*data.DashFunTaskData, error) {
+	return t.CreateTask1(taskId, name, gameId, false, TaskPriorityLow, taskType, category, condition, rewards...)
+}
+
+func (t *TaskCenter) CreateTask1(taskId, name, gameId string, showInGame bool, priority int, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
+	condition data.DashFunTaskCondition, rewards ...data.DashFunTaskReward) (*data.DashFunTaskData, error) {
+	if priority == 0 {
+		priority = TaskPriorityLow
+	}
 	task, err := dao.GetTaskDao().CreateTask(
-		taskId, name, gameId, taskType, category, condition, rewards)
+		taskId, name, gameId, showInGame, priority, taskType, category, condition, rewards)
 
 	if err != nil {
 		return nil, err
@@ -107,7 +134,7 @@ func (t *TaskCenter) CreateTask(taskId, name, gameId string, taskType data.DashF
 	return task, nil
 }
 
-func (t *TaskCenter) UpdateTask(taskId string, name string, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
+func (t *TaskCenter) UpdateTask(taskId string, name string, showInGame bool, priority int, taskType data.DashFunTaskType, category data.DashFunTaskCategory,
 	condition data.DashFunTaskCondition, reward []data.DashFunTaskReward, isOpen bool) (*data.DashFunTaskData, error) {
 	if taskId == "" {
 		return nil, errors.New("task Id is empty")
@@ -119,11 +146,16 @@ func (t *TaskCenter) UpdateTask(taskId string, name string, taskType data.DashFu
 	if name != "" {
 		task.Name = name
 	}
+	if priority == 0 {
+		priority = TaskPriorityLow
+	}
+	task.Priority = priority
 	task.Type = taskType
 	task.Category = category
 	task.Condition = condition
 	task.Rewards = reward
 	task.Open = isOpen
+	task.ShowInGame = showInGame
 	dao.GetTaskDao().SaveOrUpdate(task)
 	return task, nil
 }
@@ -173,7 +205,6 @@ func (t *TaskCenter) saveTaskUserData(data *data.DashFunTaskUserData) {
 }
 
 // GetTaskUserData 获取用户对应任务的进度记录，如果没有则新建，同时检测是否需要重置
-// 同时针对加入TG Channel的任务，会在获取进度时进行验证是否完成
 func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUserData, error) {
 	userData, err := t.loadTaskUserData(userId, taskId)
 	if err != nil {
@@ -203,15 +234,22 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 	reset := false
 
 	if task != nil {
-		switch task.Type {
-		case data.TaskType_Daily:
-			reset = diffDays >= 1
-		case data.TaskType_2Days:
-			reset = diffDays >= 2
-		case data.TaskType_3Days:
-			reset = diffDays >= 3
-		case data.TaskType_7Days:
-			reset = diffDays >= 7
+		if task.Condition.Type == data.TaskCondition_DailyLogin && userData.Status != data.TaskStatus_InProgress {
+			if t.taskRecordDailyLogin(userId, task, userData) {
+				//任务状态有变化，保存数据
+				t.saveTaskUserData(userData)
+			}
+		} else {
+			switch task.Type {
+			case data.TaskType_Daily:
+				reset = diffDays >= 1
+			case data.TaskType_2Days:
+				reset = diffDays >= 2
+			case data.TaskType_3Days:
+				reset = diffDays >= 3
+			case data.TaskType_7Days:
+				reset = diffDays >= 7
+			}
 		}
 	}
 
@@ -281,7 +319,7 @@ func (t *TaskCenter) addTaskReward(taskId, gameId string, reward *data.DashFunTa
 		}
 	}
 
-	_, err := coincenter.Get().AddUserCoinAmount(userData.UserId, coin.Id, reward.Amount)
+	_, err := coincenter.Get().AddUserCoinAmount(userData.UserId, coin.Id, reward.Amount, "TaskReward", taskId)
 	if err != nil {
 		zap.S().Errorw("AddUserCoinAmount err", "task", taskId, "error", err)
 		return false
@@ -318,7 +356,11 @@ func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *dat
 
 	for _, task := range t.tasks {
 		// 250320修改，游戏的任务列表中不在下发DashFun的任务
-		if task.Open && ((isDashFunTask(task) && (gameId == "" || gameId == "-1" || strings.EqualFold(gameId, "dashfun"))) || task.GameId == gameId || gameId == "all") {
+		// 250406修改，游戏的任务列表中增加强制显示在游戏中的DashFun任务
+		if task.Open && ((isDashFunTask(task) &&
+			(task.ShowInGame || gameId == "" || gameId == "-1" || strings.EqualFold(gameId, "dashfun"))) || // DashFun的任务，且游戏Id为DashFun的绑定，或者任务的showInGame==true
+			task.GameId == gameId || gameId == "all") { //任务绑定的游戏id匹配，或者获取的游戏id是all
+
 			userData, err := t.GetTaskUserData(userId, task.Id)
 			if err != nil {
 				zap.S().Errorw("get user task data error", "user", userId, "task", task)

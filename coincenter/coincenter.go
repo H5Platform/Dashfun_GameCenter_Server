@@ -83,8 +83,8 @@ func (c *CoinCenter) loadUserCoins(userId string) (*CoinsUserData, error) {
 }
 
 // recordUserCoinChange 记录用户coin数量变化，amount>0为增加 <0为扣减
-func (c *CoinCenter) recordUserCoinChange(cud *CoinsUserData, coinId string, amount int32) {
-	r := newCoinUserRecordData(cud.userId, coinId, amount)
+func (c *CoinCenter) recordUserCoinChange(cud *CoinsUserData, coinId string, amount int32, reason, info string) {
+	r := newCoinUserRecordData(cud.userId, coinId, amount, reason, info)
 	_, err := dao.GetCoinRecordDao().AddRecord(r)
 	if err != nil {
 		zap.S().Errorw("save user coin change record error", "userId", cud.userId, "coinId", coinId, "amount", amount, "err", err)
@@ -184,7 +184,7 @@ func (c *CoinCenter) UpdateCoin(id, name, desc, Symbol string, canWithdraw bool,
 }
 
 // AddUserCoinAmount 给用户增加指定数量的coin
-func (c *CoinCenter) AddUserCoinAmount(userId, coinId string, amount int32) (*data.CoinUserData, error) {
+func (c *CoinCenter) AddUserCoinAmount(userId, coinId string, amount int32, reason, info string) (*data.CoinUserData, error) {
 	cud := c.users.GetCoinsUserData(userId)
 	cud.Lock()
 	defer cud.Unlock()
@@ -198,7 +198,7 @@ func (c *CoinCenter) AddUserCoinAmount(userId, coinId string, amount int32) (*da
 		coinData.Amount += amount
 		cud.AddOrUpdateUserData(coinData)
 		dao.GetCoinUserDao().SaveOrUpdate(coinData)
-		c.recordUserCoinChange(cud, coinId, amount)
+		c.recordUserCoinChange(cud, coinId, amount, reason, info)
 		events.UserCoinChangedEvents.Emit(events.UserCoinChangedEvent{
 			UserId: userId, Coin: coin, UserData: coinData, ChangedAmount: amount,
 		})
@@ -208,7 +208,7 @@ func (c *CoinCenter) AddUserCoinAmount(userId, coinId string, amount int32) (*da
 }
 
 // DecUserCoinAmount 给用户减少指定数量的coin
-func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount int32) (*data.CoinUserData, error) {
+func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount int32, reason, info string) (*data.CoinUserData, error) {
 	cud := c.users.GetCoinsUserData(userId)
 	cud.Lock()
 	defer cud.Unlock()
@@ -230,7 +230,7 @@ func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount int32) (*da
 		events.UserCoinChangedEvents.Emit(events.UserCoinChangedEvent{
 			UserId: userId, Coin: coin, UserData: coinData, ChangedAmount: -amount,
 		})
-		c.recordUserCoinChange(cud, coinId, -amount)
+		c.recordUserCoinChange(cud, coinId, -amount, reason, info)
 		zap.S().Infow("dec user coin amount", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount)
 	}
 	return coinData, nil

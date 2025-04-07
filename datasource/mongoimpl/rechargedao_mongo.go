@@ -31,12 +31,29 @@ func (p *RechargeDaoMongo) FindRechargeById(id string) (*data.DashFunRechargeDat
 	return ret, nil
 }
 
-func (p *RechargeDaoMongo) CreateRecharge(id, userId string, from data.RechargeFrom, price int, priceType data.RechargePlatformOptionPriceType, diamond int,
+func (p *RechargeDaoMongo) GetOrdersByStatus(status data.RechargeStatus) ([]*data.DashFunRechargeData, error) {
+	var ret []*data.DashFunRechargeData
+	cursor, err := p.c.Find(context.TODO(), bson.M{"status": status})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	err = cursor.All(context.TODO(), &ret)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
+func (p *RechargeDaoMongo) CreateRecharge(id, userId string, from data.RechargeFrom, gameId string, price int, priceType data.RechargePlatformOptionPriceType, diamond int,
 	payload, message string, createAt int64) (*data.DashFunRechargeData, error) {
 	recharge := &data.DashFunRechargeData{
 		Id:           id,
 		UserId:       userId,
 		ChannelPayId: "",
+		GameId:       gameId,
 		From:         from,
 		Price:        price,
 		PriceType:    priceType,
@@ -79,6 +96,12 @@ func (p *RechargeDaoMongo) initDB() {
 			Unique:    false,
 			Sort:      1,
 			IndexName: "index_price_type",
+		},
+		{
+			FieldName: "game_id",
+			Unique:    false,
+			Sort:      1,
+			IndexName: "index_game_id",
 		},
 		{
 			FieldName: "create_at",

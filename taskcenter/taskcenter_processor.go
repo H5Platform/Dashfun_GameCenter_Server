@@ -112,7 +112,7 @@ func (t *TaskCenter) taskRecordEnterDashFun(user *data.DashFunUser, task *data.D
 	return ret
 }
 
-func (t *TaskCenter) taskRecordDailyLogin(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData) bool {
+func (t *TaskCenter) taskRecordDailyLogin(userId string, task *data.DashFunTaskData, userData *data.DashFunTaskUserData) bool {
 	ret := false
 
 	if task.Condition.Type == data.TaskCondition_DailyLogin && userData.Status == data.TaskStatus_InProgress {
@@ -124,25 +124,39 @@ func (t *TaskCenter) taskRecordDailyLogin(user *data.DashFunUser, task *data.Das
 		if userData.SaveData != "" {
 			err := json.Unmarshal([]byte(userData.SaveData), &save)
 			if err != nil {
-				zap.S().Errorw("unmarshal task daily login fail", err, err.Error(), "user", user.Id, "task", task.Id, "game", task.GameId, "savedata", userData.SaveData)
+				zap.S().Errorw("unmarshal task daily login fail", err, err.Error(), "user", userId, "task", task.Id, "game", task.GameId, "savedata", userData.SaveData)
 				ret = false
 				return ret
 			}
 		}
 
 		currentTime := time.Now().UnixMilli()
-		if currentTime > save.NextTime {
-			save.Days++
+		if currentTime >= save.NextTime {
+			if currentTime < save.NextTime+24*60*60*1000 {
+				//在24小时内，连续登录
+				save.Days++
+			} else {
+				//超过24小时，重新开始
+				save.Days = 1
+			}
 			nextDay := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day()+1, 0, 0, 0, 0, time.Now().Location())
 			save.NextTime = nextDay.UnixMilli()
+			userData.Progress = save.Days
+
+			marshal, err := json.Marshal(save)
+			if err != nil {
+				zap.S().Errorw("marshal task save data error", "err", err.Error(), "user", userId, "task", task.Id, "game", task.GameId, "savedata", userData.SaveData)
+			} else {
+				userData.SaveData = string(marshal)
+			}
+
+			ret = true
 		}
+
 		if save.Days >= task.Condition.Count {
-			userData.Progress = save.Days
 			userData.Status = data.TaskStatus_Completed
-		} else {
-			userData.Progress = save.Days
+			ret = true
 		}
-		ret = true
 	}
 
 	return ret
@@ -318,6 +332,54 @@ func (t *TaskCenter) taskRecordUserPayment(user *data.DashFunUser, task *data.Da
 			ret = true
 		}
 		if userData.Progress >= task.Condition.Count {
+			userData.Status = data.TaskStatus_Completed
+			ret = true
+		}
+		return ret
+	}
+	return false
+}
+
+func (t *TaskCenter) taskRecordUserTGPayment(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, payment *data.DashFunPaymentData, gameId string) bool {
+	if task.Condition.Type == data.TaskCondition_SpendTGStar && userData.Status == data.TaskStatus_InProgress {
+		ret := false
+		if userData.Progress < task.Condition.Count {
+			userData.Progress = userData.Progress + payment.Price
+			ret = true
+		}
+		if userData.Progress >= task.Condition.Count {
+			userData.Status = data.TaskStatus_Completed
+			ret = true
+		}
+		return ret
+	}
+	return false
+}
+
+func (t *TaskCenter) taskRecordUserRecharge(user *data.DashFunUser, task *data.DashFunTaskData, userData *data.DashFunTaskUserData, recharge *data.DashFunRechargeData) bool {
+	if task.Condition.Type == data.TaskCondition_Recharge && userData.Status == data.TaskStatus_InProgress {
+		ret := false
+		if userData.Progress < task.Condition.Count {
+			userData.Progress = userData.Progress + recharge.Diamond
+			ret = true
+		}
+		if userData.Progress >= task.Condition.Count {
+			userData.Status = data.TaskStatus_Completed
+			ret = true
+		}
+		return ret
+	}
+	return false
+}
+
+func (t *TaskCenter) taskRecordUserLeaderboardChanged(task *data.DashFunTaskData, userData *data.DashFunTaskUserData, rank int64, score float64) bool {
+	if task.Condition.Type == data.TaskCondition_LeaderboardRank && userData.Status == data.TaskStatus_InProgress {
+		ret := false
+		//排行榜排名大于要求排名，任务继续
+		userData.Progress = int(rank)
+		ret = true
+		//排行榜排名复合排名要求
+		if userData.Progress <= task.Condition.Count {
 			userData.Status = data.TaskStatus_Completed
 			ret = true
 		}

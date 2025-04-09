@@ -6,6 +6,7 @@ api调用时必须携带Authorization header，值为adminConfig中的backend_pa
 package api
 
 import (
+	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
@@ -14,8 +15,10 @@ import (
 	"dashfun_gamecenter/web"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gomarkdown/markdown"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type GameResult struct {
@@ -41,12 +44,9 @@ func checkAuthorize(c *gin.Context) bool {
 }
 
 // apiAdminGetGameInfo
+//
 //	@Router	/api/v1/admin_search/game/{id} [get]
 func apiAdminGetGameInfo(c *gin.Context) {
-	if !checkAuthorize(c) {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError("unauthorized"))
-		return
-	}
 	id := c.Param("id")
 	game, err := gamecenter.Get().FindGame(id)
 	if err != nil {
@@ -73,13 +73,9 @@ func apiAdminGetGameInfo(c *gin.Context) {
 }
 
 // apiAdminGetGameInfo
+//
 //	@Router	/api/v1/admin_search/user/{id} [get]
 func apiAdminGetUserInfo(c *gin.Context) {
-	if !checkAuthorize(c) {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, RError("unauthorized"))
-		return
-	}
-
 	id := c.Param("id")
 	user, err := usercenter.Get().GetDashFunUser(id)
 	if err != nil {
@@ -98,7 +94,153 @@ func apiAdminGetUserInfo(c *gin.Context) {
 	}))
 }
 
+func apiAdminGetUserCoins(c *gin.Context) {
+	id := c.Param("id")
+	user, err := usercenter.Get().GetDashFunUser(id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(err.Error()))
+		return
+	}
+	if user == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("user %s not found", id)))
+		return
+	}
+
+	coins := coincenter.Get().GetDashFunCoins()
+
+	userCoins := make(map[string]int32)
+	for _, coin := range coins {
+		ud := coincenter.Get().GetCoinUserData(user.Id, coin.Id)
+		if ud != nil {
+			userCoins[coin.Name] = ud.Amount
+		}
+	}
+
+	c.JSON(http.StatusOK, RSuccess(userCoins))
+}
+
+func apiAdminSearchUserCoinRecords(c *gin.Context) {
+	id := c.Param("id")
+	user, err := usercenter.Get().GetDashFunUser(id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(err.Error()))
+		return
+	}
+	if user == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("user %s not found", id)))
+		return
+	}
+
+	coin := c.Query("coin_name")
+	if len(coin) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("coin_name is required"))
+		return
+	}
+
+	coinData, exist := coincenter.Get().GetCoinByName(coin)
+	if !exist {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(fmt.Sprintf("coin %s not found", coin)))
+		return
+	}
+
+	ucd := coincenter.Get().GetCoinUserData(user.Id, coinData.Id)
+	records := coincenter.Get().GetUserCoinRecords(id, coinData.Id, 0)
+
+	str := fmt.Sprintf("## User **[%s]%s** Coin **[%s]** Records\n\n", user.Id, user.DisplayName, coinData.Name)
+	str += fmt.Sprintf("|%s|%s|%s|%s|%s|\n", "Time", "Type", "Change", "Reason", "Info")
+	str += fmt.Sprintf("|%s|%s|%s|%s|%s|\n", "---", "---", "---", "---", "---")
+	var totalAdd int32
+	var totalDec int32
+	var totalBalance int32
+	for _, record := range records {
+		t := time.UnixMilli(record.Time).Format("2006-01-02 15:04:05")
+		recordType := "Add"
+		if record.Reason == coincenter.CoinAddReasonRecalculate {
+			recordType = "Recalculate"
+			str += fmt.Sprintf("|%s|%s|%d|%s|%s|\n", t, recordType, record.Change, record.Reason, record.Info)
+			continue
+		} else if record.Change > 0 {
+			totalAdd += record.Change
+		} else if record.Change < 0 {
+			recordType = "Dec"
+			totalDec += -record.Change
+		}
+		totalBalance += record.Change
+		str += fmt.Sprintf("|%s|%s|%d|%s|%s|\n", t, recordType, record.Change, record.Reason, record.Info)
+	}
+
+	str += fmt.Sprintf("- User **[%s]%s** Coin **[%s]** Total Add: %d Total Dec:%d Record Balance:%d\n", user.Id, user.DisplayName, coinData.Name, totalAdd, totalDec, totalBalance)
+	str += fmt.Sprintf("- User **[%s]%s** Coin **[%s]** Current Balance: %d\n", user.Id, user.DisplayName, coinData.Name, ucd.Amount)
+
+	if totalBalance > ucd.Amount {
+		str += fmt.Sprintf("\n\n## <font color=\"red\">**Warning**</font> User **[%s]%s** Coin **[%s]** Record Balance: %d > Current Balance: %d\n", user.Id, user.DisplayName, coinData.Name, totalBalance, ucd.Amount)
+	}
+
+	html := markdown.ToHTML([]byte(str), nil, nil)
+	c.Header("Content-Disposition", "inline; filename=coin_records.html")
+	c.Data(200, "text/html; charset=utf-8", html)
+}
+
+// apiAdminRecalculateUserCoin 根据用户的coin记录重新计算用户的coin余额
+func apiAdminRecalculateUserCoin(c *gin.Context) {
+	id := c.Param("id")
+	user, err := usercenter.Get().GetDashFunUser(id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(err.Error()))
+		return
+	}
+	if user == nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("user %s not found", id)))
+		return
+	}
+
+	coin := c.Query("coin_name")
+	if len(coin) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("coin_name is required"))
+		return
+	}
+
+	coinData, exist := coincenter.Get().GetCoinByName(coin)
+	if !exist {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(fmt.Sprintf("coin %s not found", coin)))
+		return
+	}
+
+	ucd := coincenter.Get().GetCoinUserData(user.Id, coinData.Id)
+
+	_, _, totalBalance := coincenter.Get().CalculateUserCoinByRecords(user.Id, coinData.Id)
+
+	before := ucd.Amount
+	makeup := totalBalance - ucd.Amount
+	if totalBalance > ucd.Amount {
+		coincenter.Get().AddUserCoinAmount(user.Id, coinData.Id, makeup, coincenter.CoinAddReasonRecalculate, fmt.Sprintf("Make Up %d Coin", makeup))
+		c.JSON(http.StatusOK, gin.H{
+			"coin":    gin.H{"id": coinData.Id, "name": coinData.Name},
+			"user":    gin.H{"id": user.Id, "name": user.DisplayName},
+			"balance": gin.H{"before": before, "make up": makeup, "current": totalBalance},
+		})
+	} else {
+		c.JSON(http.StatusOK, "no make up needed")
+	}
+}
+
 func init() {
-	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "game/:id", apiAdminGetGameInfo)
-	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id", apiAdminGetUserInfo)
+	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "game/:id", backendAdminAuthWrapper(apiAdminGetGameInfo))
+	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id", backendAdminAuthWrapper(apiAdminGetUserInfo))
+	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id/coins", backendAdminAuthWrapper(apiAdminGetUserCoins))
+	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id/coin/record", backendAdminAuthWrapper(apiAdminSearchUserCoinRecords))
+	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id/coin/recalculate", backendAdminAuthWrapper(apiAdminRecalculateUserCoin))
+}
+
+func backendAdminAuthWrapper(handler func(ctx *gin.Context)) func(*gin.Context) {
+	return func(c *gin.Context) {
+		if !checkAuthorize(c) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, RError("unauthorized"))
+			return
+		}
+
+		if handler != nil {
+			handler(c)
+		}
+	}
 }

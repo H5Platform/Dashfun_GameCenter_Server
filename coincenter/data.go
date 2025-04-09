@@ -63,7 +63,7 @@ func (t *CoinUserDataList) Has(userId string) (*CoinsUserData, bool) {
 	return d, exist
 }
 
-func (t *CoinUserDataList) GetCoinsUserData(userId string) *CoinsUserData {
+func (t *CoinUserDataList) CreateCoinsUserData(userId string) *CoinsUserData {
 	t.Lock()
 	defer t.Unlock()
 	d, exist := t.coinsUserData[userId]
@@ -97,6 +97,19 @@ func (cud *CoinsUserData) AddOrUpdateUserData(coinUserData *data.CoinUserData) {
 	cud.coins.Add(coinUserData)
 }
 
+func (cud *CoinsUserData) GetOrCreateCoinUserData(coinId string) *data.CoinUserData {
+	for _, userData := range cud.coins.Items() {
+		if userData.CoinId == coinId {
+			return userData
+		}
+	}
+
+	//不存在则创建
+	coinUserData := newCoinUserData(cud.userId, coinId)
+	cud.coins.Add(coinUserData)
+	return coinUserData
+}
+
 func (cud *CoinsUserData) GetCoinUserData(coinId string) *data.CoinUserData {
 	for _, userData := range cud.coins.Items() {
 		if userData.CoinId == coinId {
@@ -107,7 +120,7 @@ func (cud *CoinsUserData) GetCoinUserData(coinId string) *data.CoinUserData {
 }
 
 func (cud *CoinsUserData) AddUserCoinChangeRecord(record *data.CoinUserRecordData) {
-	l := cud.GetUserCoinChangeRecordList(record.UserId)
+	l := cud.GetUserCoinChangeRecordList(record.CoinId)
 	l.Add(record)
 }
 

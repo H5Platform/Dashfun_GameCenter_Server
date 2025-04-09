@@ -18,6 +18,11 @@ import (
 var once sync.Once
 var instance *CoinCenter
 
+const (
+	// CoinAddReasonRecalculate 手动重新计算用户的coin后，补偿丢失数据使用的Reason，通过record计算总额时，应去掉这个记录
+	CoinAddReasonRecalculate = "Recalculate User Coin"
+)
+
 // CoinCenter 操作用户的coin
 type CoinCenter struct {
 	idGen       *snowflake.Worker
@@ -69,6 +74,7 @@ func (c *CoinCenter) init() {
 	events.UserPaymentEvents.On(c.onUserPayment)
 }
 
+// loadUserCoins 所有需要访问userCoins数据的方法，都需要用这个load先读取CoinsUserData，再进行操作，不要直接访问c.users
 func (c *CoinCenter) loadUserCoins(userId string) (*CoinsUserData, error) {
 	d, ok := c.users.Has(userId)
 	if ok {
@@ -80,7 +86,7 @@ func (c *CoinCenter) loadUserCoins(userId string) (*CoinsUserData, error) {
 		return nil, err
 	}
 
-	cud := c.users.GetCoinsUserData(userId)
+	cud := c.users.CreateCoinsUserData(userId)
 	cud.Lock()
 	defer cud.Unlock()
 	for _, coin := range coinsData {
@@ -91,7 +97,7 @@ func (c *CoinCenter) loadUserCoins(userId string) (*CoinsUserData, error) {
 			continue
 		}
 
-		for i := len(records) - 1; i > 0; i-- {
+		for i := len(records) - 1; i >= 0; i-- {
 			cud.AddUserCoinChangeRecord(records[i])
 		}
 
@@ -208,15 +214,20 @@ func (c *CoinCenter) UpdateCoin(id, name, desc, Symbol string, canWithdraw bool,
 
 // AddUserCoinAmount 给用户增加指定数量的coin
 func (c *CoinCenter) AddUserCoinAmount(userId, coinId string, amount int32, reason, info string) (*data.CoinUserData, error) {
-	cud := c.users.GetCoinsUserData(userId)
+	cud, err := c.loadUserCoins(userId)
+	if err != nil {
+		zap.S().Errorw("add user coin error, load user coins failed", "userId", userId, "coinId", coinId, "amount", amount, "reason", reason, "err", err)
+		return nil, err
+	}
 	cud.Lock()
 	defer cud.Unlock()
+
 	coin, ok := c.GetCoinById(coinId)
 	if !ok {
-		zap.S().Errorw("add user coin error, coin not found", "userId", userId, "coinId", coinId, "amount", amount)
+		zap.S().Errorw("add user coin error, coin not found", "userId", userId, "coinId", coinId, "amount", amount, "reason", reason)
 		return nil, errors.New("coin not found")
 	}
-	coinData := c.GetCoinUserData(userId, coinId)
+	coinData := cud.GetOrCreateCoinUserData(coinId) //c.GetCoinUserData(userId, coinId)
 	if amount > 0 {
 		coinData.Amount += amount
 		cud.AddOrUpdateUserData(coinData)
@@ -232,15 +243,22 @@ func (c *CoinCenter) AddUserCoinAmount(userId, coinId string, amount int32, reas
 
 // DecUserCoinAmount 给用户减少指定数量的coin
 func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount int32, reason, info string) (*data.CoinUserData, error) {
-	cud := c.users.GetCoinsUserData(userId)
+	cud, err := c.loadUserCoins(userId)
+	if err != nil {
+		zap.S().Errorw("dec user coin error, load user coins failed", "userId", userId, "coinId", coinId, "amount", amount, "reason", reason, "err", err)
+		return nil, err
+	}
+
 	cud.Lock()
 	defer cud.Unlock()
+
 	coin, ok := c.GetCoinById(coinId)
 	if !ok {
 		zap.S().Errorw("dec user coin error, coin not found", "userId", userId, "coinId", coinId, "amount", amount)
 		return nil, errors.New("coin not found")
 	}
-	coinData := c.GetCoinUserData(userId, coinId)
+
+	coinData := cud.GetOrCreateCoinUserData(coinId) //c.GetCoinUserData(userId, coinId)
 	if amount > 0 {
 		if coinData.Amount < amount {
 			err := apperrors.ErrPaymentNotEnoughBalance
@@ -259,30 +277,54 @@ func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount int32, reas
 	return coinData, nil
 }
 
+// GetCoinUserData 获取用户指定coin的数据，外部使用，内部调用loadUserCoins，避免cud死锁
 func (c *CoinCenter) GetCoinUserData(userId, coinId string) *data.CoinUserData {
-	_, ok := c.users.Has(userId)
-	if !ok {
-		c.loadUserCoins(userId)
+	cud, err := c.loadUserCoins(userId)
+	if err != nil {
+		zap.S().Errorw("GetCoinUserData failed", "userId", userId, "coinId", coinId, "err", err)
+		return nil
 	}
-	cud := c.users.GetCoinsUserData(userId)
-	cd := cud.GetCoinUserData(coinId)
-	if cd == nil {
-		cd = newCoinUserData(userId, coinId)
-		cud.AddOrUpdateUserData(cd)
-		dao.GetCoinUserDao().SaveOrUpdate(cd)
-	}
+	cud.Lock()
+	defer cud.Unlock()
+	cd := cud.GetOrCreateCoinUserData(coinId)
 	return cd
 }
 
-// GetUserCoinRecords 获取用户指定coin的交易记录
+// CalculateUserCoinByRecords 根据records计算用户coin的总额，返回增加、减少、余额
+func (c *CoinCenter) CalculateUserCoinByRecords(userId, coinId string) (totalAdd, totalDec, totalBalance int32) {
+	records := c.GetUserCoinRecords(userId, coinId, 0)
+	for _, record := range records {
+		if record.Reason == CoinAddReasonRecalculate {
+			//CoinAddReasonRecalculate 不参与计算
+			continue
+		}
+		if record.Change > 0 {
+			totalAdd += record.Change
+		} else if record.Change < 0 {
+			totalDec += -record.Change
+		}
+		totalBalance += record.Change
+	}
+	return
+}
+
+// GetUserCoinRecords 获取用户指定coin的交易记录，count=0表示全部获取
 func (c *CoinCenter) GetUserCoinRecords(userId, coinId string, count int) []*data.CoinUserRecordData {
-	cud := c.users.GetCoinsUserData(userId)
+	cud, err := c.loadUserCoins(userId)
+	if err != nil {
+		zap.S().Errorw("GetUserCoinRecords failed", "userId", userId, "coinId", coinId, "err", err)
+		return nil
+	}
 	cud.RLock()
 	defer cud.RUnlock()
 
-	items := cud.records[coinId].Items()
-	l := len(items)
+	items := make([]*data.CoinUserRecordData, 0)
 
+	if cud.records[coinId] != nil {
+		items = cud.records[coinId].Items()
+	}
+
+	l := len(items)
 	ret := make([]*data.CoinUserRecordData, 0)
 
 	for i := l - 1; i >= 0; i-- {

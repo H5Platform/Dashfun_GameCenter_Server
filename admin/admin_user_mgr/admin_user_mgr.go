@@ -279,8 +279,15 @@ func (mgr *AdminUserMgr) Login(name, password string) (*admin.AdminUser, *admin.
 	if err != nil {
 		return nil, nil, err
 	}
+
 	if user == nil {
-		return nil, nil, errors.New("incorrect username or password")
+		user, err = dao.GetAdminUserDao().FindUserByMail(name)
+		if err != nil {
+			return nil, nil, err
+		}
+		if user == nil {
+			return nil, nil, errors.New("incorrect username or password")
+		}
 	}
 	if user.Status == admin.AdminStatus_ResetPassword || user.Status == admin.AdminStatus_Ban {
 		return nil, nil, errors.New("incorrect user status")

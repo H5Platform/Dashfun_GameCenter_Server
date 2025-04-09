@@ -6,6 +6,7 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/snowflake"
+	"dashfun_gamecenter/utils"
 	"errors"
 	"go.uber.org/zap"
 	"slices"
@@ -217,10 +218,8 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 	}
 
 	task := t.GetTaskById(taskId)
-	taskTime := time.UnixMilli(userData.Time)
-	taskTime = time.Date(taskTime.Year(), taskTime.Month(), taskTime.Day(), 0, 0, 0, 0, taskTime.Location())
-	nowTime := time.Now()
-	nowTime = time.Date(nowTime.Year(), nowTime.Month(), nowTime.Day(), 0, 0, 0, 0, nowTime.Location())
+	//taskTime := time.UnixMilli(userData.Time).Truncate(24 * time.Hour)
+	//nowTime := time.Now().Truncate(24 * time.Hour)
 
 	//td := taskTime.YearDay()
 	//ty := taskTime.Year()
@@ -228,8 +227,8 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 	//nd := nowTime.YearDay()
 	//ny := nowTime.Year()
 
-	diff := nowTime.Sub(taskTime)
-	diffDays := diff.Hours() / 24
+	//diff := nowTime.Sub(taskTime)
+	diffDays := utils.DaysDifference(userData.Time)
 
 	reset := false
 
@@ -400,6 +399,25 @@ func (t *TaskCenter) GetUserTaskInfo(user *data.DashFunUser, gameId string) *dat
 		Tasks:    tasks,
 		UserData: dataMap,
 	}
+	return ret
+}
+
+// GetLeaderboardTasks 获取排名区间的所有排行榜任务
+func (t *TaskCenter) GetLeaderboardTasks(lowRank, highRank int) []*data.DashFunTaskData {
+	t.tasksLock.RLock()
+	defer t.tasksLock.RUnlock()
+
+	ret := make([]*data.DashFunTaskData, 0)
+	for _, task := range t.tasks {
+		if task.Condition.Type == data.TaskCondition_LeaderboardRank {
+			if lowRank > 0 && highRank > 0 &&
+				// 最低排名 > 任务条件排名 >= 最高排名
+				lowRank > task.Condition.Count && task.Condition.Count >= highRank {
+				ret = append(ret, task)
+			}
+		}
+	}
+
 	return ret
 }
 

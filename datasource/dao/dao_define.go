@@ -52,3 +52,6 @@ func GetInvitedUserDao() types.InvitedUserDao { return daoImpl.GetInvitedUserDao
 func GetRechargeDao() types.RechargeDao {
 	return daoImpl.GetRechargeDao()
 }
+func GetLeaderboardBotDao() types.LeaderboardBotDao {
+	return daoImpl.GetLeaderboardBotDao()
+}

@@ -22,6 +22,7 @@ type DaoImpl interface {
 	GetUserPlayRecordDao() DashFunUserPlayRecordDao
 	GetInvitedUserDao() InvitedUserDao
 	GetRechargeDao() RechargeDao
+	GetLeaderboardBotDao() LeaderboardBotDao
 }
 
 type UserDao interface {
@@ -31,6 +32,7 @@ type UserDao interface {
 }
 
 type GameDao interface {
+	GetAllGames(status data.DashFunGameStatus) ([]*data.DashFunGame, error)
 	GetGameById(gameId string) (*data.DashFunGame, error)
 	SaveOrUpdate(game *data.DashFunGame) (*data.DashFunGame, error)
 	GetGameByName(gameName string) (*data.DashFunGame, error)
@@ -118,4 +120,9 @@ type Cursor[T any] interface {
 	Next(ctx context.Context) bool
 	Data() (*T, error)
 	Close()
+}
+
+type LeaderboardBotDao interface {
+	SaveOrUpdate(bot *data.LeaderboardBotData) (*data.LeaderboardBotData, error)
+	LoadAllBots() ([]*data.LeaderboardBotData, error)
 }

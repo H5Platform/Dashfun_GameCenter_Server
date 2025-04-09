@@ -11,6 +11,8 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
+	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -51,6 +53,18 @@ func (gc *GameCenter) init() {
 	gc.id2games = make(map[string]*data.DashFunGame)
 	gc.name2games = make(map[string]*data.DashFunGame)
 
+	//游戏列表缓存
+	games, err := dao.GetGameDao().GetAllGames(0)
+	if err != nil {
+		log.Fatalf("GetGameDao.GetAllGames err:%v", err)
+	}
+
+	for _, game := range games {
+		gc.processGame(game)
+		gc.id2games[game.Id] = game
+		gc.name2games[game.Name] = game
+	}
+
 	gc.gameList = make(map[data.GameListType][]string)
 	gc.refreshGameList(data.GameListType_New)
 	gc.refreshGameList(data.GameListType_Popular)
@@ -58,6 +72,17 @@ func (gc *GameCenter) init() {
 	gc.refreshGameList(data.GameListType_Banner)
 
 	events.UserEnterGameEvents.On(gc.onUserEnterGame)
+
+	//定时更新popular list
+	ticker := time.NewTicker(5 * time.Minute)
+	go func() {
+		for {
+			<-ticker.C
+			gc.gameListLock.Lock()
+			gc.sortPopularGameList()
+			gc.gameListLock.Unlock()
+		}
+	}()
 }
 
 func (gc *GameCenter) newGameId() string {
@@ -168,7 +193,7 @@ func (gc *GameCenter) updateGameImage(game *data.DashFunGame, img []byte, imgTyp
 }
 
 // UpdateGameInfo 更新游戏信息，如果openTime不需要变更，传入-1
-// flags 1: new, 2: popular, 3: suggest, 4: banner
+// flags 四个数字， 1: new, 2: popular, 3: suggest, 4: banner ，每一个位置0表示关闭，>0表示排序值
 func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, openTime int64, status data.DashFunGameStatus, flags []int) (*data.DashFunGame, error) {
 	game, err := gc.FindGame(id)
 	if err != nil {
@@ -179,6 +204,7 @@ func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, op
 	}
 
 	update := false
+	statusUpdated := false
 
 	if status != data.DashFunGameStatus_NoChange {
 		if status == data.DashFunGameStatus_Online {
@@ -188,6 +214,7 @@ func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, op
 		}
 		game.Status = status
 		update = true
+		statusUpdated = true
 	}
 
 	if name != "" {
@@ -213,32 +240,31 @@ func (gc *GameCenter) UpdateGameInfo(id, name, desc, url string, genre []int, op
 
 	changedList := make([]data.GameListType, 0)
 	if len(flags) > 0 {
-
 		oldFlgs := []int{game.NewFlag, game.PopularFlag, game.SuggestFlag, game.BannerFlag}
 		game.NewFlag = 0
 		game.PopularFlag = 0
 		game.SuggestFlag = 0
 		game.BannerFlag = 0
-		for _, flag := range flags {
-			switch flag {
-			case 1:
-				game.NewFlag = 1
-				if oldFlgs[0] != 1 {
+		for i, flag := range flags {
+			switch i {
+			case 0:
+				game.NewFlag = flag
+				if oldFlgs[0] != flag || statusUpdated {
 					changedList = append(changedList, data.GameListType_New)
 				}
-			case 2:
-				game.PopularFlag = 1
-				if oldFlgs[1] != 1 {
+			case 1:
+				game.PopularFlag = flag
+				if oldFlgs[1] != flag || statusUpdated {
 					changedList = append(changedList, data.GameListType_Popular)
 				}
-			case 3:
-				game.SuggestFlag = 1
-				if oldFlgs[2] != 1 {
+			case 2:
+				game.SuggestFlag = flag
+				if oldFlgs[2] != flag || statusUpdated {
 					changedList = append(changedList, data.GameListType_Suggest)
 				}
-			case 4:
-				game.BannerFlag = 1
-				if oldFlgs[3] != 1 {
+			case 3:
+				game.BannerFlag = flag
+				if oldFlgs[3] != flag || statusUpdated {
 					changedList = append(changedList, data.GameListType_Banner)
 				}
 			}
@@ -403,6 +429,35 @@ func (gc *GameCenter) FindGames(keyword string, genre []int, size int64, page in
 	return dao.GetGameDao().FindGames(keyword, genre, nil, data.DashFunGameStatus_Online, size, page)
 }
 
+// sortPopularGameList 对popular的gamelist进行排序，其实不需要从数据库读取数据了，本身缓存数据已经可以对gamelist进行排序了
+func (gc *GameCenter) sortPopularGameList() {
+	gc.gameLock.RLock()
+	defer gc.gameLock.RUnlock()
+
+	games := make([]*data.DashFunGame, 0)
+	for _, g := range gc.id2games {
+		if g.Status == data.DashFunGameStatus_Online && (g.PopularFlag == 1 || g.OpenCount > 1) {
+			games = append(games, g)
+		}
+	}
+
+	slices.SortFunc(games, func(a, b *data.DashFunGame) int {
+		if a.PopularFlag != b.PopularFlag {
+			return b.PopularFlag - a.PopularFlag
+		}
+		if a.OpenCount != b.OpenCount {
+			return b.OpenCount - a.OpenCount
+		}
+		return int(b.Time - a.Time)
+	})
+
+	list := make([]string, 0)
+	for _, g := range games {
+		list = append(list, g.Id)
+	}
+	gc.gameList[data.GameListType_Popular] = list
+}
+
 func (gc *GameCenter) refreshGameList(listType data.GameListType) {
 	games, err := dao.GetGameDao().FindGameList(listType, 20)
 	if err != nil {
@@ -414,6 +469,10 @@ func (gc *GameCenter) refreshGameList(listType data.GameListType) {
 		list = append(list, game.Id)
 	}
 	gc.gameList[listType] = list
+	if listType == data.GameListType_Popular {
+		//popular list需要和游戏开启次数统一排序
+		gc.sortPopularGameList()
+	}
 }
 
 // UpdateGameFlagBackend

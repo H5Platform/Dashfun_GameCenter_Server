@@ -31,6 +31,7 @@ type DaoImplMongo struct {
 	userPlayRecordDao     types.DashFunUserPlayRecordDao
 	invitedUserDao        types.InvitedUserDao
 	rechargeDao           types.RechargeDao
+	leaderboardBotDao     types.LeaderboardBotDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
@@ -51,6 +52,7 @@ func NewDaoImplMongo() *DaoImplMongo {
 		userPlayRecordDao:     GetUserPlayRecordDaoMongo(),
 		invitedUserDao:        GetInvitedUserDaoMongo(),
 		rechargeDao:           GetRechargeDaoMongo(),
+		leaderboardBotDao:     GetLeaderboardBotDaoMongo(),
 	}
 }
 
@@ -81,6 +83,9 @@ func (d *DaoImplMongo) GetInvitedUserDao() types.InvitedUserDao {
 }
 func (d *DaoImplMongo) GetRechargeDao() types.RechargeDao {
 	return d.rechargeDao
+}
+func (d *DaoImplMongo) GetLeaderboardBotDao() types.LeaderboardBotDao {
+	return d.leaderboardBotDao
 }
 
 func GetMongoDatabase() *mongo.Database {

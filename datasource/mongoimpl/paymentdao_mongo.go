@@ -86,7 +86,7 @@ func (p *PaymentDaoMongo) initDB() {
 			FieldName: "currency",
 			Unique:    false,
 			Sort:      -1,
-			IndexName: "index_create_at",
+			IndexName: "index_currency",
 		},
 	})
 

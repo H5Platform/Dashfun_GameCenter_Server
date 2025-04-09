@@ -2,13 +2,14 @@ package leaderboardcenter
 
 import (
 	"context"
-	"dashfun_gamecenter/apperrors"
+	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/rediscenter"
+	"dashfun_gamecenter/spinwheelcenter"
+	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/usercenter"
-	"errors"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"log"
@@ -226,6 +227,7 @@ var instLeaderboardCenter *LeaderboardCenter
 
 const leaderboardKey = "dashfun_xp_leaderboard"
 const leaderboardLoadKey = "dashfun_xp_leaderboard_load"
+const LeaderboardMinCount = 1666
 
 type LeaderboardData struct {
 	Id          string `json:"id"`           //用户ID
@@ -236,10 +238,111 @@ type LeaderboardData struct {
 	Avatar      string `json:"avatar"`       //头像
 }
 
+type LeaderboardBot struct {
+	data *data.LeaderboardBotData
+	sync.RWMutex
+}
+
+// InitScore  生成初始化分数
+func (b *LeaderboardBot) InitScore() {
+	cfg := config.GetConfig().LeaderboardBotCfg.BotLevels[b.data.Level-1]
+	fixedScore := cfg.FixedTaskTop*80/100 + rand.Intn(cfg.FixedTaskTop*20/100+1)
+	finalScore := int64(cfg.MinScore + fixedScore)
+	b.data.ActiveDate = ""
+	b.data.Score = finalScore
+	b.data.ActiveDays = 0
+	b.data.ActiveTime = rand.Intn(24 * 60 * 60 * 1000)
+	b.data.Status = data.LeaderboardBotStatus_Active
+}
+
+func (b *LeaderboardBot) Spin() int {
+	cfg := config.GetConfig().LeaderboardBotCfg.BotLevels[b.data.Level-1]
+	finalScore := 0
+	for i := 0; i < cfg.SpinWheelDailyCount; i++ {
+		spinWheelHit := spinwheelcenter.Get().RandomSpinWheel()
+		if spinWheelHit != nil && spinWheelHit.RewardType == data.SpinWheelReward_DashFunPoint {
+			finalScore += spinWheelHit.RewardValue
+		}
+	}
+
+	finalScore = int(float64(finalScore) * (1 + 0.2*rand.Float64()))
+	return finalScore
+}
+
+func (b *LeaderboardBot) DoTodayBehaviour() {
+	spinScore := b.Spin()
+	cfg := config.GetConfig().LeaderboardBotCfg.BotLevels[b.data.Level-1]
+	dailyIndex := b.data.ActiveDays
+	if dailyIndex >= len(cfg.DailyTop) {
+		dailyIndex = len(cfg.DailyTop) - 1
+	}
+	dailyScore := cfg.DailyTop[dailyIndex]
+	b.data.Score += int64(dailyScore + spinScore)
+	b.data.Status = data.LeaderboardBotStatus_DoneToday
+	b.data.ActiveDate = time.Now().UTC().Format("20060102")
+	b.data.ActiveDays++
+
+	oldRank := b.data.Rank
+	if oldRank == 0 {
+		oldRank = 9999999
+	}
+	rank := b.UploadScore()
+
+	tasks := taskcenter.Get().GetLeaderboardTasks(oldRank, int(rank))
+
+	scoreChanged := false
+	if len(tasks) > 0 {
+		for _, task := range tasks {
+			for _, r := range task.Rewards {
+				if r.RewardType == data.TaskRewardType_DashFunPoint {
+					b.data.Score += int64(r.Amount)
+					scoreChanged = true
+				}
+			}
+		}
+	}
+
+	if scoreChanged {
+		rank = b.UploadScore()
+		if rank > 0 {
+			b.data.Rank = int(rank)
+		}
+	}
+
+	dao.GetLeaderboardBotDao().SaveOrUpdate(b.data)
+}
+
+// UploadScore 上传分数，并返回最新排名
+func (b *LeaderboardBot) UploadScore() int64 {
+	//存入redis
+	rdb := rediscenter.Get()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	//将用户的分数存入redis
+	_, err := rdb.ZAdd(ctx, leaderboardKey, &redis.Z{
+		Score:  float64(b.data.Score),
+		Member: b.data.Id,
+	}).Result()
+
+	if err != nil {
+		zap.S().Errorw("redis ZAdd failed", "error", err.Error())
+	}
+
+	rank, err := rdb.ZRevRank(ctx, leaderboardKey, b.data.Id).Result()
+	if err != nil {
+		zap.S().Errorw("redis ZRevRank failed", "error", err.Error())
+		return 0
+	}
+
+	return rank + 1
+}
+
 type LeaderboardCenter struct {
 	sync.RWMutex
 	userCache map[string]*data.DashFunUser //user缓存
 	loading   bool                         //是否正在从数据库中读取数据建立排行榜中
+	bots      map[string]*LeaderboardBot   //所有的机器人
 }
 
 func Get() *LeaderboardCenter {
@@ -254,41 +357,142 @@ func (l *LeaderboardCenter) init() {
 	l.userCache = make(map[string]*data.DashFunUser)
 	events.UserCoinChangedEvents.On(l.onUserCoinChanged)
 	events.UserLoginEvents.On(l.onUserLogin)
+	l.loadAllBots()
 	if l.needLoad() {
 		go l.initRedis()
-	} else {
-		l.fillLeaderboard()
+	}
+
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				l.botBehaviour()
+			}
+		}
+	}()
+
+	//else {
+	//	l.fillLeaderboard()
+	//}
+}
+
+func (l *LeaderboardCenter) botBehaviour() {
+	now := time.Now().UTC()
+	midnight := now.Truncate(24 * time.Hour)
+	t := int(now.Sub(midnight).Milliseconds())
+
+	today := time.Now().UTC().Format("20060102")
+
+	for _, bot := range l.bots {
+		bd := bot.data
+		bot.Lock()
+
+		//如果今天已经完成了任务，且不是今天的日期，则需要重置状态
+		if bd.Status == data.LeaderboardBotStatus_DoneToday && bd.ActiveDate != today {
+			bd.Status = data.LeaderboardBotStatus_Active
+		}
+
+		if bd.Status == data.LeaderboardBotStatus_Active && t > bd.ActiveTime {
+			bot.DoTodayBehaviour()
+		}
+		bot.Unlock()
 	}
 }
 
-// fillLeaderboard 排行榜不足50人，随机生成50个数据
+func (l *LeaderboardCenter) randomBotLevel() int {
+	cfgs := config.GetConfig().LeaderboardBotCfg.BotLevels
+	totalWeight := 0
+	for _, cfg := range cfgs {
+		totalWeight += cfg.Weight
+	}
+
+	randValue := rand.Intn(totalWeight)
+	for _, cfg := range cfgs {
+		if randValue < cfg.Weight {
+			return cfg.Level // 等级从1开始
+		}
+		randValue -= cfg.Weight
+	}
+	return 1 // 默认返回最低等级
+}
+
+func (l *LeaderboardCenter) loadAllBots() {
+	l.bots = make(map[string]*LeaderboardBot)
+
+	botDao := dao.GetLeaderboardBotDao()
+	botData, err := botDao.LoadAllBots()
+	if err != nil {
+		log.Fatalf("loadAllBots err: %v", err)
+	}
+
+	bots := make([]*LeaderboardBot, 0)
+
+	for _, b := range botData {
+		bot := &LeaderboardBot{
+			data: b,
+		}
+		bots = append(bots, bot)
+		l.bots[b.Id] = bot
+	}
+
+	if len(bots) < LeaderboardMinCount {
+		//填满bot数据
+		for i := len(bots); i < LeaderboardMinCount; i++ {
+			botLevel := l.randomBotLevel()
+			nbd := &data.LeaderboardBotData{
+				Id:    "b" + usercenter.Get().RequestUserId(),
+				Name:  "", //name先空着，需要的时候再随机
+				Level: botLevel,
+			}
+			bot := &LeaderboardBot{
+				data: nbd,
+			}
+			bot.InitScore()
+			botDao.SaveOrUpdate(bot.data)
+			bots = append(bots, bot)
+			l.bots[nbd.Id] = bot
+		}
+	}
+
+	members := make([]*redis.Z, 0, len(bots))
+	for _, bot := range bots {
+		members = append(members, &redis.Z{
+			Score:  float64(bot.data.Score),
+			Member: bot.data.Id,
+		})
+	}
+
+	rdb := rediscenter.Get()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	//将所有的bot数据存入redis
+	_, err = rdb.ZAdd(ctx, leaderboardKey, members...).Result()
+	if err != nil {
+		log.Fatalf("add bots to redis error: %s", err.Error())
+	}
+}
+
+// fillLeaderboard 随机生成排行榜数据
 func (l *LeaderboardCenter) fillLeaderboard() {
 	rdb := rediscenter.Get()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	r, err := rdb.ZRevRangeWithScores(ctx, leaderboardKey, 0, int64(50-1)).Result()
+	r, err := rdb.ZRevRangeWithScores(ctx, leaderboardKey, 0, int64(LeaderboardMinCount-1)).Result()
 	if err != nil {
 		log.Fatalf("fillLeaderboard: %s", err.Error())
 	}
 
-	maxScore := 0
-	for _, z := range r {
-		if z.Score > float64(maxScore) {
-			maxScore = int(z.Score)
-		}
-	}
+	maxScore := 5000
 
-	if maxScore == 0 {
-		maxScore = 1000
-	}
-
-	if len(r) < 50 {
-		members := make([]*redis.Z, 0, 50-len(r))
-		for i := len(r); i < 50; i++ {
+	if len(r) < LeaderboardMinCount {
+		members := make([]*redis.Z, 0, LeaderboardMinCount-len(r))
+		for i := len(r); i < LeaderboardMinCount; i++ {
 			uid := "B" + usercenter.Get().RequestUserId()
 			members = append(members, &redis.Z{
-				Score:  float64((rand.Intn(maxScore*5) + (maxScore / 2)) / 10 * 10),
+				Score:  float64((rand.Intn(maxScore*2) + (maxScore / 2)) / 100 * 100),
 				Member: uid,
 			})
 		}
@@ -409,13 +613,25 @@ func (l *LeaderboardCenter) getUser(id string) (*data.DashFunUser, error) {
 	defer l.Unlock()
 	u, ok := l.userCache[id]
 	if !ok {
-		user, err := usercenter.Get().GetDashFunUser(id)
-		if err != nil && !errors.Is(err, apperrors.ErrUserDoesNotExist) {
-			return nil, err
-		}
+		user, _ := usercenter.Get().GetDashFunUser(id)
+		//if err != nil && !errors.Is(err, apperrors.ErrUserDoesNotExist) {
+		//	return nil, err
+		//}
 		//用户不存在，可能是填充数据，随机做个用户
 		if user == nil {
-			name := TemplateNames[rand.Intn(len(TemplateNames))]
+			botUser := l.bots[id]
+			name := ""
+			if botUser == nil {
+				name = TemplateNames[rand.Intn(len(TemplateNames))]
+			} else {
+				if botUser.data.Name == "" {
+					botUser.Lock()
+					botUser.data.Name = TemplateNames[rand.Intn(len(TemplateNames))]
+					dao.GetLeaderboardBotDao().SaveOrUpdate(botUser.data)
+					botUser.Unlock()
+				}
+				name = botUser.data.Name
+			}
 			user = &data.DashFunUser{
 				Id:          id,
 				UserName:    name,

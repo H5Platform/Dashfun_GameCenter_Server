@@ -4,6 +4,7 @@ import (
 	"dashfun_gamecenter/RechargeCenter"
 	_ "dashfun_gamecenter/_initdata"
 	_ "dashfun_gamecenter/api"
+	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/invitecenter"
 	"dashfun_gamecenter/leaderboardcenter"
@@ -55,6 +56,7 @@ func main() {
 
 	zap.ReplaceGlobals(logger)
 	tgbot.Get()
+	coincenter.Get()
 	taskcenter.Get()
 	invitecenter.Get()
 	leaderboardcenter.Get()

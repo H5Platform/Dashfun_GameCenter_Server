@@ -26,19 +26,43 @@ func (g *GameDaoMongo) FindGameList(listType data.GameListType, count int) (game
 		filter = append(filter, bson.E{Key: "status", Value: 2})
 		sort = bson.D{{"new_flag", -1}, {"time", -1}, {"_id", 1}}
 	} else if listType == data.GameListType_Popular {
-		sort = bson.D{{"time", -1}, {"_id", 1}}
-		filter = append(filter, bson.E{Key: "popular_flag", Value: 1}, bson.E{Key: "status", Value: 2})
+		sort = bson.D{{"popular_flag", -1}, {"time", -1}, {"_id", 1}}
+		filter = append(filter, bson.E{Key: "popular_flag", Value: bson.D{{"$gt", 0}}}, bson.E{Key: "status", Value: 2})
 	} else if listType == data.GameListType_Suggest {
-		sort = bson.D{{"time", -1}, {"_id", 1}}
-		filter = append(filter, bson.E{Key: "suggest_flag", Value: 1})
+		sort = bson.D{{"suggest_flag", -1}, {"time", -1}, {"_id", 1}}
+		filter = append(filter, bson.E{Key: "suggest_flag", Value: bson.D{{"$gt", 0}}}, bson.E{Key: "status", Value: 2})
 	} else if listType == data.GameListType_Banner {
-		sort = bson.D{{"time", -1}, {"_id", 1}}
-		filter = append(filter, bson.E{Key: "banner_flag", Value: 1})
+		sort = bson.D{{"banner_flag", -1}, {"time", -1}, {"_id", 1}}
+		filter = append(filter, bson.E{Key: "banner_flag", Value: bson.D{{"$gt", 0}}}, bson.E{Key: "status", Value: 2})
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	find, err := g.c.Find(ctx, filter, options.Find().SetLimit(int64(count)).SetSort(sort))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = find.All(ctx, &games); err != nil {
+		return nil, err
+	}
+
+	return games, nil
+}
+
+func (g *GameDaoMongo) GetAllGames(status data.DashFunGameStatus) ([]*data.DashFunGame, error) {
+	var games []*data.DashFunGame
+	filter := bson.D{}
+	if status > data.DashFunGameStatus_NoChange {
+		filter = append(filter, bson.E{
+			Key:   "status",
+			Value: status,
+		})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	find, err := g.c.Find(ctx, filter)
 
 	if err != nil {
 		return nil, err
@@ -103,7 +127,7 @@ func (g *GameDaoMongo) FindGames(keyword string, genre, flags []int, status data
 
 	if flags != nil && len(flags) > 0 {
 		for _, flag := range flags {
-			filter = append(filter, bson.E{Key: flagKeys[flag-1], Value: 1})
+			filter = append(filter, bson.E{Key: flagKeys[flag-1], Value: bson.D{{"$gt", 0}}})
 		}
 	}
 
@@ -128,7 +152,13 @@ func (g *GameDaoMongo) FindGames(keyword string, genre, flags []int, status data
 
 	totalPages = int(math.Ceil(float64(totalDocs) / float64(size)))
 
-	find, err := g.c.Find(ctx, filter, options.Find().SetSkip(skip).SetLimit(size).SetSort(bson.D{{"time", -1}}))
+	sort := bson.D{{"time", -1}}
+	if flags != nil && len(flags) > 0 {
+		// 设置了flag，按第一个flag项排序
+		sort = bson.D{{flagKeys[flags[0]-1], -1}, {"time", -1}}
+	}
+
+	find, err := g.c.Find(ctx, filter, options.Find().SetSkip(skip).SetLimit(size).SetSort(sort))
 	if err != nil {
 		return nil, 0, err
 	}

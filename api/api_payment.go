@@ -12,7 +12,7 @@ import (
 )
 
 type PaymentRequest struct {
-	GameId  string `form:"game_id" binding:"required"`
+	GameId  string `form:"game_id"`
 	Title   string `form:"title" binding:"required"`
 	Desc    string `form:"desc" binding:"required"`
 	Payload string `form:"payload"`
@@ -62,17 +62,26 @@ func apiUserRequestPayment(c *gin.Context, user *data.DashFunUser) {
 	//	return
 	//}
 
-	game, err := gamecenter.Get().FindGame(req.GameId)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
-		return
-	}
-	if game == nil {
-		c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("game %s not found", req.GameId)))
-		return
+	isTesting := false
+	if req.GameId == "" {
+		req.GameId = "DashFun"
 	}
 
-	payment, err := paymentcenter.Get().RequestDashFunPayment(user.Id, req.GameId, req.Title, req.Desc, req.Payload, req.Price, game.IsTesting())
+	if req.GameId != "DashFun" {
+		//获取游戏信息
+		game, err := gamecenter.Get().FindGame(req.GameId)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+			return
+		}
+		if game == nil {
+			c.AbortWithStatusJSON(http.StatusNotFound, RError(fmt.Sprintf("game %s not found", req.GameId)))
+			return
+		}
+		isTesting = game.IsTesting()
+	}
+
+	payment, err := paymentcenter.Get().RequestDashFunPayment(user.Id, req.GameId, req.Title, req.Desc, req.Payload, req.Price, isTesting)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
 		return

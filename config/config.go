@@ -1,6 +1,7 @@
 package config
 
 import (
+	"dashfun_gamecenter/datasource/data"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -92,20 +93,49 @@ type StripeConfig struct {
 	WebhookKey string `yaml:"webhook_key"`
 }
 
+// CoinCfg 代币配置,DashFunXp, DashFunCoin, DashFunDiamond,DashFunTicket 这些必须代币的配置
+type CoinCfg struct {
+	Name   string `yaml:"name"`   //代币名称
+	Desc   string `yaml:"desc"`   //代币描述
+	Symbol string `yaml:"symbol"` //代币符号
+}
+
+type SpinWheelCfg struct {
+	TicketPrice   int                    `yaml:"ticket_price"`                          //每张票的价格，DashFunDiamond
+	TicketsNeeded []int                  `yaml:"tickets_needed"`                        //每次抽奖需要的票数，能抽的次数就是数组的长度，次数每日重置
+	Rewards       []data.SpinWheelReward `json:"rewards" bson:"rewards" yaml:"rewards"` //轮盘每个区域的奖励
+}
+type LeaderboardBotCfg struct {
+	RecordScoreMin int                    `yaml:"record_score_min"` //上榜分数的最小值
+	BotLevels      []*LeaderboardBotLevel `yaml:"bot_levels"`       //等级配置
+}
+
+type LeaderboardBotLevel struct {
+	Level               int   `yaml:"level"`                  //等级
+	Weight              int   `yaml:"weight"`                 //权重
+	MinScore            int   `yaml:"min_score"`              //初始化最小分数
+	FixedTaskTop        int   `yaml:"fixed_task_top"`         //固定任务分数上限
+	SpinWheelDailyCount int   `yaml:"spin_wheel_daily_count"` //每日转盘次数
+	DailyTop            []int `yaml:"daily_top"`              //日常任务分数上限，根据激活天数递减，最后一个数据作为每天的分数
+}
+
 type Config struct {
-	Base          *BaseConfig       `yaml:"base"`
-	Mongo         *MongoConfig      `yaml:"mongo"`
-	Web           *WebConfig        `yaml:"web"`
-	TG            *TelegramConfig   `yaml:"telegram"`
-	Log           *Log              `yaml:"log"`
-	PinPoint      *AwsPinPoint      `yaml:"aws_pinpoint"`
-	AdminCfg      *AdminConfig      `yaml:"admin_cfg"`
-	TencentCosCfg *TencentCosConfig `yaml:"tencent_cos"`
-	TonCfg        *TonConfig        `yaml:"ton_cfg"`
-	RedisCfg      *RedisCfg         `yaml:"redis_cfg"`
-	InviteCfg     *InviteCfg        `yaml:"invite_cfg"`
-	RechargeCfg   *RechargeCfg      `yaml:"recharge_cfg"`
-	StripeCfg     *StripeConfig     `yaml:"stripe_cfg"`
+	Base              *BaseConfig        `yaml:"base"`
+	Mongo             *MongoConfig       `yaml:"mongo"`
+	Web               *WebConfig         `yaml:"web"`
+	TG                *TelegramConfig    `yaml:"telegram"`
+	Log               *Log               `yaml:"log"`
+	PinPoint          *AwsPinPoint       `yaml:"aws_pinpoint"`
+	AdminCfg          *AdminConfig       `yaml:"admin_cfg"`
+	TencentCosCfg     *TencentCosConfig  `yaml:"tencent_cos"`
+	TonCfg            *TonConfig         `yaml:"ton_cfg"`
+	RedisCfg          *RedisCfg          `yaml:"redis_cfg"`
+	InviteCfg         *InviteCfg         `yaml:"invite_cfg"`
+	RechargeCfg       *RechargeCfg       `yaml:"recharge_cfg"`
+	CoinCfg           []*CoinCfg         `yaml:"coin_cfg"`
+	SpinWheelCfg      *SpinWheelCfg      `yaml:"spin_wheel_cfg"`
+	LeaderboardBotCfg *LeaderboardBotCfg `yaml:"leaderboard_bot_cfg"`
+	StripeCfg         *StripeConfig      `yaml:"stripe_cfg"`
 }
 
 var config *Config

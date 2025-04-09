@@ -6,7 +6,6 @@ import (
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
-	"dashfun_gamecenter/spinwheelcenter"
 	"dashfun_gamecenter/taskcenter"
 	"errors"
 	"fmt"
@@ -21,76 +20,76 @@ func init() {
 		makeTestGame()
 		makeTestTask()
 		makeTestCoins()
-		makeTestSpinWheel()
+		//makeTestSpinWheel()
 	}
 }
 
-func makeTestSpinWheel() {
-	gameId := "LocalTest"
-
-	spinWheelData, err := spinwheelcenter.Get().GetSpinWheelForGame(gameId)
-	if err != nil {
-		log.Fatalf("GetSpinWheelForGame err: %v", err)
-	}
-	if spinWheelData == nil {
-		spinWheelData, err = spinwheelcenter.Get().CreateWheelForGame("SpinWheelTest", gameId, []data.SpinWheelReward{
-			{
-				RewardIndex: 0,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 5,
-				Weight:      12,
-			}, {
-				RewardIndex: 1,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 10,
-				Weight:      10,
-			}, {
-				RewardIndex: 2,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 5,
-				Weight:      12,
-			}, {
-				RewardIndex: 3,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 10,
-				Weight:      10,
-			}, {
-				RewardIndex: 4,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 5,
-				Weight:      12,
-			}, {
-				RewardIndex: 5,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 10,
-				Weight:      10,
-			}, {
-				RewardIndex: 6,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 5,
-				Weight:      12,
-			}, {
-				RewardIndex: 7,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 20,
-				Weight:      8,
-			}, {
-				RewardIndex: 8,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 5,
-				Weight:      12,
-			}, {
-				RewardIndex: 9,
-				RewardType:  data.SpinWheelReward_GamePoint,
-				RewardValue: 50,
-				Weight:      2,
-			},
-		})
-		if err != nil {
-			log.Fatalf("CreateWheelForGame err: %v", err)
-		}
-	}
-}
+//func makeTestSpinWheel() {
+//	gameId := "LocalTest"
+//
+//	spinWheelData, err := spinwheelcenter.Get().GetSpinWheelForGame(gameId)
+//	if err != nil {
+//		log.Fatalf("GetSpinWheelForGame err: %v", err)
+//	}
+//	if spinWheelData == nil {
+//		spinWheelData, err = spinwheelcenter.Get().CreateWheelForGame("SpinWheelTest", gameId, []data.SpinWheelReward{
+//			{
+//				RewardIndex: 0,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 5,
+//				Weight:      12,
+//			}, {
+//				RewardIndex: 1,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 10,
+//				Weight:      10,
+//			}, {
+//				RewardIndex: 2,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 5,
+//				Weight:      12,
+//			}, {
+//				RewardIndex: 3,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 10,
+//				Weight:      10,
+//			}, {
+//				RewardIndex: 4,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 5,
+//				Weight:      12,
+//			}, {
+//				RewardIndex: 5,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 10,
+//				Weight:      10,
+//			}, {
+//				RewardIndex: 6,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 5,
+//				Weight:      12,
+//			}, {
+//				RewardIndex: 7,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 20,
+//				Weight:      8,
+//			}, {
+//				RewardIndex: 8,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 5,
+//				Weight:      12,
+//			}, {
+//				RewardIndex: 9,
+//				RewardType:  data.SpinWheelReward_GamePoint,
+//				RewardValue: 50,
+//				Weight:      2,
+//			},
+//		})
+//		if err != nil {
+//			log.Fatalf("CreateWheelForGame err: %v", err)
+//		}
+//	}
+//}
 
 func makeTestUser() {
 	user, err := dao.GetUserDao().GetUserById("LocalTestUser")

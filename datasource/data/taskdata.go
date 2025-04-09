@@ -42,6 +42,7 @@ const (
 	TaskRewardType_DashFunPoint                                  //奖励dashfun point (XP)，用来兑换链上token
 	TaskRewardType_GamePoint                                     //奖励游戏对应的Point
 	TaskRewardType_Diamond                                       //奖励DashFun Diamond
+	TaskRewardType_Ticket                                        //奖励DashFun Ticket
 )
 
 func TaskRewardType2CoinName(rewardType DashFunTaskRewardType) string {
@@ -52,6 +53,8 @@ func TaskRewardType2CoinName(rewardType DashFunTaskRewardType) string {
 		return "DashFunPoint"
 	case TaskRewardType_Diamond:
 		return "DashFunDiamond"
+	case TaskRewardType_Ticket:
+		return "DashFunTicket"
 	default:
 		return ""
 	}

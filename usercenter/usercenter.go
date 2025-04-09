@@ -472,6 +472,9 @@ func (uc *UserCenter) UserGetPlayRecord(userId string) []*data.PlayGameRecord {
 }
 
 func (uc *UserCenter) getUserPhoto(photoPath string) ([]byte, error) {
+	if photoPath == "" {
+		return nil, apperrors.ErrUserPhotoNotExist
+	}
 	prefix := photoPath[:3]
 	filePath := photoPath[3:]
 	if prefix == "TG-" {

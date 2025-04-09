@@ -1,6 +1,7 @@
 package api
 
 import (
+	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/leaderboardcenter"
 	"dashfun_gamecenter/web"
@@ -26,11 +27,12 @@ func apiLeaderboardTop20(c *gin.Context, user *data.DashFunUser) {
 		return
 	}
 	rank, score, err := leaderboardcenter.Get().GetUserRankAndScore(user.Id)
-	if err != nil {
+	if err != nil || score < int64(config.GetConfig().LeaderboardBotCfg.RecordScoreMin) {
+		// 5000分以下不显示
 		top = append(top, &leaderboardcenter.LeaderboardData{
 			Id:          user.Id,
 			Rank:        0,
-			Score:       0,
+			Score:       score,
 			UserName:    user.UserName,
 			DisplayName: user.DisplayName,
 		})

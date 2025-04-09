@@ -186,6 +186,13 @@ func (p *PaymentCenter) ConfirmDashFunPayment(paymentId string, opUserId string)
 	}
 
 	game, err := gamecenter.Get().FindGame(payment.GameId)
+	if payment.GameId == "DashFun" {
+		game = &data.DashFunGame{
+			Id:   "DashFun",
+			Name: "DashFun",
+		}
+		err = nil
+	}
 	if err != nil {
 		zap.S().Errorw("RequestTestPayment Find Game Failed", "Payment", payment, "error")
 		payment.Status = data.DashFunPaymentStatus_Failed

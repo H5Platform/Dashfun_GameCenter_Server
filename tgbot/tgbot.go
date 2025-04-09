@@ -297,7 +297,7 @@ func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	msgCenter := &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
-		Text:   "GameCenter",
+		Text:   "Welcome! I bet you’re here for the fun—head over to the Game Center and hey, don’t forget to stack some airdrop points while you’re at it!",
 		ReplyMarkup: &models.InlineKeyboardMarkup{
 			InlineKeyboard: [][]models.InlineKeyboardButton{
 				{

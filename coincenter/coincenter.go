@@ -2,6 +2,7 @@ package coincenter
 
 import (
 	"dashfun_gamecenter/apperrors"
+	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
@@ -10,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -32,6 +34,18 @@ func Get() *CoinCenter {
 	return instance
 }
 
+func (c *CoinCenter) initDefaultCoins() {
+	for _, cfg := range config.GetConfig().CoinCfg {
+		_, exist := c.GetCoinByName(cfg.Name)
+		if !exist {
+			_, err := c.CreateCoin("", cfg.Name, cfg.Symbol, cfg.Desc, "", true, 100, make(map[string]string))
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+}
+
 func (c *CoinCenter) init() {
 	c.idGen = snowflake.Must(snowflake.GetWorker(data.WorkerCoinId))
 	c.coins = make(map[string]*data.CoinData)
@@ -48,7 +62,11 @@ func (c *CoinCenter) init() {
 		c.coins[coin.Id] = coin
 		c.coinsByName[coin.Name] = coin
 	}
+
+	c.initDefaultCoins()
+
 	events.UserLoginEvents.On(c.onUserLogin)
+	events.UserPaymentEvents.On(c.onUserPayment)
 }
 
 func (c *CoinCenter) loadUserCoins(userId string) (*CoinsUserData, error) {
@@ -122,6 +140,11 @@ func (c *CoinCenter) GetDashFunDiamond() *data.CoinData {
 
 func (c *CoinCenter) GetDashFunXp() *data.CoinData {
 	coin, _ := c.GetCoinByName("DashFunPoint")
+	return coin
+}
+
+func (c *CoinCenter) GetDashFunTicket() *data.CoinData {
+	coin, _ := c.GetCoinByName("DashFunTicket")
 	return coin
 }
 
@@ -269,4 +292,27 @@ func (c *CoinCenter) GetUserCoinRecords(userId, coinId string, count int) []*dat
 		}
 	}
 	return ret
+}
+
+func (c *CoinCenter) onUserPayment(evt *events.EventUserPayment) {
+	if evt.Game.Id == "DashFun" && strings.HasPrefix(evt.Payment.Payload, "dashfun_buy_") {
+		parts := strings.Split(evt.Payment.Payload, ":")
+		if len(parts) < 2 {
+			return
+		}
+		if parts[0] == "dashfun_buy_ticket" {
+			amount, err := strconv.Atoi(parts[1])
+			if err != nil {
+				zap.S().Errorw("Invalid amount in payload", "payload", evt.Payment.Payload, "error", err)
+				return
+			}
+			//购买DashFunTicket
+			coin := c.GetDashFunTicket()
+			_, err = c.AddUserCoinAmount(evt.User.Id, coin.Id, int32(amount), "Buy DashFunTicket", evt.Payment.Id)
+			if err != nil {
+				zap.S().Errorw("AddUser Ticket error", "userId", evt.User.Id, "coinId", coin.Id, "amount", amount, "error", err, "paymentId", evt.Payment.Id)
+				return
+			}
+		}
+	}
 }

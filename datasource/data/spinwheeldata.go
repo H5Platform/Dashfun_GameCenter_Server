@@ -4,7 +4,8 @@ type SpinWheelRewardType int
 type SpinWheelUserStatus int
 
 const (
-	SpinWheelReward_GamePoint SpinWheelRewardType = iota + 1 //奖励游戏绑定的积分
+	SpinWheelReward_DashFunPoint SpinWheelRewardType = iota + 1 //奖励DashFun绑定的积分
+	SpinWheelReward_GamePoint                                   //奖励游戏绑定的积分
 )
 
 const (
@@ -14,10 +15,10 @@ const (
 )
 
 type SpinWheelReward struct {
-	RewardIndex int                 `json:"reward_index" bson:"reward_index"` //区域Id, 0~9
-	RewardType  SpinWheelRewardType `json:"reward_type" bson:"reward_type"`
-	RewardValue int                 `json:"reward_value" bson:"reward_value"`
-	Weight      int                 `json:"-" bson:"weight"`
+	RewardIndex int                 `json:"reward_index" bson:"reward_index" yaml:"reward_index"` //区域Id, 0~9
+	RewardType  SpinWheelRewardType `json:"reward_type" bson:"reward_type" yaml:"reward_type"`
+	RewardValue int                 `json:"reward_value" bson:"reward_value" yaml:"reward_value"`
+	Weight      int                 `json:"-" bson:"weight" yaml:"weight"`
 }
 
 // SpinWheelData 轮盘定义，共分10个区域
@@ -33,6 +34,8 @@ type SpinWheelUserData struct {
 	UserId      string              `json:"user_id" bson:"user_id"`
 	SpinWheelId string              `json:"spin_wheel_id" bson:"spin_wheel_id"`
 	RewardIndex int                 `json:"reward_index" bson:"reward_index"` //抽中的区域索引，0-9
+	RewardValue int                 `json:"reward_value" bson:"reward_value"` //抽中的区域值，会随机浮动
 	SpinTime    int64               `json:"spin_time" bson:"spin_time"`       //抽奖时间
 	Status      SpinWheelUserStatus `json:"status" bson:"status"`             //状态
+	Count       int                 `json:"count" bson:"count"`               //抽奖次数
 }

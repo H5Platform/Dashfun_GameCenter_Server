@@ -225,7 +225,7 @@ func (c *CoinCenter) AddUserCoinAmount(userId, coinId string, amount int32, reas
 		events.UserCoinChangedEvents.Emit(events.UserCoinChangedEvent{
 			UserId: userId, Coin: coin, UserData: coinData, ChangedAmount: amount,
 		})
-		zap.S().Infow("add user coin amount", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount)
+		zap.S().Infow("add user coin amount", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount, "reason", reason, "info", info)
 	}
 	return coinData, nil
 }
@@ -254,7 +254,7 @@ func (c *CoinCenter) DecUserCoinAmount(userId, coinId string, amount int32, reas
 			UserId: userId, Coin: coin, UserData: coinData, ChangedAmount: -amount,
 		})
 		c.recordUserCoinChange(cud, coinId, -amount, reason, info)
-		zap.S().Infow("dec user coin amount", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount)
+		zap.S().Infow("dec user coin amount", "userId", userId, "coin", coin, "amount", amount, "balance", coinData.Amount, "reason", reason, "info", info)
 	}
 	return coinData, nil
 }

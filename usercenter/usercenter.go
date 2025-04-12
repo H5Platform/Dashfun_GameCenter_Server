@@ -124,7 +124,8 @@ func (uc *UserCenter) UserEnterGame(tgAuthData, gameId string) (*data.DashFunUse
 	return user, nil
 }
 
-func (uc *UserCenter) TGUserLogin(tgAuthData string, referrerId string) (*data.OnlineUser, error) {
+// TGUserLogin 用户登录, 通过tgAuthData获取用户信息, autoCreate表示是否自动创建用户
+func (uc *UserCenter) TGUserLogin(tgAuthData string, referrerId string, autoCreate bool) (*data.OnlineUser, error) {
 	initData, err := parseInitData(tgAuthData, 0)
 	if err != nil {
 		return nil, err
@@ -134,6 +135,10 @@ func (uc *UserCenter) TGUserLogin(tgAuthData string, referrerId string) (*data.O
 	user, err := ud.GetUserByChannelId(fmt.Sprintf("%d", initData.User.ID))
 	if err != nil {
 		return nil, err
+	}
+
+	if user == nil && !autoCreate {
+		return nil, apperrors.ErrUserDoesNotExist
 	}
 
 	tgUser := initData.User

@@ -45,7 +45,7 @@ redis_cfg:
 
 invite_cfg:
   # 被邀请的用户，达到指定积分后，才算邀请成功
-  point_required: 5000
+  point_required: 2000
   # 每个成功被邀请的用户奖励的分数
   point_reward:
     - {

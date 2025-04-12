@@ -38,7 +38,7 @@ func apiTgUserLogin(c *gin.Context) {
 		return
 	}
 
-	login, err := usercenter.Get().TGUserLogin(auth.Token, referrerId)
+	login, err := usercenter.Get().TGUserLogin(auth.Token, referrerId, true)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return

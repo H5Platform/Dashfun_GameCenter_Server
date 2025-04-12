@@ -164,7 +164,7 @@ func (r *RechargeCenter) processPaidOrders() {
 			game, _ = dao.GetGameDao().GetGameById(order.GameId)
 		}
 
-		zap.S().Infow("recharge order completed", "order", order.Id, "price", order.Price, "diamond", order.Diamond)
+		zap.S().Infow("recharge order completed", "user", order.UserId, "order", order.Id, "price", order.Price, "diamond", order.Diamond)
 		events.UserRechargeEvents.Emit(&events.EventUserRecharge{
 			User:     user,
 			Game:     game,

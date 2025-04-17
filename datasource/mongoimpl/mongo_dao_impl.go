@@ -197,3 +197,31 @@ func newMongoCursor[T any](c *mongo.Collection, filter *bson.D, batchSize int32)
 	mc.cursor = cursor
 	return mc, nil
 }
+
+func CollectionExists(ctx context.Context, db *mongo.Database, collectionName string) (bool, error) {
+	collections, err := db.ListCollectionNames(ctx, nil)
+	if err != nil {
+		return false, err
+	}
+
+	for _, name := range collections {
+		if name == collectionName {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func DatabaseExists(ctx context.Context, client *mongo.Client, dbName string) (bool, error) {
+	databases, err := client.ListDatabaseNames(ctx, bson.D{})
+	if err != nil {
+		return false, err
+	}
+
+	for _, name := range databases {
+		if name == dbName {
+			return true, nil
+		}
+	}
+	return false, nil
+}

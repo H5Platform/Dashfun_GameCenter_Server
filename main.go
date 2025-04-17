@@ -22,6 +22,7 @@ import (
 )
 
 func main() {
+	//将本地user数据迁移到DBUserCenter里，专门给usercenter服务使用
 	usercenter.MoveUserData()
 
 	logPath := config.GetConfig().Log.Path

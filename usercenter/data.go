@@ -4,11 +4,11 @@ import (
 	"context"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/datasource/mongoimpl"
 	"dashfun_gamecenter/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.uber.org/zap"
 	"log"
 	"sync"
 	"time"
@@ -116,6 +116,7 @@ func Get() IUserCenter {
 
 // MoveUserData 将用户数据迁移到新的数据源，新的数据源供单独的UserCenter服务使用
 func MoveUserData() {
+
 	mongoCfg := config.GetConfig().Mongo
 	serverApi := options.ServerAPI(options.ServerAPIVersion1)
 	opt := options.Client().ApplyURI(mongoCfg.Source).SetServerAPIOptions(serverApi)
@@ -124,6 +125,17 @@ func MoveUserData() {
 	if err != nil {
 		panic(err)
 	}
+
+	exists, err := mongoimpl.DatabaseExists(context.Background(), client, "DBUserCenter")
+	if err != nil {
+		panic(err)
+	}
+
+	if exists {
+		return
+	}
+	
+	log.Printf("start moving user data")
 
 	var result bson.M
 	dbDashFun := client.Database(mongoCfg.DataBase)
@@ -154,7 +166,7 @@ func MoveUserData() {
 
 	cursor.Close(context.Background())
 
-	zap.S().Infow("user data", "moving users", len(users))
+	log.Printf("user data moving users %d", len(users))
 
 	for _, user := range users {
 		update := bson.M{
@@ -163,7 +175,7 @@ func MoveUserData() {
 		opts := options.Update().SetUpsert(true)
 		_, err := dbUserCenter.Collection("user_data").UpdateByID(context.TODO(), user.Id, update, opts)
 		if err != nil {
-			zap.S().Errorw("insert user data error", "err", err)
+			log.Printf("insert user data error %s", err)
 		}
 
 		update = bson.M{

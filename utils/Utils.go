@@ -50,6 +50,10 @@ type AuthData struct {
 	Token  string
 }
 
+func (auth *AuthData) ToString() string {
+	return auth.Method + " " + auth.Token
+}
+
 // CheckAuthorize 检查请求中的authorization header，返回验证信息
 func CheckAuthorize(c *gin.Context) (*AuthData, error) {
 	tgAuthData := c.GetHeader("authorization")

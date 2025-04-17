@@ -119,10 +119,10 @@ func TGLoginCheckMiddleware(excludePaths ...string) gin.HandlerFunc {
 
 		auth, err := utils.CheckAuthorize(c)
 		if err == nil {
-			_, err := usercenter.Get().GetDashFunUserByTgAuthData(auth.Token, true)
-			if errors.Is(err, apperrors.ErrUserDoesNotExist) {
+			_, err := usercenter.Get().GetDashFunUserByAuthData(auth, true)
+			if errors.Is(err, apperrors.ErrUserSessionNotExist) || errors.Is(err, apperrors.ErrUserNotFound) {
 				//用户调用api时没有在在线用户列表中，有可能由于重启服务器导致，重新进行用户登录，但不要创建新用户
-				usercenter.Get().TGUserLogin(auth.Token, "", false)
+				usercenter.Get().UserLogin(auth, "", false)
 			}
 		}
 	}

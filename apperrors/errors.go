@@ -6,6 +6,8 @@ var (
 	ErrUserNotFound     = errors.New("user not found")
 	ErrUserDoesNotExist = errors.New("user does not exist")
 
+	ErrUserSessionNotExist = newError("user not online")
+	
 	ErrOnlineUserNotExist = newError("user does not online")
 
 	ErrUserGameSaveDataNotExisted = newError("User Game Save Data Not Existed")

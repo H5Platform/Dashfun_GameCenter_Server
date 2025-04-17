@@ -61,6 +61,11 @@ type RedisCfg struct {
 	DB       int    `yaml:"db"`
 }
 
+type NacosCfg struct {
+	IpAddr string `yaml:"ip_addr"`
+	Port   uint64 `yaml:"port"`
+}
+
 type RewardPoint struct {
 	InviteUserType int `yaml:"invite_user_type"` //邀请用户类型, 1=新用户，2=老用户,3=非活跃用户(登录时间超过90天)
 	RewardPoint    int `yaml:"reward_point"`     //奖励的积分xp
@@ -136,6 +141,7 @@ type Config struct {
 	SpinWheelCfg      *SpinWheelCfg      `yaml:"spin_wheel_cfg"`
 	LeaderboardBotCfg *LeaderboardBotCfg `yaml:"leaderboard_bot_cfg"`
 	StripeCfg         *StripeConfig      `yaml:"stripe_cfg"`
+	NacosCfg          *NacosCfg          `yaml:"nacos_cfg"`
 }
 
 var config *Config
@@ -155,6 +161,10 @@ func IsTest() bool {
 
 func IsDev() bool {
 	return GetConfig().Base.Env == "Dev"
+}
+
+func NacosNamespace() string {
+	return strings.ToLower(GetConfig().Base.Env)
 }
 
 func init() {

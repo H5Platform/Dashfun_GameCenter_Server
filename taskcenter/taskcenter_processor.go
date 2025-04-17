@@ -4,6 +4,7 @@ import (
 	"context"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/tgbot"
+	"dashfun_gamecenter/usercenter"
 	"encoding/json"
 	"errors"
 	"github.com/go-telegram/bot"
@@ -200,7 +201,12 @@ func (t *TaskCenter) taskVerifyTGChannel(user *data.DashFunUser, task *data.Dash
 		if (isDashFunTask(task) || task.GameId == gameId) && userData.Status == data.TaskStatus_Verify_Pending {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 			defer cancel()
-			tgUserId, err := strconv.ParseInt(user.ChannelId, 10, 64)
+			channelId, err := usercenter.Get().GetDashFunUserChannelId(user.Id, data.DF_UserFrom_TG)
+			if err != nil {
+				zap.S().Errorw("get user channel id error", "user", user, "error", err)
+				return false
+			}
+			tgUserId, err := strconv.ParseInt(channelId, 10, 64)
 			if err != nil {
 				zap.S().Errorw("user telegram id error", "user", user)
 				return false

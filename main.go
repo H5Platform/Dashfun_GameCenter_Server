@@ -11,6 +11,7 @@ import (
 	"dashfun_gamecenter/paymentcenter"
 	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/tgbot"
+	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
@@ -21,6 +22,8 @@ import (
 )
 
 func main() {
+	usercenter.MoveUserData()
+
 	logPath := config.GetConfig().Log.Path
 	if logPath == "" {
 		logPath = "app.log"
@@ -62,6 +65,7 @@ func main() {
 	leaderboardcenter.Get()
 	RechargeCenter.Get()
 	paymentcenter.Get()
+	usercenter.Get()
 
 	logger.Info("dashfun gamecenter started")
 	//ton.Get()

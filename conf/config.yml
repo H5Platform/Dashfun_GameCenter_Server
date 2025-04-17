@@ -125,3 +125,7 @@ stripe_cfg:
   secret_key: ${stripe_secret_key}
   webhook_key: ${stripe_webhook_key}
   return_host: http://localhost:5175/
+
+nacos_cfg:
+  ip_addr: localhost
+  port: 8848

@@ -2,7 +2,6 @@ package data
 
 import (
 	"dashfun_gamecenter/apperrors"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"slices"
 	"sync"
 	"time"
@@ -31,7 +30,7 @@ type DashFunUser struct {
 
 type TGInfo struct {
 	AuthData string
-	InitData *initdata.InitData
+	//InitData *initdata.InitData
 }
 
 type UserSaveData struct {

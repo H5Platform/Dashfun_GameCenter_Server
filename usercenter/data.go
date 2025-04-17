@@ -1,7 +1,15 @@
 package usercenter
 
 import (
+	"context"
+	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/utils"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
+	"log"
 	"sync"
 	"time"
 )
@@ -73,4 +81,104 @@ func (o *OnlineUsers) UserLogout(user *data.DashFunUser) *data.OnlineUser {
 		delete(o.ChannelMap, user.ChannelId)
 	}
 	return u
+}
+
+var onceUserCenter sync.Once
+var instUserCenter IUserCenter
+
+type IUserCenter interface {
+	UserEnterGame(authData *utils.AuthData, gameId string) (*data.DashFunUser, error)
+	UserLogin(authData *utils.AuthData, referrerId string, autoCreate bool) (*data.OnlineUser, error)
+	GetDashFunUserByAuthData(authData *utils.AuthData, onlineUserOnly bool) (*data.DashFunUser, error)
+	GetDashFunUserChannelId(userId string, from data.DashFunUserFrom) (string, error)
+	GetDashFunUser(userId string) (*data.DashFunUser, error)
+	UserBindWallet(userId, chain, address string) (*data.DashFunUser, error)
+	UserSaveData(userId, gameId, dataKey, saveData string, isTesting bool) (*data.DashFunUserSaveData, error)
+	UserGetData(userId, gameId, dataKey string, isTesting bool) (string, error)
+	UserGetFavorites(userId string) []string
+	UserAddFavorite(userId, gameId string) error
+	IsUserFavoriteGame(userId, gameId string) (bool, error)
+	UserRemoveFavorite(userId, gameId string) error
+	UserGetPlayRecord(userId string) []*data.PlayGameRecord
+	GetUserChannelHeadData(userId string) []byte
+	GetUserHeadAvatar(userId string) []byte
+	RequestUserId() string
+}
+
+func Get() IUserCenter {
+	onceUserCenter.Do(func() {
+		uc := &UserCenterRpc{}
+		uc.init()
+		instUserCenter = uc
+	})
+	return instUserCenter
+}
+
+// MoveUserData 将用户数据迁移到新的数据源，新的数据源供单独的UserCenter服务使用
+func MoveUserData() {
+	mongoCfg := config.GetConfig().Mongo
+	serverApi := options.ServerAPI(options.ServerAPIVersion1)
+	opt := options.Client().ApplyURI(mongoCfg.Source).SetServerAPIOptions(serverApi)
+	client, err := mongo.Connect(context.TODO(), opt)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var result bson.M
+	dbDashFun := client.Database(mongoCfg.DataBase)
+	err = dbDashFun.RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result)
+
+	if err != nil {
+		panic(err)
+	}
+
+	dbUserCenter := client.Database("DBUserCenter")
+	err = dbUserCenter.RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result)
+
+	if err != nil {
+		panic(err)
+	}
+
+	cursor, err := dbDashFun.Collection("user_data").Find(context.TODO(), bson.M{})
+
+	if err != nil {
+		panic(err)
+	}
+
+	users := make([]*data.DashFunUser, 0)
+	err = cursor.All(context.TODO(), &users)
+	if err != nil {
+		panic(err)
+	}
+
+	cursor.Close(context.Background())
+
+	zap.S().Infow("user data", "moving users", len(users))
+
+	for _, user := range users {
+		update := bson.M{
+			"$set": user,
+		}
+		opts := options.Update().SetUpsert(true)
+		_, err := dbUserCenter.Collection("user_data").UpdateByID(context.TODO(), user.Id, update, opts)
+		if err != nil {
+			zap.S().Errorw("insert user data error", "err", err)
+		}
+
+		update = bson.M{
+			"$set": &bson.D{
+				bson.E{Key: "_id", Value: user.Id},
+				bson.E{Key: "channel_id", Value: user.ChannelId},
+				bson.E{Key: "from", Value: data.DF_UserFrom_TG},
+				bson.E{Key: "auth_data", Value: ""},
+			},
+		}
+
+		_, err = dbUserCenter.Collection("user_channel_data").UpdateByID(context.TODO(), user.Id, update, opts)
+		if err != nil {
+			log.Panicf("insert user data error %s\n", err)
+		}
+	}
+
 }

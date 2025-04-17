@@ -38,7 +38,7 @@ func apiTgUserLogin(c *gin.Context) {
 		return
 	}
 
-	login, err := usercenter.Get().TGUserLogin(auth.Token, referrerId, true)
+	login, err := usercenter.Get().UserLogin(auth, referrerId, true)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
@@ -65,7 +65,7 @@ func apiEnterGame(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError("param game_id is required"))
 	}
 
-	user, err := usercenter.Get().UserEnterGame(auth.Token, gameId)
+	user, err := usercenter.Get().UserEnterGame(auth, gameId)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, RError(err.Error()))
 		return

@@ -142,7 +142,7 @@ func MoveUserData() {
 	}
 
 	//检查数据库是否有user_data集合，如果有则说明已经迁移过了
-	exists, err := mongoimpl.CollectionExists(context.Background(), dbDashFun, "user_data")
+	exists, err := mongoimpl.CollectionExists(context.Background(), dbUserCenter, "user_data")
 	if err != nil {
 		panic(err)
 	}

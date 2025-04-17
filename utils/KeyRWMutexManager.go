@@ -101,7 +101,7 @@ func (mgr *KeyRWMutexManager[K]) Release(key K) {
 		return
 	}
 
-	zap.S().Debugf("KeyRWMutexManager-[%s] key %v released, scheduling cleanup. active keys: %d", mgr.name, key, len(mgr.locks)-1)
+	//zap.S().Debugf("KeyRWMutexManager-[%s] key %v released, scheduling cleanup. active keys: %d", mgr.name, key, len(mgr.locks)-1)
 
 	entry.timer = time.AfterFunc(mgr.expireAfter, func() {
 		mgr.mu.Lock()

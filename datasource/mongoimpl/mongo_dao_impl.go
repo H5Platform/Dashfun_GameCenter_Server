@@ -199,7 +199,7 @@ func newMongoCursor[T any](c *mongo.Collection, filter *bson.D, batchSize int32)
 }
 
 func CollectionExists(ctx context.Context, db *mongo.Database, collectionName string) (bool, error) {
-	collections, err := db.ListCollectionNames(ctx, nil)
+	collections, err := db.ListCollectionNames(ctx, bson.D{})
 	if err != nil {
 		return false, err
 	}

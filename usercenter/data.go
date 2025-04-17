@@ -126,17 +126,6 @@ func MoveUserData() {
 		panic(err)
 	}
 
-	exists, err := mongoimpl.DatabaseExists(context.Background(), client, "DBUserCenter")
-	if err != nil {
-		panic(err)
-	}
-
-	if exists {
-		return
-	}
-	
-	log.Printf("start moving user data")
-
 	var result bson.M
 	dbDashFun := client.Database(mongoCfg.DataBase)
 	err = dbDashFun.RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result)
@@ -151,6 +140,18 @@ func MoveUserData() {
 	if err != nil {
 		panic(err)
 	}
+
+	//检查数据库是否有user_data集合，如果有则说明已经迁移过了
+	exists, err := mongoimpl.CollectionExists(context.Background(), dbDashFun, "user_data")
+	if err != nil {
+		panic(err)
+	}
+
+	if exists {
+		return
+	}
+
+	log.Printf("start moving user data")
 
 	cursor, err := dbDashFun.Collection("user_data").Find(context.TODO(), bson.M{})
 

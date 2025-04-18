@@ -233,7 +233,7 @@ func (t *TaskCenter) GetTaskUserData(userId, taskId string) (*data.DashFunTaskUs
 	reset := false
 
 	if task != nil {
-		if task.Condition.Type == data.TaskCondition_DailyLogin && userData.Status != data.TaskStatus_InProgress {
+		if task.Condition.Type == data.TaskCondition_DailyLogin && userData.Status == data.TaskStatus_InProgress {
 			if t.taskRecordDailyLogin(userId, task, userData) {
 				//任务状态有变化，保存数据
 				t.saveTaskUserData(userData)

@@ -220,6 +220,8 @@ func (t *TaskCenter) taskVerifyTGChannel(user *data.DashFunUser, task *data.Dash
 				return false
 			}
 
+			zap.S().Infow("tgbot GetChatMember", "user", user, "channel", channelId, "member", member)
+
 			if member.Type == models.ChatMemberTypeOwner || member.Type == models.ChatMemberTypeAdministrator || member.Type == models.ChatMemberTypeMember {
 				userData.Progress = task.Condition.Count
 				userData.Status = data.TaskStatus_Completed

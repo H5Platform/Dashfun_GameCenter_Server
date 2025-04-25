@@ -7,7 +7,7 @@ var (
 	ErrUserDoesNotExist = errors.New("user does not exist")
 
 	ErrUserSessionNotExist = newError("user not online")
-	
+
 	ErrOnlineUserNotExist = newError("user does not online")
 
 	ErrUserGameSaveDataNotExisted = newError("User Game Save Data Not Existed")
@@ -18,6 +18,8 @@ var (
 	ErrRechargeOrderCantCancel   = newError("you can't cancel this order")
 
 	ErrUserPhotoNotExist = newError("user photo not exist")
+
+	ErrUserCannotCreateOnChannel = newError("user cannot create on this channel")
 
 	ErrPaymentNotEnoughBalance = newError("not enough balance")
 )

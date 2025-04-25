@@ -29,6 +29,7 @@ type UserDao interface {
 	GetUserById(userId string) (*data.DashFunUser, error)
 	GetUserByChannelId(channelId string) (*data.DashFunUser, error)
 	SaveOrUpdate(user *data.DashFunUser) (*data.DashFunUser, error)
+	GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUser, error)
 }
 
 type GameDao interface {

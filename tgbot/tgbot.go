@@ -372,3 +372,7 @@ func botLink() string {
 func gameLink(gameId string) string {
 	return botLink() + "/Games?startapp=" + gameId
 }
+
+func InviteLink(userId string) string {
+	return fmt.Sprintf("%s/center?startapp=%s", botLink(), userId)
+}

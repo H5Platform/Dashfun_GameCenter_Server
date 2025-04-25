@@ -76,3 +76,19 @@ func (u *UserDaoMongo) SaveOrUpdate(user *data.DashFunUser) (*data.DashFunUser, 
 
 	return user, nil
 }
+
+func (u *UserDaoMongo) GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUser, error) {
+	var users []*data.DashFunUser
+	cursor, err := u.c.Find(context.TODO(), bson.M{"from": from})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	err = cursor.All(context.TODO(), &users)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

@@ -567,3 +567,34 @@ func (uc *UserCenter) GetUserHeadAvatar(userId string) []byte {
 	//return ou.Header
 	return avatar
 }
+
+func (uc *UserCenter) CreateDashFunUser(from data.DashFunUserFrom, username string) (*data.DashFunUser, error) {
+	if from < data.DF_UserFrom_Kol {
+		return nil, apperrors.ErrUserCannotCreateOnChannel
+	}
+	user := &data.DashFunUser{
+		Id:          uc.newUserId(),
+		ChannelId:   "",
+		DisplayName: username,
+		UserName:    username,
+		AvatarUrl:   "",
+		From:        from,
+		CreateData:  time.Now().UnixMilli(),
+		LoginTime:   time.Now().UnixMilli(),
+		LogoffTime:  0,
+	}
+	user, err := dao.GetUserDao().SaveOrUpdate(user)
+	return user, err
+}
+
+func (uc *UserCenter) GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUser, error) {
+	if from < data.DF_UserFrom_Kol {
+		return nil, apperrors.ErrUserCannotCreateOnChannel
+	}
+	users, err := dao.GetUserDao().GetUsersFrom(from)
+	if err != nil {
+		zap.S().Errorw("get users from error", "from", from, "err", err)
+		return nil, err
+	}
+	return users, nil
+}

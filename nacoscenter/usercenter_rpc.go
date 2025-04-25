@@ -108,6 +108,42 @@ func (u *UserCenterRpc) GetUserChannelId(userId string, from data.DashFunUserFro
 	return resp.ChannelId, nil
 }
 
+func (u *UserCenterRpc) CreateUser(from data.DashFunUserFrom, username string) (*data.DashFunUser, error) {
+	userServiceClient, err := Get().GetUserServiceClient()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := userServiceClient.CreateUser(context.Background(), &v1.CreateUserRequest{
+		From:     int32(from),
+		Username: username,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return pb2DashFunUser(resp.User), nil
+}
+
+func (u *UserCenterRpc) GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUser, error) {
+	userServiceClient, err := Get().GetUserServiceClient()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := userServiceClient.GetUsersFrom(context.Background(), &v1.GetUserFromRequest{
+		From: int32(from),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	users := make([]*data.DashFunUser, len(resp.Users))
+	for i, user := range resp.Users {
+		users[i] = pb2DashFunUser(user)
+	}
+	return users, nil
+}
+
 func pb2DashFunUser(user *common.DashFunUserPb) *data.DashFunUser {
 	return &data.DashFunUser{
 		Id:            user.UserId,

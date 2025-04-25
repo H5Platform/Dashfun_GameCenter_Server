@@ -11,6 +11,8 @@ type DashFunUserFrom int
 
 const (
 	DF_UserFrom_TG DashFunUserFrom = iota + 1 //telegram 用户
+
+	DF_UserFrom_Kol = 99999 //为kol推广使用的用户，不能登陆，只能用来推广
 )
 
 // DashFunUser user data db

@@ -616,3 +616,19 @@ func (uc *UserCenterRpc) GetUserHeadAvatar(userId string) []byte {
 	//return ou.Header
 	return avatar
 }
+
+func (uc *UserCenterRpc) CreateDashFunUser(from data.DashFunUserFrom, username string) (*data.DashFunUser, error) {
+	user, err := uc.userCenterRpc.CreateUser(from, username)
+	if err != nil {
+		return nil, err
+	}
+	return user, err
+}
+
+func (uc *UserCenterRpc) GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUser, error) {
+	users, err := uc.userCenterRpc.GetUsersFrom(from)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

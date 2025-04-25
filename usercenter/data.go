@@ -103,6 +103,8 @@ type IUserCenter interface {
 	GetUserChannelHeadData(userId string) []byte
 	GetUserHeadAvatar(userId string) []byte
 	RequestUserId() string
+	CreateDashFunUser(from data.DashFunUserFrom, username string) (*data.DashFunUser, error)
+	GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUser, error)
 }
 
 func Get() IUserCenter {

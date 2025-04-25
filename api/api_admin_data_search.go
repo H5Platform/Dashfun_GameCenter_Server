@@ -10,7 +10,9 @@ import (
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
+	"dashfun_gamecenter/invitecenter"
 	"dashfun_gamecenter/taskcenter"
+	"dashfun_gamecenter/tgbot"
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	"fmt"
@@ -29,6 +31,11 @@ type GameResult struct {
 type UserResult struct {
 	User     *data.DashFunUser
 	TaskInfo *data.UserTaskInfo
+}
+
+type CreateDFUserRequest struct {
+	From     data.DashFunUserFrom `json:"from" form:"from" binding:"required"`
+	Username string               `json:"username" form:"username" binding:"required"`
 }
 
 func checkAuthorize(c *gin.Context) bool {
@@ -224,12 +231,92 @@ func apiAdminRecalculateUserCoin(c *gin.Context) {
 	}
 }
 
+func apiAdminCreateDashFunKolUser(c *gin.Context) {
+
+	username := c.PostForm("username")
+
+	if len(username) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("username is required"))
+		return
+	}
+
+	user, err := usercenter.Get().CreateDashFunUser(data.DF_UserFrom_Kol, username)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(user))
+}
+
+func apiAdminGetKolUsers(c *gin.Context) {
+	users, err := usercenter.Get().GetUsersFrom(data.DF_UserFrom_Kol)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, RError(err.Error()))
+		return
+	}
+
+	str := `
+<style>
+	table {
+		width: auto;
+		min-width:600px;
+	}
+	th, td {
+		padding: 8px;
+	}
+	tr:nth-child(even) {
+		background-color: #f2f2f2;
+	}
+</style>
+`
+
+	str += fmt.Sprintf("## Kol Invite Records\n\n")
+
+	str += fmt.Sprintf("- **Invited(Total)**: %s\n", "Total Invited")
+	str += fmt.Sprintf("- **Actived**: %s\n", "Users Invited who have reached 5000 xp (Including new users)")
+	str += fmt.Sprintf("- **New Users**: %s\n\n", "New users invited by this KOL who have reached 5000 xp")
+
+	str += fmt.Sprintf("|%s|%s|%s|%s|%s|%s\n", "UserId", "Name", "Invited(Total)", "Actived", "New Users", "Link")
+	str += fmt.Sprintf("|%s|%s|%s|%s|%s|%s\n", "---", "---", ":---:", ":---:", ":---:", "---")
+
+	for _, user := range users {
+		invited, _ := invitecenter.Get().GetInvitedUsers(user.Id)
+
+		invitedCount := 0
+		activatedCount := 0
+		newUserCount := 0
+		if invited != nil {
+			invitedCount = len(invited)
+		}
+
+		for _, userData := range invited {
+			if userData.InvitedStatus == data.InvitedStatus_Success {
+				activatedCount++
+				if userData.InvitedType == data.InvitedType_NewUser {
+					newUserCount++
+				}
+			}
+		}
+
+		inviteLink := tgbot.InviteLink(user.Id)
+
+		str += fmt.Sprintf("|%s|%s|**%d**|**%d**|**%d**|%s\n", user.Id, user.DisplayName, invitedCount, activatedCount, newUserCount, inviteLink)
+	}
+
+	html := markdown.ToHTML([]byte(str), nil, nil)
+	c.Header("Content-Disposition", "inline; filename=coin_records.html")
+	c.Data(200, "text/html; charset=utf-8", html)
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "game/:id", backendAdminAuthWrapper(apiAdminGetGameInfo))
 	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id", backendAdminAuthWrapper(apiAdminGetUserInfo))
 	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id/coins", backendAdminAuthWrapper(apiAdminGetUserCoins))
 	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id/coin/record", backendAdminAuthWrapper(apiAdminSearchUserCoinRecords))
 	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/:id/coin/recalculate", backendAdminAuthWrapper(apiAdminRecalculateUserCoin))
+	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.POST, "user/create/kol", backendAdminAuthWrapper(apiAdminCreateDashFunKolUser))
+	web.GetService().RegisterApi(web.ApiModuleAdminSearch, web.GET, "user/invited/kol", apiAdminGetKolUsers)
+
 }
 
 func backendAdminAuthWrapper(handler func(ctx *gin.Context)) func(*gin.Context) {

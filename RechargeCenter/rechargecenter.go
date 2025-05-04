@@ -182,13 +182,13 @@ func (r *RechargeCenter) GetRechargePlatformOptions(platform string) RechargePla
 	var options []RechargePlatformOption
 	priceType := data.RechargePlatformOptionPriceTypeUSD
 
-	if isTelegram(platform) {
+	if isTelegram(platform) && config.GetConfig().RechargeCfg.EnableStar {
 		priceType = data.RechargePlatformOptionPriceTypeTGStar //目前ios和android都是tg的miniapp用户，使用星星支付
 	}
 
 	for _, option := range config.GetConfig().RechargeCfg.Options {
 		price := option.Price
-		if isTelegram(platform) { //目前ios和android都是tg的miniapp用户，使用星星支付
+		if isTelegram(platform) && config.GetConfig().RechargeCfg.EnableStar { //目前ios和android都是tg的miniapp用户，使用星星支付
 			price = option.TGStar
 		}
 		options = append(options, RechargePlatformOption{
@@ -259,7 +259,7 @@ func (r *RechargeCenter) CreateRechargeOrder(userId string, rechargeOption confi
 func (r *RechargeCenter) GetRechargePrice(rechargeOption config.RechargeOption, platform string) (int, data.RechargePlatformOptionPriceType) {
 	price := rechargeOption.Price
 	priceType := data.RechargePlatformOptionPriceTypeUSD
-	if isTelegram(platform) {
+	if isTelegram(platform) && config.GetConfig().RechargeCfg.EnableStar {
 		price = rechargeOption.TGStar
 		priceType = data.RechargePlatformOptionPriceTypeTGStar
 	}

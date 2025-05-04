@@ -88,8 +88,9 @@ type RechargeOption struct {
 }
 
 type RechargeCfg struct {
-	Open    bool             `yaml:"open"`    //是否开启充值
-	Options []RechargeOption `yaml:"options"` //充值选项
+	Open       bool             `yaml:"open"`        //是否开启充值
+	EnableStar bool             `yaml:"enable_star"` //是否开启星星充值
+	Options    []RechargeOption `yaml:"options"`     //充值选项
 }
 type StripeConfig struct {
 	PublicKey  string `yaml:"public_key"`

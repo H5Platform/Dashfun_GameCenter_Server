@@ -235,6 +235,7 @@ func apiPaypalCreateOrder(c *gin.Context) {
 	}
 
 	if order.PriceType != data.RechargePlatformOptionPriceTypeUSD || (order.Status != data.DashFunRechargeStatus_Created && order.Status != data.DashFunRechargeStatus_Pending) {
+		zap.S().Errorw("apiPaypalCreateOrder", "order", order, "error", apperrors.ErrRechargeOrderStatus.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(apperrors.ErrRechargeOrderStatus.Error()))
 		return
 	}

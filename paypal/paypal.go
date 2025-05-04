@@ -23,6 +23,7 @@ func NewClient(clientId, secret string, apiBase config.PayPalApiBase) *Client {
 	c := &Client{
 		apiBase: GetApi(apiBase, clientId, secret),
 	}
+	zap.S().Infow("Paypal Client Created", "clientId", clientId, "apiBase", c.apiBase.apiUrl())
 	return c
 }
 
@@ -103,6 +104,8 @@ func (c *Client) RequestOrder(productName string, price float64) (orderId string
 
 	body, _ := io.ReadAll(resp.Body)
 	jsonStr := string(body)
+
+	zap.S().Infow("Paypal requestOrder", "orderId", orderId, "url", apiUrl, "token", t.Token(), "response", jsonStr)
 
 	orderId = gjson.Get(jsonStr, "id").String()
 	return orderId, nil

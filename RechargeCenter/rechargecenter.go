@@ -297,6 +297,8 @@ func (r *RechargeCenter) PendingRechargeOrder(orderId string, payFrom string, pa
 
 	order.ChannelPayId = payOrderId
 
+	zap.S().Infow("PendingRechargeOrder", "orderId", orderId, "payFrom", payFrom, "payOrderId", payOrderId)
+
 	return dao.GetRechargeDao().SaveOrUpdate(order)
 }
 

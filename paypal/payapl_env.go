@@ -54,21 +54,48 @@ func (p *ApiBaseSandbox) SecretKey() string {
 }
 
 type ApiBaseLive struct {
-	ApiBaseSandbox
+	clientId  string
+	secretKey string
 }
 
 func (p *ApiBaseLive) apiUrl() string {
 	return "https://api-m.paypal.com"
 }
 
+func (p *ApiBaseLive) OauthTokenUrl() string {
+	return fmt.Sprintf("%s/v1/oauth2/token", p.apiUrl())
+}
+
+func (p *ApiBaseLive) RequestOrderUrl() string {
+	return fmt.Sprintf("%s/v2/checkout/orders", p.apiUrl())
+}
+
+func (p *ApiBaseLive) CaptureOrderUrl(paypalOrderId string) string {
+	return fmt.Sprintf("%s/v2/checkout/orders/%s/capture", p.apiUrl(), paypalOrderId)
+}
+
+func (p *ApiBaseLive) ConfirmOrderUrl(paypalOrderId string) string {
+	return fmt.Sprintf("%s/v2/checkout/orders/%s/confirm-payment-source", p.apiUrl(), paypalOrderId)
+}
+
+func (p *ApiBaseLive) OrderDetailUrl(paypalOrderId string) string {
+	return fmt.Sprintf("%s/v2/checkout/orders/%s", p.apiUrl(), paypalOrderId)
+}
+
+func (p *ApiBaseLive) ClientId() string {
+	return p.clientId
+}
+
+func (p *ApiBaseLive) SecretKey() string {
+	return p.secretKey
+}
+
 func GetApi(apiBase config.PayPalApiBase, clientId, clientSecret string) ApiBase {
 	switch apiBase {
 	case config.PayPalApiBaseLive:
 		return &ApiBaseLive{
-			ApiBaseSandbox: ApiBaseSandbox{
-				clientId:  clientId,
-				secretKey: clientSecret,
-			},
+			clientId:  clientId,
+			secretKey: clientSecret,
 		}
 	default:
 		return &ApiBaseSandbox{

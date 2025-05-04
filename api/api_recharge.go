@@ -7,6 +7,7 @@ import (
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
+	"dashfun_gamecenter/paypal"
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"github.com/stripe/stripe-go/v81/webhook"
 	"go.uber.org/zap"
 	"net/http"
+	"strings"
 )
 
 type CreateOrderRequest struct {
@@ -192,7 +194,7 @@ func apiStripeCreateCheckoutSession(c *gin.Context) {
 		return
 	}
 
-	RechargeCenter.Get().PendingRechargeOrder(orderId, "stripe")
+	RechargeCenter.Get().PendingRechargeOrder(orderId, "stripe", "")
 
 	c.Redirect(http.StatusSeeOther, s.URL)
 }
@@ -219,7 +221,93 @@ func apiStripeWebhook(c *gin.Context) {
 	}
 }
 
+func apiPaypalCreateOrder(c *gin.Context) {
+	orderId := c.PostForm("order_id")
+	if orderId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("order id is required"))
+		return
+	}
+
+	order, err := RechargeCenter.Get().GetRechargeOrder(orderId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	if order.PriceType != data.RechargePlatformOptionPriceTypeUSD || (order.Status != data.DashFunRechargeStatus_Created && order.Status != data.DashFunRechargeStatus_Pending) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(apperrors.ErrRechargeOrderStatus.Error()))
+		return
+	}
+
+	if order.Status == data.DashFunRechargeStatus_Pending && order.PayFrom == "paypal" && order.ChannelPayId != "" {
+		//已经有支付订单号了，返回订单
+		c.JSON(http.StatusOK, RSuccess(order))
+		return
+	}
+
+	paypalOrderId, err := client.RequestOrder(fmt.Sprintf("%d Diamonds", order.Diamond), float64(order.Price)/100.0)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	rechargeOrder, err := RechargeCenter.Get().PendingRechargeOrder(orderId, "paypal", paypalOrderId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(rechargeOrder))
+}
+
+func apiPaypalCaptureOrder(c *gin.Context) {
+	orderId := c.PostForm("order_id")
+	if orderId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("order id is required"))
+		return
+	}
+
+	order, err := RechargeCenter.Get().GetRechargeOrder(orderId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	if order.Status != data.DashFunRechargeStatus_Pending {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(apperrors.ErrRechargeOrderStatus.Error()))
+		return
+	}
+
+	paypalOrderId := order.ChannelPayId
+	if paypalOrderId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("paypal order id is required"))
+		return
+	}
+
+	status, err := client.ConfirmOrder(paypalOrderId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	if strings.EqualFold(status, "COMPLETED") {
+		//订单完成
+		rechargeOrder, err := RechargeCenter.Get().ConfirmRechargeOrder(order.Id, paypalOrderId)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+			return
+		}
+		c.JSON(http.StatusOK, RSuccess(rechargeOrder))
+	} else {
+		zap.S().Error("ConfirmOrder [" + orderId + "] failed Status:" + status)
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("paypal order with status "+status))
+	}
+}
+
+var client *paypal.Client
+
 func init() {
+	client = paypal.NewClient(config.GetConfig().PaypalCfg.ClientId, config.GetConfig().PaypalCfg.SecretKey, config.GetConfig().PaypalCfg.ApiBase)
+
 	web.GetService().RegisterApi(web.ApiModuleRecharge, web.GET, "options", userHandlerAuthWrapper(apiGetRechargePlatformOptions))
 	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "order/create", userHandlerAuthWrapper(apiRequestRechargeOrder))
 	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "order/cancel", userHandlerAuthWrapper(apiCancelRechargeOrder))
@@ -228,4 +316,7 @@ func init() {
 	web.GetService().RegisterApi(web.ApiModuleRecharge, web.GET, "detail/:id", apiGetRechargeOrderDetails)
 	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "stripe/checkout", apiStripeCreateCheckoutSession)
 	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "stripe/webhook", apiStripeWebhook)
+
+	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "paypal/create_order", apiPaypalCreateOrder)
+	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "paypal/capture_order", apiPaypalCaptureOrder)
 }

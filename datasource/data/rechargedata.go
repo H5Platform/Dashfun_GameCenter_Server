@@ -28,7 +28,7 @@ type DashFunRechargeData struct {
 	Id           string                          `json:"id" bson:"_id"`                //订单ID
 	UserId       string                          `json:"user_id" bson:"userId"`        //请求订单的用户Id
 	PayFrom      string                          `json:"pay_from" bson:"payFrom"`      //支付来源
-	GameId       string                          `json:"game_id" bson:"gameId"`        //充值所在游戏，如果实在平台充的此处为空
+	GameId       string                          `json:"game_id" bson:"gameId"`        //充值所在游戏，如果是在平台充的此处为空
 	ChannelPayId string                          `json:"payment_id" bson:"paymentId"`  //渠道方的支付Id
 	From         RechargeFrom                    `json:"from" bson:"from"`             //付款来源渠道
 	Price        int                             `json:"price" bson:"price"`           //付款金额，单位美分 or star

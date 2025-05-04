@@ -110,6 +110,10 @@ spin_wheel_cfg:
     - { reward_index: 8, reward_type: 1, reward_value: 3000, weight: 4 }
     - { reward_index: 9, reward_type: 1, reward_value: 10000, weight: 2 }
 
+leaderboard_cfg:
+  - { name: "lb_gamecenter_xp_forever", score_type: "dashfun_point_total", period_type: 1, game_id: "dashfun", top_count: 20 }
+  - { name: "lb_gamecenter_xp_daily", score_type: "dashfun_point_delta", period_type: 2, game_id: "dashfun", top_count: 20 }
+
 leaderboard_bot_cfg:
   record_score_min: 10000
   bot_levels:
@@ -129,3 +133,9 @@ stripe_cfg:
 nacos_cfg:
   ip_addr: localhost
   port: 8848
+
+paypal_cfg:
+  #api_base : sandbox or live
+  api_base: sandbox
+  client_id: ${paypal_client_id}
+  secret_key: ${paypal_client_secret}

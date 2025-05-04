@@ -26,6 +26,7 @@ require (
 	github.com/swaggo/swag v1.16.3
 	github.com/telegram-mini-apps/init-data-golang v1.1.5
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.55
+	github.com/tidwall/gjson v1.18.0
 	github.com/tonkeeper/tonapi-go v0.0.7
 	github.com/tonkeeper/tongo v1.10.3
 	go.mongodb.org/mongo-driver v1.16.0
@@ -128,6 +129,8 @@ require (
 	github.com/r3labs/sse/v2 v2.10.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/snksoft/crc v1.1.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect

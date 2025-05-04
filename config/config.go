@@ -124,6 +124,26 @@ type LeaderboardBotLevel struct {
 	DailyTop            []int `yaml:"daily_top"`              //日常任务分数上限，根据激活天数递减，最后一个数据作为每天的分数
 }
 
+type LeaderboardCfg struct {
+	Name       string                     `yaml:"name"`        //排行榜名称
+	ScoreType  data.LeaderboardScoreType  `yaml:"score_type"`  //排行榜分数类型，由使用者定义，当上报分数给Leaderboard时，会更新所有匹配这个ScoreType的排行榜
+	PeriodType data.LeaderboardPeriodType `yaml:"period_type"` //排行榜周期类型
+	GameId     string                     `yaml:"game_id"`     //绑定的游戏ID，空或者DashFun表示DashFun平台
+	TopCount   int                        `yaml:"top_count"`   //排行榜显示前多少名
+}
+
+type PayPalApiBase string
+
+const (
+	PayPalApiBaseLive    PayPalApiBase = "live"
+	PayPalApiBaseSandbox PayPalApiBase = "sandbox"
+)
+
+type PaypalConfig struct {
+	ApiBase   PayPalApiBase `yaml:"api_base"`
+	ClientId  string        `yaml:"client_id"`
+	SecretKey string        `yaml:"secret_key"`
+}
 type Config struct {
 	Base              *BaseConfig        `yaml:"base"`
 	Mongo             *MongoConfig       `yaml:"mongo"`
@@ -139,9 +159,11 @@ type Config struct {
 	RechargeCfg       *RechargeCfg       `yaml:"recharge_cfg"`
 	CoinCfg           []*CoinCfg         `yaml:"coin_cfg"`
 	SpinWheelCfg      *SpinWheelCfg      `yaml:"spin_wheel_cfg"`
+	LeaderboardCfg    []*LeaderboardCfg  `yaml:"leaderboard_cfg"` //排行榜配置
 	LeaderboardBotCfg *LeaderboardBotCfg `yaml:"leaderboard_bot_cfg"`
 	StripeCfg         *StripeConfig      `yaml:"stripe_cfg"`
 	NacosCfg          *NacosCfg          `yaml:"nacos_cfg"`
+	PaypalCfg         *PaypalConfig      `yaml:"paypal_cfg"`
 }
 
 var config *Config

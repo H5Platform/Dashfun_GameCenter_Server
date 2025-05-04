@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	hsv1 "github.com/dashfun_web3/api_proto/gen/healthservice/v1"
+	lbv1 "github.com/dashfun_web3/api_proto/gen/leaderboardservice/v1"
 	usv1 "github.com/dashfun_web3/api_proto/gen/userservice/v1"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
@@ -41,6 +42,7 @@ type grpcClientConn struct {
 type NacosCenter struct {
 	client            naming_client.INamingClient
 	userServiceClient usv1.UserServiceClient
+	lbServiceClient   lbv1.LeaderboardServiceClient
 	serviceConnection map[NacosService]*grpcClientConn
 	sync.RWMutex
 }
@@ -106,6 +108,20 @@ func (n *NacosCenter) GetUserServiceClient() (usv1.UserServiceClient, error) {
 		n.userServiceClient = usv1.NewUserServiceClient(conn.conn)
 	}
 	return n.userServiceClient, nil
+}
+
+func (n *NacosCenter) GetLeaderboardServiceClient() (lbv1.LeaderboardServiceClient, error) {
+	n.Lock()
+	defer n.Unlock()
+	conn, changed, err := n.getRpcConnection(NacosUserService)
+	if err != nil {
+		zap.S().Errorw("get grpc connection error", "err", err)
+		return nil, err
+	}
+	if n.lbServiceClient == nil || changed {
+		n.lbServiceClient = lbv1.NewLeaderboardServiceClient(conn.conn)
+	}
+	return n.lbServiceClient, nil
 }
 
 func (n *NacosCenter) getRpcConnection(serviceName NacosService) (*grpcClientConn, bool, error) {

@@ -282,7 +282,7 @@ func (r *RechargeCenter) GetRechargeOrder(id string) (*data.DashFunRechargeData,
 	return order, nil
 }
 
-func (r *RechargeCenter) PendingRechargeOrder(orderId string, payFrom string) (*data.DashFunRechargeData, error) {
+func (r *RechargeCenter) PendingRechargeOrder(orderId string, payFrom string, payOrderId string) (*data.DashFunRechargeData, error) {
 	order, err := r.GetRechargeOrder(orderId)
 	if err != nil {
 		return nil, err
@@ -294,6 +294,8 @@ func (r *RechargeCenter) PendingRechargeOrder(orderId string, payFrom string) (*
 
 	order.Status = data.DashFunRechargeStatus_Pending
 	order.PayFrom = payFrom
+
+	order.ChannelPayId = payOrderId
 
 	return dao.GetRechargeDao().SaveOrUpdate(order)
 }

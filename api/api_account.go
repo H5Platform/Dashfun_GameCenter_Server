@@ -132,11 +132,12 @@ func apiAccountVerifyEmail(c *gin.Context) {
 
 	//验证成功直接登录
 	c.JSON(http.StatusOK, RSuccess(&AccountLoginResponse{
-		AccountId: account.AccountId,
-		Username:  account.Username,
-		Type:      account.Type,
-		Status:    account.Status,
-		Token:     account.Token,
+		AccountId:   account.AccountId,
+		Username:    account.Username,
+		Type:        account.Type,
+		Status:      account.Status,
+		Token:       account.Token,
+		DisplayName: account.DisplayName,
 	}))
 }
 

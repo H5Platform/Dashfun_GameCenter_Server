@@ -22,6 +22,12 @@ var (
 	ErrUserCannotCreateOnChannel = newError("user cannot create on this channel")
 
 	ErrPaymentNotEnoughBalance = newError("not enough balance")
+
+	ErrAccountNotFound          = newError("account not found")
+	ErrAccountAlreadyExists     = newError("account already exists")
+	ErrAccountPasswordIncorrect = newError("incorrect username or password")
+	ErrAccountFrozen            = newError("account frozen")
+	ErrAccountUnvalidated       = newError("account unvalidated")
 )
 
 func newError(msg string) error {

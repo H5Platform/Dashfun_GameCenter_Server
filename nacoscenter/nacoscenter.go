@@ -5,6 +5,7 @@ import (
 	"dashfun_gamecenter/config"
 	"errors"
 	"fmt"
+	asv1 "github.com/dashfun_web3/api_proto/gen/accountservice/v1"
 	hsv1 "github.com/dashfun_web3/api_proto/gen/healthservice/v1"
 	lbv1 "github.com/dashfun_web3/api_proto/gen/leaderboardservice/v1"
 	usv1 "github.com/dashfun_web3/api_proto/gen/userservice/v1"
@@ -33,6 +34,10 @@ const (
 	NacosUserService NacosService = "user_center.service"
 )
 
+func NacosServiceName(service NacosService, name string) NacosService {
+	return NacosService(fmt.Sprintf("%s.%s", service, name))
+}
+
 type grpcClientConn struct {
 	conn     *grpc.ClientConn
 	connTime int64  // 连接时间
@@ -40,10 +45,11 @@ type grpcClientConn struct {
 }
 
 type NacosCenter struct {
-	client            naming_client.INamingClient
-	userServiceClient usv1.UserServiceClient
-	lbServiceClient   lbv1.LeaderboardServiceClient
-	serviceConnection map[NacosService]*grpcClientConn
+	client               naming_client.INamingClient
+	userServiceClient    usv1.UserServiceClient
+	lbServiceClient      lbv1.LeaderboardServiceClient
+	accountServiceClient asv1.AccountServiceClient
+	serviceConnection    map[NacosService]*grpcClientConn
 	sync.RWMutex
 }
 
@@ -96,10 +102,24 @@ func (n *NacosCenter) newNacosClient() naming_client.INamingClient {
 	return client
 }
 
+func (n *NacosCenter) GetAccountServiceClient() (asv1.AccountServiceClient, error) {
+	n.Lock()
+	defer n.Unlock()
+	conn, changed, err := n.getRpcConnection(NacosServiceName(NacosUserService, "account"))
+	if err != nil {
+		zap.S().Errorw("get grpc connection error", "err", err)
+		return nil, err
+	}
+	if n.accountServiceClient == nil || changed {
+		n.accountServiceClient = asv1.NewAccountServiceClient(conn.conn)
+	}
+	return n.accountServiceClient, nil
+}
+
 func (n *NacosCenter) GetUserServiceClient() (usv1.UserServiceClient, error) {
 	n.Lock()
 	defer n.Unlock()
-	conn, changed, err := n.getRpcConnection(NacosUserService)
+	conn, changed, err := n.getRpcConnection(NacosServiceName(NacosUserService, "user"))
 	if err != nil {
 		zap.S().Errorw("get grpc connection error", "err", err)
 		return nil, err
@@ -113,7 +133,7 @@ func (n *NacosCenter) GetUserServiceClient() (usv1.UserServiceClient, error) {
 func (n *NacosCenter) GetLeaderboardServiceClient() (lbv1.LeaderboardServiceClient, error) {
 	n.Lock()
 	defer n.Unlock()
-	conn, changed, err := n.getRpcConnection(NacosUserService)
+	conn, changed, err := n.getRpcConnection(NacosServiceName(NacosUserService, "leaderboard"))
 	if err != nil {
 		zap.S().Errorw("get grpc connection error", "err", err)
 		return nil, err

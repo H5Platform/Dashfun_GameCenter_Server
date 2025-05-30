@@ -28,6 +28,7 @@ const (
 	PUT    HttpMethod = "put"
 	DELETE HttpMethod = "delete"
 
+	ApiModuleAccount     = "acc"
 	ApiModuleUser        = "user"
 	ApiModuleGame        = "game"
 	ApiModulePayment     = "payment"

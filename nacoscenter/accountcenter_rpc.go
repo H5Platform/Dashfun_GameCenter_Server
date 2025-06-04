@@ -21,6 +21,7 @@ type DashFunAccountType int
 const (
 	DashFunAccountTypeEmail    DashFunAccountType = iota + 1 //邮箱
 	DashFunAccountTypeTelegram                               //telegram
+	DashFunAccountTypeAppleId
 )
 
 type AccountCenterRpc struct {
@@ -137,6 +138,30 @@ func (uc *AccountCenterRpc) VerifyEmail(accountId, verifyCode string) (*AccountR
 
 	result := loginAccPb2AccountResult(resp)
 	return result, nil
+}
+
+func (uc *AccountCenterRpc) DeleteAccount(accountId, token string, accType DashFunAccountType) error {
+	accountServiceClient, err := Get().GetAccountServiceClient()
+	if err != nil {
+		zap.S().Errorw("GetAccountServiceClient", "err", err)
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req := &v1.DeleteAccountRequest{
+		AccountId: accountId,
+		Token:     token,
+		Type:      int32(accType),
+	}
+
+	_, err = accountServiceClient.DeleteAccount(ctx, req)
+
+	if err != nil {
+		zap.S().Errorw("Delete Account", "accountId", accountId, "token", token, "err", err)
+		return err
+	}
+	return nil
 }
 
 func (uc *AccountCenterRpc) CheckToken(accountId, token string, accType DashFunAccountType) (*AccountResult, error) {

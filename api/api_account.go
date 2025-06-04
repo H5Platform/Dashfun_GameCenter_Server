@@ -163,6 +163,22 @@ func apiCheckToken(c *gin.Context) {
 	}))
 }
 
+func apiDeleteAccount(c *gin.Context) {
+	req := &CheckTokenRequest{}
+	err := c.ShouldBindJSON(req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	err = accountcenter.Get().DeleteAccount(req.AccountId, req.Token, req.AccType)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, RSuccess("success"))
+}
+
 func apiRequestRestPassword(c *gin.Context) {
 	req := &RequestResetPasswordRequest{}
 	err := c.ShouldBindJSON(req)
@@ -206,4 +222,6 @@ func init() {
 
 	web.GetService().RegisterApi(web.ApiModuleAccount, web.POST, "request_reset_password", apiRequestRestPassword)
 	web.GetService().RegisterApi(web.ApiModuleAccount, web.POST, "reset_password", apiResetPassword)
+
+	web.GetService().RegisterApi(web.ApiModuleAccount, web.POST, "delete", apiDeleteAccount)
 }

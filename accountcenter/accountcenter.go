@@ -45,6 +45,10 @@ func (a *AccountCenter) CheckToken(accountId, token string, accType nacoscenter.
 	return a.accountCenterRpc.CheckToken(accountId, token, accType)
 }
 
+func (a *AccountCenter) DeleteAccount(accountId, token string, accType nacoscenter.DashFunAccountType) error {
+	return a.accountCenterRpc.DeleteAccount(accountId, token, accType)
+}
+
 func (a *AccountCenter) RequestResetPassword(username string) error {
 	return a.accountCenterRpc.RequestResetPassword(username)
 }

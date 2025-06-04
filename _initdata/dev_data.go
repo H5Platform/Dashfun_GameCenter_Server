@@ -622,7 +622,7 @@ func makeTestGame() {
 			Name: "Game(New)",
 			Desc: "Game(New) test",
 			//Url:     "http://10.0.0.173:7456/web-mobile/web-mobile/index.html",
-			Url:         "https://h5-test-brain.dashfun.games",
+			Url:         "https://play.dashfun.games/IdleRest/index.html",
 			MainPicUrl:  "",
 			LogoUrl:     "",
 			Genre:       []int{1, 1001},

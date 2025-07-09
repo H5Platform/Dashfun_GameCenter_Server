@@ -10,6 +10,7 @@ import (
 	"dashfun_gamecenter/paypal"
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/stripe/stripe-go/v81"
@@ -33,6 +34,12 @@ type RechargeOrderDetail struct {
 	DisplayName string                    `json:"display_name"`
 	Balance     int                       `json:"balance"`
 	Order       *data.DashFunRechargeData `json:"order"`
+}
+
+type PlayStoreVerifyRequest struct {
+	OrderId   string `json:"order_id"  required:"true"`  //DashFun 订单ID
+	ProductId string `json:"product_id" required:"true"` //商品ID
+	Receipt   string `json:"receipt" required:"true"`    //购买收据
 }
 
 func apiGetRechargePlatformOptions(c *gin.Context, user *data.DashFunUser) {
@@ -304,6 +311,58 @@ func apiPaypalCaptureOrder(c *gin.Context) {
 	}
 }
 
+type PlayStoreReceipt struct {
+	OrderId       string `json:"orderId"`
+	PackageName   string `json:"packageName"`
+	ProductId     string `json:"productId"`
+	PurchaseTime  int64  `json:"purchaseTime"`
+	PurchaseState int    `json:"purchaseState"`
+	PurchaseToken string `json:"purchaseToken"`
+	Quantity      int    `json:"quantity"`
+	Acknowledged  bool   `json:"acknowledged"`
+}
+
+func apiPlayStoreVerifyPurchase(c *gin.Context) {
+	req := &PlayStoreVerifyRequest{}
+	err := c.ShouldBindBodyWithJSON(req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	receipt := &PlayStoreReceipt{}
+	err = json.Unmarshal([]byte(req.Receipt), receipt)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	_, err = RechargeCenter.Get().PendingRechargeOrder(req.OrderId, "google_play", receipt.OrderId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+
+	ok, err := RechargeCenter.Get().VerifyPlayStorePurchaseToken(req.ProductId, receipt.PurchaseToken)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError("invalid purchase token"))
+		return
+	} else {
+		_, err = RechargeCenter.Get().ConfirmRechargeOrder(req.OrderId, receipt.OrderId)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+			return
+		}
+
+		c.JSON(http.StatusOK, RSuccess(true))
+		return
+	}
+}
+
 var client *paypal.Client
 
 func init() {
@@ -320,4 +379,6 @@ func init() {
 
 	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "paypal/create_order", apiPaypalCreateOrder)
 	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "paypal/capture_order", apiPaypalCaptureOrder)
+
+	web.GetService().RegisterApi(web.ApiModuleRecharge, web.POST, "verify/play_store", apiPlayStoreVerifyPurchase)
 }

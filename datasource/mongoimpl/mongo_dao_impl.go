@@ -87,6 +87,9 @@ func (d *DaoImplMongo) GetRechargeDao() types.RechargeDao {
 func (d *DaoImplMongo) GetLeaderboardBotDao() types.LeaderboardBotDao {
 	return d.leaderboardBotDao
 }
+func (d *DaoImplMongo) GetAirdropDao() types.AirdropDao {
+	return GetAirdropDaoMongo()
+}
 
 func GetMongoDatabase() *mongo.Database {
 	mongoCfg := config.GetConfig().Mongo

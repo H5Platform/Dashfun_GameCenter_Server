@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 type BaseConfig struct {
@@ -87,11 +88,19 @@ type RechargeOption struct {
 	Diamond      int `yaml:"diamond"`       //对应钻石数量
 }
 
+type RechargePlayStoreCfg struct {
+	PlayStoreKeyFile   string `yaml:"play_store_key_file"`  //Google Play Store的公钥文件路径，Json
+	ProductPackageName string `yaml:"product_package_name"` //Google Play Store的产品包名
+}
+
 type RechargeCfg struct {
 	Open       bool             `yaml:"open"`        //是否开启充值
 	EnableStar bool             `yaml:"enable_star"` //是否开启星星充值
 	Options    []RechargeOption `yaml:"options"`     //充值选项
+
+	PlayStore RechargePlayStoreCfg `yaml:"play_store"` // Google Play Store的配置
 }
+
 type StripeConfig struct {
 	PublicKey  string `yaml:"public_key"`
 	SecretKey  string `yaml:"secret_key"`
@@ -145,6 +154,49 @@ type PaypalConfig struct {
 	ClientId  string        `yaml:"client_id"`
 	SecretKey string        `yaml:"secret_key"`
 }
+
+type AirdropConfig struct {
+	StartTime       string `yaml:"start_time"`       // TGE开始时间，格式为YYYY-MM-DD HH:MM:SS , 温哥华时间
+	LockXpTime      int    `yaml:"lock_xp_time"`     // TGE开始之前多久锁定积分，单位小时
+	ClaimTime       int    `yaml:"claim_time"`       // TGE后多久可以领取，单位秒
+	TotalScore      int    `yaml:"total_score"`      // Airdrop 使用的总分数，作为token分配的分母
+	TotalToken      int    `yaml:"total_token"`      // Airdrop 的总token数量，单位Ether
+	VestingContract string `yaml:"vesting_contract"` // 代币锁仓合约地址
+	TokenContract   string `yaml:"token_contract"`   // 代币合约地址
+}
+
+type Web3Config struct {
+	RpcUrl     string `yaml:"rpc_url"`
+	ChainId    int    `yaml:"chain_id"`
+	PrivateKey string `yaml:"private_key"`
+}
+
+// GetStartTime 获取Airdrop开始时间的Unix时间戳，单位秒
+func (ac *AirdropConfig) GetStartTime() int64 {
+	st := ac.StartTime
+
+	loc, err := time.LoadLocation("America/Vancouver")
+	if err != nil {
+		log.Printf("failed to load Vancouver timezone: %v", err)
+		return 0
+	}
+	t, err := time.ParseInLocation("2006-1-02 15:04:05", st, loc)
+	if err != nil {
+		log.Printf("failed to parse start time: %v", err)
+		return 0
+	}
+	return t.Unix()
+}
+
+// GetLockXpTime 获取锁定积分的时间，单位秒
+func (ac *AirdropConfig) GetLockXpTime() int64 {
+	startTime := ac.GetStartTime()
+	if startTime == 0 {
+		return 0
+	}
+	return startTime - int64(ac.LockXpTime*3600) // 转换为秒
+}
+
 type Config struct {
 	Base              *BaseConfig        `yaml:"base"`
 	Mongo             *MongoConfig       `yaml:"mongo"`
@@ -165,6 +217,8 @@ type Config struct {
 	StripeCfg         *StripeConfig      `yaml:"stripe_cfg"`
 	NacosCfg          *NacosCfg          `yaml:"nacos_cfg"`
 	PaypalCfg         *PaypalConfig      `yaml:"paypal_cfg"`
+	AirdropCfg        *AirdropConfig     `yaml:"airdrop_cfg"`
+	Web3Config        *Web3Config        `yaml:"web3_cfg"`
 }
 
 var config *Config

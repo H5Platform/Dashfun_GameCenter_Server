@@ -23,6 +23,7 @@ type DaoImpl interface {
 	GetInvitedUserDao() InvitedUserDao
 	GetRechargeDao() RechargeDao
 	GetLeaderboardBotDao() LeaderboardBotDao
+	GetAirdropDao() AirdropDao
 }
 
 type UserDao interface {
@@ -126,4 +127,10 @@ type Cursor[T any] interface {
 type LeaderboardBotDao interface {
 	SaveOrUpdate(bot *data.LeaderboardBotData) (*data.LeaderboardBotData, error)
 	LoadAllBots() ([]*data.LeaderboardBotData, error)
+}
+
+type AirdropDao interface {
+	SaveOrUpdate(airDrop *data.AirdropData) (*data.AirdropData, error)
+	GetAirdropData(userId string) (*data.AirdropData, error)
+	GetAllAirdropData() ([]*data.AirdropData, error)
 }

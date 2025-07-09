@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "dashfunweb3",
+  "private_key_id": "58962a65eb6a3b0b3f02829ba87911083907c162",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDqDNWpXl5odGkI\n97nBz/F0AzZmpgJC2MgPa0TZ/CaLGeFi9xK/gqQM/UVP0bkRmcsPF/PLIplc62GT\nSUOAoPT3M07pgSCmVzaIVATESP5CpjmOmJTT4eGkdJ0ATQNH2TiuJWuVbv4qT1xC\ngSbn83/p1cWNig6+Jq4vgnZk53zIC5dByfQkvKHaO4U77ZbPPwCpKq/w1ud9XIQL\n4K3O1vKzUJtoqALvCZhZX52ukRt1zUuNC5LeaN2zSPkgSMALSbkymrDUVw88E8aO\na0KBgNzWxatruYZwOoFofFPnvtu2fMv3Mm4x/zjkDjEWKzCXkgiLlWy0RlUc9QDq\ndP1jkG0nAgMBAAECggEAEjIqpeImnQbr2ym5p3LXFtaT5kAV+rd0bX2nJ5SKzi0W\nNwXDAq0rIhb9fZqhWws/XHskVepPM27ZshDNYcf7TRqpxTQ0r+nydrMKTQfo7vde\nwyv9A7Bsd/olWJtXW9pSv0TWfxKKSdf/C4aTjUK18tDohm8xltPwBKHA1AOkayYU\npFvmo6p9pBZeQUCBLQZ2go4KJj6bLXJNDZXWW+LkSqRJRKtWLyxh7UHasJB0Odki\nONU7BrEirzw46eDT7nMnd57YZ4EKbWqWY7OWOLgxs3v9qweScu3DFQ38iWTGVJmM\nWibeZ3DQHRYOJQkLmAYub4zh6vw8ZulwF84BlAU8mQKBgQD/+Is/9dyY5VR5Bk3X\np0CuYbrITDfWQhdOcn6gJEvAtMUBdT3oWHJcvZxMMK+dOvzUZ+EEJfSmNewx63oU\nczrw+wP3rtNNZxOumW174bcw8JYz20p64LI68g+NyqZd+MntbzMAO4uaP1tkuCLX\nst90dKytNw/HUq4V2nGuawkrOQKBgQDqE6bzbq8XdAfDwtkMioQBOVYIqM8W+hG/\nxt6lqMCi5EYOwtph2WwkrhFkAsesSePALVF5S5JE4uVXACTk5haDi2AoF/i4Ksv/\n/GiYHiBcr1vzZTi7anYkOap9TPARgYMW3DTNIpSVERtyGUnuApRCDc8a2ZwZLPW/\nizUEHY17XwKBgQC/r6roDQBT53ko4JWup2uCq2Eq2hj+dKPrdUZqOoQYHcdiXiAs\nPP/3f27qh5Mbla78iYYyixH43mywvXzAj8JV8ER6WQuX7VcJ64/Xs6JyHdj9oHzY\nJCiUh+0p69ZGjSb6jcmNpQnYSxXwCQzepu870Jv3Y0KHq9z+NIXpbfKB0QKBgCy1\n0D/TNnJ+YTVNNHQmyQwKzZod1GCJJ3bAH6r4zsLOY2tSYLAr/XIMJZo6xbTs8Cm2\n/kby3l92D2RMzL9EC6zYpGdEHOfglNKyfbAAoSHTBPc6sFlr/mDw+tWwKnLNkCJ/\nsT41irfmap2iovJpX7Q2Owbf5ecRJWeOyXOdyXZ1AoGBAK7uYoCC1wc91eL+V/ws\nVksh40V3VwZnP5dibSRTrmBjJ3oGufHF28JDMthjUA6a3yOlX+j1sILRzKN15HqO\na8VNzff2Mw8won356VWwZnu1bHdjBgiQo71S02UATbXeOCwYq39Q2NCEOSQLRqFB\nlQp6ULhXFhSS9KLkIBBqxDXw\n-----END PRIVATE KEY-----\n",
+  "client_email": "pruchase-check@dashfunweb3.iam.gserviceaccount.com",
+  "client_id": "101071069190528250458",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/pruchase-check%40dashfunweb3.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

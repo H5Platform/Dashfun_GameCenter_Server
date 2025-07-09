@@ -70,10 +70,10 @@ invite_cfg:
 recharge_cfg:
   open: true
   options:
-    # price: 价格，单位美分，必须整数, diamond: 钻石数量，基本汇率 100美分=50 Diamond
+    # price: 价格，单位美分，必须整数, diamond: 钻石数量，基本汇率 100美分=50 Diamond，-1表示指定平台不支持
     # price_off: 折扣，100 = 10% off, 1=0.1% off
-    - { price: 199, price_ios: 259, price_android: 259, tg_star: 140, diamond: 100, price_off: 0 }
-    - { price: 299, price_ios: 389, price_android: 389, tg_star: 210, diamond: 150, price_off: 0 }
+    - { price: 199, price_ios: 249, price_android: 249, tg_star: 140, diamond: 100, price_off: 0 }
+    - { price: 299, price_ios: 399, price_android: 399, tg_star: 210, diamond: 150, price_off: 0 }
     - { price: 499, price_ios: 649, price_android: 649, tg_star: 350, diamond: 250, price_off: 2 }
     - { price: 699, price_ios: 899, price_android: 899, tg_star: 490, diamond: 350, price_off: 3 }
     - { price: 999, price_ios: 1299, price_android: 1299, tg_star: 700, diamond: 500, price_off: 5 }
@@ -82,10 +82,13 @@ recharge_cfg:
     - { price: 4999, price_ios: 6499, price_android: 6499, tg_star: 3500, diamond: 2500, price_off: 20 }
     - { price: 9999, price_ios: 12999, price_android: 12999, tg_star: 7000, diamond: 5000, price_off: 30 }
     - { price: 19999, price_ios: 25999, price_android: 25999, tg_star: 14000, diamond: 10000, price_off: 45 }
-    - { price: 49999, price_ios: 64999, price_android: 64999, tg_star: 35000, diamond: 25000, price_off: 60 }
-    - { price: 99999, price_ios: 129999, price_android: 129999, tg_star: 70000, diamond: 50000, price_off: 75 }
-    - { price: 199999, price_ios: 259999, price_android: 259999, tg_star: 140000, diamond: 100000, price_off: 90 }
-    - { price: 299999, price_ios: 389999, price_android: 389999, tg_star: 210000, diamond: 150000, price_off: 100 }
+    - { price: 49999, price_ios: -1, price_android: -1, tg_star: 35000, diamond: 25000, price_off: 60 }
+    - { price: 99999, price_ios: -1, price_android: -1, tg_star: 70000, diamond: 50000, price_off: 75 }
+    - { price: 199999, price_ios: -1, price_android: -1, tg_star: 140000, diamond: 100000, price_off: 90 }
+    - { price: 299999, price_ios: -1, price_android: -1, tg_star: 210000, diamond: 150000, price_off: 100 }
+  play_store:
+    play_store_key_file: "./conf/dashfunweb3-58962a65eb6a.json"
+    product_package_name: "com.dashfun.app"
 
 coin_cfg:
   - { name: DashFunPoint, symbol: DXP, desc: DashFun Point }
@@ -139,3 +142,17 @@ paypal_cfg:
   api_base: sandbox
   client_id: ${paypal_client_id}
   secret_key: ${paypal_client_secret}
+
+airdrop_cfg:
+  start_time: 2025-7-10 15:00:00 # TGE时间
+  lock_xp_time: 48 # TGE之前48小时锁定积分
+  claim_time: 43200  # TGE之后12小时可以领取token
+  total_score: 1000000
+  total_token: 1000000
+  vesting_contract: 0x8bFbb0b157D60756F54Eb1C95E6B08331d1cB95E
+  token_contract: 0xac5389256b5fcA25849E3896137BDd8287743f28
+
+web3_cfg:
+  rpc_url: https://bsc-testnet-rpc.publicnode.com
+  chain_id: 97
+  private_key: ${web3_op_private_key}

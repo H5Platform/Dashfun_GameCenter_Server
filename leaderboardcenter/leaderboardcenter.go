@@ -19,6 +19,7 @@ import (
 const leaderboardKey = "dashfun_xp_leaderboard"
 const leaderboardLoadKey = "dashfun_xp_leaderboard_load"
 const LeaderboardMinCount = 1666
+const LeaderboardTotalCount = 18888 // 排行榜机器人的总量，MinCount是最小数量，这部分机器人会随机全部等级，超过MinCount的部分，只会随机1和2级，用来填充排行榜
 
 type LeaderboardData struct {
 	Id          string `json:"id"`           //用户ID
@@ -138,6 +139,13 @@ func (l *LeaderboardCenter) loadAllBots() {
 			l.bots[nbd.Id] = bot
 		}
 	}
+
+	//if len(bots) > LeaderboardTotalCount {
+	//	//填充1和2级的机器人
+	//	for i := len(bots); i < LeaderboardTotalCount; i++ {
+	//		botLevel := l.randomBotLevel()
+	//	}
+	//}
 
 	members := make([]*redis.Z, 0, len(bots))
 	for _, bot := range bots {

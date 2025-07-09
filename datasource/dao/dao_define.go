@@ -55,3 +55,7 @@ func GetRechargeDao() types.RechargeDao {
 func GetLeaderboardBotDao() types.LeaderboardBotDao {
 	return daoImpl.GetLeaderboardBotDao()
 }
+
+func GetAirdropDao() types.AirdropDao {
+	return daoImpl.GetAirdropDao()
+}

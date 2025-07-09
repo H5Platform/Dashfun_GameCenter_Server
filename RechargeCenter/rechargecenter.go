@@ -18,6 +18,10 @@ import (
 	"github.com/stripe/stripe-go/v81"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/androidpublisher/v3"
+	"google.golang.org/api/option"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -178,6 +182,41 @@ func (r *RechargeCenter) newRechargeOrderId() string {
 	return "rc" + strconv.FormatInt(id, 36)
 }
 
+func (r *RechargeCenter) GetRechargePlatformOption(option *config.RechargeOption, platform string) (data.RechargePlatformOptionPriceType, RechargePlatformOption) {
+	priceType := data.RechargePlatformOptionPriceTypeUSD
+	useStar := isTelegram(platform) && config.GetConfig().RechargeCfg.EnableStar
+	if useStar {
+		priceType = data.RechargePlatformOptionPriceTypeTGStar //目前ios和android都是tg的miniapp用户，使用星星支付
+	}
+
+	priceOff := option.PriceOff
+
+	price := option.Price
+	if useStar { //目前ios和android都是tg的miniapp用户，使用星星支付
+		price = option.TGStar
+	} else {
+		if strings.HasPrefix(platform, "dfapp") {
+			// 如果是DashFun App，使用对应平台的价格
+			if strings.HasSuffix(platform, "_ios") {
+				price = option.PriceIos
+				priceOff = 0 // iOS价格不打折
+			} else if strings.HasSuffix(platform, "_android") {
+				price = option.PriceAndroid
+				priceOff = 0 // Android价格不打折
+			} else {
+				// 默认使用浏览器价格
+				price = option.Price
+			}
+		}
+	}
+
+	return priceType, RechargePlatformOption{
+		Price:    price,
+		Diamond:  option.Diamond,
+		PriceOff: priceOff,
+	}
+}
+
 func (r *RechargeCenter) GetRechargePlatformOptions(platform string) RechargePlatformOptions {
 	var options []RechargePlatformOption
 	priceType := data.RechargePlatformOptionPriceTypeUSD
@@ -187,15 +226,14 @@ func (r *RechargeCenter) GetRechargePlatformOptions(platform string) RechargePla
 	}
 
 	for _, option := range config.GetConfig().RechargeCfg.Options {
-		price := option.Price
-		if isTelegram(platform) && config.GetConfig().RechargeCfg.EnableStar { //目前ios和android都是tg的miniapp用户，使用星星支付
-			price = option.TGStar
+		//price := option.Price
+		//if isTelegram(platform) && config.GetConfig().RechargeCfg.EnableStar { //目前ios和android都是tg的miniapp用户，使用星星支付
+		//	price = option.TGStar
+		//}
+		_, opt := r.GetRechargePlatformOption(&option, platform)
+		if opt.Price > 0 {
+			options = append(options, opt)
 		}
-		options = append(options, RechargePlatformOption{
-			Price:    price,
-			Diamond:  option.Diamond,
-			PriceOff: option.PriceOff,
-		})
 	}
 
 	ret := RechargePlatformOptions{
@@ -257,15 +295,17 @@ func (r *RechargeCenter) CreateRechargeOrder(userId string, rechargeOption confi
 }
 
 func (r *RechargeCenter) GetRechargePrice(rechargeOption config.RechargeOption, platform string) (int, data.RechargePlatformOptionPriceType) {
-	price := rechargeOption.Price
-	priceType := data.RechargePlatformOptionPriceTypeUSD
-	if isTelegram(platform) && config.GetConfig().RechargeCfg.EnableStar {
-		price = rechargeOption.TGStar
-		priceType = data.RechargePlatformOptionPriceTypeTGStar
-	}
-	finalPrice := price
-	if rechargeOption.PriceOff > 0 {
-		finalPrice = price * (1000 - rechargeOption.PriceOff) / 1000
+	//priceType := data.RechargePlatformOptionPriceTypeUSD
+	//
+	//if isTelegram(platform) && config.GetConfig().RechargeCfg.EnableStar {
+	//	priceType = data.RechargePlatformOptionPriceTypeTGStar
+	//}
+
+	priceType, opt := r.GetRechargePlatformOption(&rechargeOption, platform)
+
+	finalPrice := opt.Price
+	if opt.PriceOff > 0 {
+		finalPrice = opt.Price * (1000 - rechargeOption.PriceOff) / 1000
 	}
 	return finalPrice, priceType
 }
@@ -345,4 +385,45 @@ func (r *RechargeCenter) CancelRechargeOrder(orderId, userId string) (*data.Dash
 	order.PaidAt = time.Now().Unix()
 
 	return dao.GetRechargeDao().SaveOrUpdate(order)
+}
+
+func (r *RechargeCenter) VerifyPlayStorePurchaseToken(productId, purchaseToken string) (bool, error) {
+	jsonFile := config.GetConfig().RechargeCfg.PlayStore.PlayStoreKeyFile
+	jsonKey, err := os.ReadFile(jsonFile)
+	if err != nil {
+		return false, fmt.Errorf("read play store key file %s failed: %v", jsonFile, err)
+	}
+
+	jwtConf, err := google.JWTConfigFromJSON(jsonKey, androidpublisher.AndroidpublisherScope)
+	if err != nil {
+		return false, fmt.Errorf("create JWT config from JSON failed: %v", err)
+	}
+
+	client := jwtConf.Client(context.Background())
+
+	service, err := androidpublisher.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return false, fmt.Errorf("create android publisher service failed: %v", err)
+	}
+
+	pkg := config.GetConfig().RechargeCfg.PlayStore.ProductPackageName
+
+	resp, err := service.Purchases.Products.Get(pkg, productId, purchaseToken).Do()
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return false, nil // 购买记录不存在
+		}
+		return false, fmt.Errorf("get purchase info failed: %v", err)
+	}
+
+	if resp.PurchaseState == 0 {
+		ok := resp.ConsumptionState == 1 // 1表示已消费，0表示未消费
+		if !ok {
+			return false, fmt.Errorf("purchase token %s for product %s is not consumed", purchaseToken, productId)
+		}
+	} else {
+		return false, fmt.Errorf("purchase state is not valid: %d", resp.PurchaseState)
+	}
+
+	return true, nil
 }

@@ -87,9 +87,19 @@ func apiGetAllKuCoinUsersDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, RSuccess(detail))
 }
 
+func apiGetAllVestingRequests(c *gin.Context) {
+	requests, err := AirdropCenter.Get().GetAllVestingRequests()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, RSuccess(requests))
+}
+
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleAirdrop, web.GET, "detail", userHandlerAuthWrapper(apiGetAirdropUserDetail))
 	web.GetService().RegisterApi(web.ApiModuleAirdrop, web.POST, "claim", userHandlerAuthWrapper(apiUserClaimAirdrop))
 	web.GetService().RegisterApi(web.ApiModuleAirdrop, web.GET, "my_request", userHandlerAuthWrapper(apiGetUserVestingRequest))
 	web.GetService().RegisterApi(web.ApiModuleAirdrop, web.GET, "kc_users", apiGetAllKuCoinUsersDetail)
+	web.GetService().RegisterApi(web.ApiModuleAirdrop, web.GET, "vesting_requests", apiGetAllVestingRequests)
 }

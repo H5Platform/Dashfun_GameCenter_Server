@@ -144,7 +144,7 @@ paypal_cfg:
   secret_key: ${paypal_client_secret}
 
 airdrop_cfg:
-  start_time: 2025-7-10 15:00:00 # TGE时间
+  start_time: 2025-07-09 21:00:00 # TGE时间
   lock_xp_time: 48 # TGE之前48小时锁定积分
   claim_time: 43200  # TGE之后12小时可以领取token
   total_score: 1000000
@@ -155,4 +155,4 @@ airdrop_cfg:
 web3_cfg:
   rpc_url: https://bsc-testnet-rpc.publicnode.com
   chain_id: 97
-  private_key: ${web3_op_private_key}
+  private_key: ${web3_op_private_key} 

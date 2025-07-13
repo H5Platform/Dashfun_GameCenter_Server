@@ -114,6 +114,11 @@ func (a *AirdropCenter) getUserTokenAmount(userId string) string {
 	return amtString
 }
 
+func (a *AirdropCenter) GetAllVestingRequests() ([]*CreateVestingRequest, error) {
+	requests := a.requestList.Items()
+	return requests, nil
+}
+
 func (a *AirdropCenter) GetUserCreateVestingRequest(userId string) (*CreateVestingRequest, bool) {
 	req, ok := a.requestMap.Get(userId)
 	return req, ok

@@ -138,7 +138,13 @@ func makeTestCoins() {
 			log.Fatal(err)
 		}
 	}
-
+	_, exist = c.GetCoinByName("FishingPoint") //FP
+	if !exist {
+		_, err := c.CreateCoin("", "FishingPoint", "FP", "Fishing Point", "", false, 0, make(map[string]string))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func makeTestTask() {

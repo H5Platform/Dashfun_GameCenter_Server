@@ -192,7 +192,6 @@ func (l *LeaderboardCenter) fillLeaderboard() {
 			log.Fatalf("fillLeaderboard: %s", err.Error())
 		}
 	}
-
 }
 
 func (l *LeaderboardCenter) onUserLogin(user *data.OnlineUser) {

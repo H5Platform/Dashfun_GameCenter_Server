@@ -59,3 +59,15 @@ func GetLeaderboardBotDao() types.LeaderboardBotDao {
 func GetAirdropDao() types.AirdropDao {
 	return daoImpl.GetAirdropDao()
 }
+
+func GetUserProfileDao() types.UserProfileDao {
+	return daoImpl.GetUserProfileDao()
+}
+
+func GetFishingPostDao() types.FishingPostDao {
+	return daoImpl.GetFishingPostDao()
+}
+
+func GetFishingLeaderboardBotDao() types.FishingLeaderboardBotDao {
+	return daoImpl.GetFishingLeaderboardBotDao()
+}

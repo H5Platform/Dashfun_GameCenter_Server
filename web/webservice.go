@@ -6,11 +6,13 @@ import (
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/utils"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type ApiModuleName string
@@ -28,20 +30,21 @@ const (
 	PUT    HttpMethod = "put"
 	DELETE HttpMethod = "delete"
 
-	ApiModuleAccount     = "acc"
-	ApiModuleUser        = "user"
-	ApiModuleGame        = "game"
-	ApiModulePayment     = "payment"
-	ApiModuleTask        = "task"
-	ApiModuleCoin        = "coin"
-	ApiModuleSpinWheel   = "spinwheel"
-	ApiModuleGameReport  = "game_report"
-	ApiModuleAdmin       = "admin"
-	ApiModuleAdminSearch = "admin_search"
-	ApiModuleLeaderboard = "leaderboard"
-	ApiModuleFriends     = "friends"
-	ApiModuleRecharge    = "recharge"
-	ApiModuleAirdrop     = "airdrop"
+	ApiModuleAccount      = "acc"
+	ApiModuleUser         = "user"
+	ApiModuleGame         = "game"
+	ApiModulePayment      = "payment"
+	ApiModuleTask         = "task"
+	ApiModuleCoin         = "coin"
+	ApiModuleSpinWheel    = "spinwheel"
+	ApiModuleGameReport   = "game_report"
+	ApiModuleAdmin        = "admin"
+	ApiModuleAdminSearch  = "admin_search"
+	ApiModuleLeaderboard  = "leaderboard"
+	ApiModuleFriends      = "friends"
+	ApiModuleRecharge     = "recharge"
+	ApiModuleAirdrop      = "airdrop"
+	ApiModuleFishingVerse = "fishingverse"
 )
 
 type ApiNode struct {
@@ -94,21 +97,31 @@ func noCacheMiddleWare() gin.HandlerFunc {
 }
 
 func CorsMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		method := c.Request.Method
-		origin := c.Request.Header.Get("Origin")
-		if origin != "" {
-			c.Header("Access-Control-Allow-Origin", "*") // 可将将 * 替换为指定的域名
-			c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
-			c.Header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
-			c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-rControl, Content-Language, Content-Type")
-			c.Header("Access-Control-Allow-Credentials", "true")
-		}
-		if method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusNoContent)
-		}
-		c.Next()
-	}
+
+	return cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type", "ETag"},
+		AllowCredentials: true,           // 需要带 cookie 时开启
+		MaxAge:           12 * time.Hour, // 预检缓存
+	})
+
+	//return func(c *gin.Context) {
+	//	method := c.Request.Method
+	//	origin := c.Request.Header.Get("Origin")
+	//	if origin != "" {
+	//		c.Header("Access-Control-Allow-Origin", "*") // 可将将 * 替换为指定的域名
+	//		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
+	//		c.Header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+	//		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
+	//		c.Header("Access-Control-Allow-Credentials", "true")
+	//	}
+	//	if method == "OPTIONS" {
+	//		c.AbortWithStatus(http.StatusNoContent)
+	//	}
+	//	c.Next()
+	//}
 }
 
 func TGLoginCheckMiddleware(excludePaths ...string) gin.HandlerFunc {
@@ -164,6 +177,7 @@ func (s *Service) Run() error {
 			SkipPaths: []string{"/health"},
 		}),
 		noCacheMiddleWare(), CorsMiddleware(), TGLoginCheckMiddleware("/api/v1/user/tg_login") /*, authMiddleWare()*/)
+	r.MaxMultipartMemory = 3 << 20 // 3 MiB
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "ok")
 	})

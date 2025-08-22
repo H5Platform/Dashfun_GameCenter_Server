@@ -9,6 +9,11 @@ import (
 	"net/http"
 )
 
+type UserUpdateProfileReq struct {
+	Nickname string `json:"nickname" form:"nickname" binding:"required"`
+	Avatar   string `json:"avatar" form:"avatar" binding:"required"` // 头像链接
+}
+
 // @Summary	telegram用户登录
 // @Tags		User API
 // @Produce	json
@@ -43,6 +48,7 @@ func apiTgUserLogin(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, RError(err.Error()))
 		return
 	}
+
 	c.JSON(http.StatusOK, RSuccess(login.User))
 }
 

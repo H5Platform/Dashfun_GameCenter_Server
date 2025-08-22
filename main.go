@@ -6,6 +6,7 @@ import (
 	_ "dashfun_gamecenter/api"
 	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/config"
+	"dashfun_gamecenter/fishingverse/fishingleaderboard"
 	"dashfun_gamecenter/invitecenter"
 	"dashfun_gamecenter/leaderboardcenter"
 	"dashfun_gamecenter/paymentcenter"
@@ -67,6 +68,8 @@ func main() {
 	RechargeCenter.Get()
 	paymentcenter.Get()
 	usercenter.Get()
+
+	fishingleaderboard.Get()
 
 	logger.Info("dashfun gamecenter started")
 	//ton.Get()

@@ -10,6 +10,7 @@ import (
 	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/nacoscenter"
 	"dashfun_gamecenter/snowflake"
+	"dashfun_gamecenter/tencentcos"
 	"dashfun_gamecenter/tgbot"
 	"dashfun_gamecenter/utils"
 	"dashfun_gamecenter/utils/cache"
@@ -266,21 +267,39 @@ func (uc *UserCenterRpc) UserLogin(authData *utils.AuthData, referrerId string, 
 		referrer = nil
 	}
 
-	var playRecord []*data.PlayGameRecord
-	var favorites []string
+	var playRecord []*data.PlayGameRecord = make([]*data.PlayGameRecord, 0)
+	var favorites []string = make([]string, 0)
 
-	record, err := dao.GetUserPlayRecordDao().GetUserPlayRecord(user.Id)
-	if record == nil || record.Records == nil {
-		playRecord = make([]*data.PlayGameRecord, 0)
-	} else {
-		playRecord = record.Records
+	//record, err := dao.GetUserPlayRecordDao().GetUserPlayRecord(user.Id)
+	//if record == nil || record.Records == nil {
+	//	playRecord = make([]*data.PlayGameRecord, 0)
+	//} else {
+	//	playRecord = record.Records
+	//}
+	//
+	//if record == nil || record.Favorites == nil {
+	//	favorites = make([]string, 0)
+	//} else {
+	//	favorites = record.Favorites
+	//}
+
+	profile, err := dao.GetUserProfileDao().GetUserProfile(user.Id)
+	if err != nil {
+		zap.S().Errorw("Get User Profile Error", "userId", user.Id, "err", err)
+		return nil, err
 	}
 
-	if record == nil || record.Favorites == nil {
-		favorites = make([]string, 0)
-	} else {
-		favorites = record.Favorites
+	if profile == nil {
+		profile = &data.UserProfileData{
+			UserId:   user.Id,
+			Nickname: "",
+			Avatar:   "",
+		}
+		dao.GetUserProfileDao().SaveOrUpdate(profile)
 	}
+
+	user.Nickname = profile.Nickname
+	user.AvatarUrl = profile.Avatar
 
 	ou := uc.onlineUsers.TGUserLogin(user, &data.TGInfo{
 		AuthData: authData.Token,
@@ -340,6 +359,14 @@ func (uc *UserCenterRpc) GetDashFunUserByAuthData(authData *utils.AuthData, onli
 	if err != nil {
 		return nil, err
 	}
+
+	profile, err := dao.GetUserProfileDao().GetUserProfile(user.Id)
+
+	if profile != nil {
+		user.Nickname = profile.Nickname
+		user.AvatarUrl = profile.Avatar
+	}
+
 	uc.auth2user.Set(authData.ToString(), user)
 	return user, nil
 }
@@ -615,6 +642,53 @@ func (uc *UserCenterRpc) GetUserHeadAvatar(userId string) []byte {
 
 	//return ou.Header
 	return avatar
+}
+
+// UserUpdateProfile 更新用户的昵称和头像，这个还会更新UserProfileData数据，目前只有FishingVerse使用
+func (uc *UserCenterRpc) UserUpdateProfile(userId string, nickname string, avatar []byte) (*data.DashFunUser, error) {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		zap.S().Errorw("User Not Found", "userId", userId)
+		return nil, apperrors.ErrOnlineUserNotExist
+	}
+
+	//只有用户没有设置昵称的时候才更新昵称
+	if ou.User.Nickname == "" && nickname != "" {
+		ou.User.Nickname = nickname
+	}
+
+	//avatar的存储方式是存储当前的版本号，文件路径固定是images/users/avatar_{userId}.png
+	if len(avatar) > 0 {
+		//upload avatar数据到tencent cos
+		_, err := tencentcos.Get().UploadData("images/users/avatar_"+userId+".png", avatar, "image/png")
+		if err != nil {
+			return nil, err
+		}
+
+		if ou.User.AvatarUrl == "" {
+			ou.User.AvatarUrl = "v1"
+		} else {
+			if strings.HasPrefix(ou.User.AvatarUrl, "v") {
+				numStr := ou.User.AvatarUrl[1:]
+				num, err := strconv.Atoi(numStr)
+				if err != nil {
+					ou.User.AvatarUrl = "v1"
+				} else {
+					ou.User.AvatarUrl = "v" + strconv.Itoa(num+1)
+				}
+			} else {
+				ou.User.AvatarUrl = "v1"
+			}
+		}
+	}
+
+	dao.GetUserProfileDao().SaveOrUpdate(&data.UserProfileData{
+		UserId:   userId,
+		Nickname: ou.User.Nickname,
+		Avatar:   ou.User.AvatarUrl,
+	})
+
+	return ou.User, nil
 }
 
 func (uc *UserCenterRpc) CreateDashFunUser(from data.DashFunUserFrom, username string) (*data.DashFunUser, error) {

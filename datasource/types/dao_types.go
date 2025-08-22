@@ -24,6 +24,9 @@ type DaoImpl interface {
 	GetRechargeDao() RechargeDao
 	GetLeaderboardBotDao() LeaderboardBotDao
 	GetAirdropDao() AirdropDao
+	GetUserProfileDao() UserProfileDao
+	GetFishingPostDao() FishingPostDao
+	GetFishingLeaderboardBotDao() FishingLeaderboardBotDao
 }
 
 type UserDao interface {
@@ -129,8 +132,24 @@ type LeaderboardBotDao interface {
 	LoadAllBots() ([]*data.LeaderboardBotData, error)
 }
 
+type FishingLeaderboardBotDao interface {
+	SaveOrUpdate(bot *data.FishingBotData) (*data.FishingBotData, error)
+	LoadAllBots() ([]*data.FishingBotData, error)
+}
+
 type AirdropDao interface {
 	SaveOrUpdate(airDrop *data.AirdropData) (*data.AirdropData, error)
 	GetAirdropData(userId string) (*data.AirdropData, error)
 	GetAllAirdropData() ([]*data.AirdropData, error)
+}
+
+type UserProfileDao interface {
+	SaveOrUpdate(profile *data.UserProfileData) (*data.UserProfileData, error)
+	GetUserProfile(userId string) (*data.UserProfileData, error)
+}
+
+type FishingPostDao interface {
+	SaveOrUpdate(post *data.FishingPostData) (*data.FishingPostData, error)
+	GetPosts(limit int) ([]*data.FishingPostData, error)
+	GetUserLatestPostTime(userId string) (int64, error)
 }

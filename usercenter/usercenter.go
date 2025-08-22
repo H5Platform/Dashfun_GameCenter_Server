@@ -598,3 +598,26 @@ func (uc *UserCenter) GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUs
 	}
 	return users, nil
 }
+
+func (uc *UserCenter) UserUpdateProfile(userId string, nickname string, avatar string) *data.DashFunUser {
+	ou := uc.onlineUsers.FindUser(userId)
+	if ou == nil {
+		zap.S().Errorw("User Not Found", "userId", userId)
+		return nil
+	}
+
+	if nickname != "" {
+		ou.User.Nickname = nickname
+	}
+	if avatar != "" {
+		ou.User.AvatarUrl = avatar
+	}
+
+	dao.GetUserProfileDao().SaveOrUpdate(&data.UserProfileData{
+		UserId:   userId,
+		Nickname: ou.User.Nickname,
+		Avatar:   ou.User.AvatarUrl,
+	})
+
+	return ou.User
+}

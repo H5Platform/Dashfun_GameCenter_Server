@@ -12,4 +12,5 @@ const (
 	WorkerTencentCosName = 70
 	WorkerSpinWheelId    = 80
 	WorkerRechargeId     = 90
+	WorkerFishingPostId  = 100
 )

@@ -105,6 +105,7 @@ type IUserCenter interface {
 	RequestUserId() string
 	CreateDashFunUser(from data.DashFunUserFrom, username string) (*data.DashFunUser, error)
 	GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUser, error)
+	UserUpdateProfile(userId string, nickname string, avatar []byte) (*data.DashFunUser, error)
 }
 
 func Get() IUserCenter {

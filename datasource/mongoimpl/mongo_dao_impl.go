@@ -90,6 +90,15 @@ func (d *DaoImplMongo) GetLeaderboardBotDao() types.LeaderboardBotDao {
 func (d *DaoImplMongo) GetAirdropDao() types.AirdropDao {
 	return GetAirdropDaoMongo()
 }
+func (d *DaoImplMongo) GetUserProfileDao() types.UserProfileDao {
+	return GetUserProfileDaoMongo()
+}
+func (d *DaoImplMongo) GetFishingPostDao() types.FishingPostDao {
+	return GetFishingPostDaoMongo()
+}
+func (d *DaoImplMongo) GetFishingLeaderboardBotDao() types.FishingLeaderboardBotDao {
+	return GetFishingLeaderboardBotDaoMongo()
+}
 
 func GetMongoDatabase() *mongo.Database {
 	mongoCfg := config.GetConfig().Mongo

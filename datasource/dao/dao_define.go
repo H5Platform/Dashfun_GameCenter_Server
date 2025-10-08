@@ -71,3 +71,11 @@ func GetFishingPostDao() types.FishingPostDao {
 func GetFishingLeaderboardBotDao() types.FishingLeaderboardBotDao {
 	return daoImpl.GetFishingLeaderboardBotDao()
 }
+
+func GetNolanDevPostDao() types.NolanDevPostDao {
+	return daoImpl.GetNolanDevPostDao()
+}
+
+func GetNolanDevLeaderboardBotDao() types.NolanDevLeaderboardBotDao {
+	return daoImpl.GetNolanDevLeaderboardBotDao()
+}

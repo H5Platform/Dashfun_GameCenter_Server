@@ -99,6 +99,12 @@ func (d *DaoImplMongo) GetFishingPostDao() types.FishingPostDao {
 func (d *DaoImplMongo) GetFishingLeaderboardBotDao() types.FishingLeaderboardBotDao {
 	return GetFishingLeaderboardBotDaoMongo()
 }
+func (d *DaoImplMongo) GetNolanDevPostDao() types.NolanDevPostDao {
+	return GetNolanDevPostDaoMongo()
+}
+func (d *DaoImplMongo) GetNolanDevLeaderboardBotDao() types.NolanDevLeaderboardBotDao {
+	return GetNolanDevLeaderboardBotDaoMongo()
+}
 
 func GetMongoDatabase() *mongo.Database {
 	mongoCfg := config.GetConfig().Mongo

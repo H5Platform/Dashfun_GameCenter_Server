@@ -5,6 +5,7 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/fishingverse/fishingleaderboard"
 	"dashfun_gamecenter/leaderboardcenter"
+	nolandevleaderboard "dashfun_gamecenter/nolandev/leaderboard"
 	"dashfun_gamecenter/web"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -93,6 +94,48 @@ func apiFishingLeaderboardTop20(c *gin.Context, user *data.DashFunUser) {
 
 	c.JSON(http.StatusOK, RSuccess(top))
 }
+func apiNolanDevLeaderboardTop20(c *gin.Context, user *data.DashFunUser) {
+	r, err := nolandevleaderboard.Get().GetTop(20)
+	top := make([]*leaderboardcenter.LeaderboardData, 0, len(r)+1)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
+		return
+	}
+
+	for _, v := range r {
+		top = append(top, &leaderboardcenter.LeaderboardData{
+			Id:          v.Id,
+			Rank:        v.Rank,
+			Score:       v.Score,
+			UserName:    v.DisplayName,
+			DisplayName: v.DisplayName,
+			Avatar:      "",
+		})
+	}
+
+	rank, score, err := nolandevleaderboard.Get().GetUserRankAndScore(user.Id)
+	if err != nil || score < int64(config.GetConfig().LeaderboardBotCfg.RecordScoreMin) {
+		// 5000分以下不显示
+		top = append(top, &leaderboardcenter.LeaderboardData{
+			Id:          user.Id,
+			Rank:        0,
+			Score:       score,
+			UserName:    user.Nickname,
+			DisplayName: user.Nickname,
+		})
+	} else {
+		top = append(top, &leaderboardcenter.LeaderboardData{
+			Id:          user.Id,
+			Rank:        rank,
+			Score:       score,
+			UserName:    user.Nickname,
+			DisplayName: user.Nickname,
+			Avatar:      user.AvatarUrl,
+		})
+	}
+
+	c.JSON(http.StatusOK, RSuccess(top))
+}
 
 // @Summary	返回用户在排行榜中的排名信息
 // @Tags	Leaderboard API
@@ -116,5 +159,6 @@ func apiLeaderboardMe(c *gin.Context, user *data.DashFunUser) {
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleLeaderboard, web.GET, "/xp_top", userHandlerAuthWrapper(apiLeaderboardTop20))
 	web.GetService().RegisterApi(web.ApiModuleLeaderboard, web.GET, "/fp_top", userHandlerAuthWrapper(apiFishingLeaderboardTop20))
+	web.GetService().RegisterApi(web.ApiModuleLeaderboard, web.GET, "/ndp_top", userHandlerAuthWrapper(apiNolanDevLeaderboardTop20))
 	web.GetService().RegisterApi(web.ApiModuleLeaderboard, web.GET, "/me", userHandlerAuthWrapper(apiLeaderboardMe))
 }

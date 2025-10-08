@@ -27,6 +27,8 @@ type DaoImpl interface {
 	GetUserProfileDao() UserProfileDao
 	GetFishingPostDao() FishingPostDao
 	GetFishingLeaderboardBotDao() FishingLeaderboardBotDao
+	GetNolanDevPostDao() NolanDevPostDao
+	GetNolanDevLeaderboardBotDao() NolanDevLeaderboardBotDao
 }
 
 type UserDao interface {
@@ -132,11 +134,6 @@ type LeaderboardBotDao interface {
 	LoadAllBots() ([]*data.LeaderboardBotData, error)
 }
 
-type FishingLeaderboardBotDao interface {
-	SaveOrUpdate(bot *data.FishingBotData) (*data.FishingBotData, error)
-	LoadAllBots() ([]*data.FishingBotData, error)
-}
-
 type AirdropDao interface {
 	SaveOrUpdate(airDrop *data.AirdropData) (*data.AirdropData, error)
 	GetAirdropData(userId string) (*data.AirdropData, error)
@@ -148,8 +145,24 @@ type UserProfileDao interface {
 	GetUserProfile(userId string) (*data.UserProfileData, error)
 }
 
+type FishingLeaderboardBotDao interface {
+	SaveOrUpdate(bot *data.FishingBotData) (*data.FishingBotData, error)
+	LoadAllBots() ([]*data.FishingBotData, error)
+}
+
 type FishingPostDao interface {
 	SaveOrUpdate(post *data.FishingPostData) (*data.FishingPostData, error)
 	GetPosts(limit int) ([]*data.FishingPostData, error)
+	GetUserLatestPostTime(userId string) (int64, error)
+}
+
+type NolanDevLeaderboardBotDao interface {
+	SaveOrUpdate(bot *data.NolanBotData) (*data.NolanBotData, error)
+	LoadAllBots() ([]*data.NolanBotData, error)
+}
+
+type NolanDevPostDao interface {
+	SaveOrUpdate(post *data.NolanPostData) (*data.NolanPostData, error)
+	GetPosts(limit int) ([]*data.NolanPostData, error)
 	GetUserLatestPostTime(userId string) (int64, error)
 }

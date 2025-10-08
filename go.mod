@@ -12,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pinpointemail v1.21.6
 	github.com/dashfun_web3/api_proto v0.0.0
 	github.com/ethereum/go-ethereum v1.16.1
+	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-telegram/bot v1.6.1
@@ -20,7 +21,9 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.9
+	github.com/openai/openai-go/v2 v2.3.1
 	github.com/pkg/errors v0.9.1
+	github.com/sashabaranov/go-openai v1.41.1
 	github.com/stripe/stripe-go/v81 v81.4.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
@@ -85,7 +88,6 @@ require (
 	github.com/clbanning/mxj v1.8.4 // indirect
 	github.com/clbanning/mxj/v2 v2.5.5 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
-	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/consensys/gnark-crypto v0.18.0 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.3.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
@@ -100,7 +102,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/gin-contrib/cors v1.7.6 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-faster/errors v0.6.1 // indirect
 	github.com/go-faster/jx v1.1.0 // indirect
@@ -155,7 +156,8 @@ require (
 	github.com/snksoft/crc v1.1.0 // indirect
 	github.com/supranational/blst v0.3.14 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
-	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect

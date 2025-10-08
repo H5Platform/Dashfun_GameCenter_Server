@@ -5,10 +5,14 @@ import (
 	_ "dashfun_gamecenter/_initdata"
 	_ "dashfun_gamecenter/api"
 	"dashfun_gamecenter/coincenter"
+	"dashfun_gamecenter/coingecko"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/fishingverse/fishingleaderboard"
 	"dashfun_gamecenter/invitecenter"
 	"dashfun_gamecenter/leaderboardcenter"
+	"dashfun_gamecenter/nolandev"
+	"dashfun_gamecenter/nolandev/leaderboard"
+	"dashfun_gamecenter/openai_api"
 	"dashfun_gamecenter/paymentcenter"
 	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/tgbot"
@@ -69,7 +73,23 @@ func main() {
 	paymentcenter.Get()
 	usercenter.Get()
 
+	nolandev.Get()
+	nolandevleaderboard.Get()
 	fishingleaderboard.Get()
+
+	coingecko.Get()
+	openai_api.GetMarketSummarize()
+	//prompt, err := coingecko.GetTokenPricePrompt("ethereum", "usd")
+	//if err != nil {
+	//	return
+	//}
+	//log.Info(prompt)
+	//resp, err := openai_api.SummarizeWithOpenAI(context.Background(), prompt)
+	//if err != nil {
+	//	return
+	//}
+
+	//log.Info(resp)
 
 	logger.Info("dashfun gamecenter started")
 	//ton.Get()

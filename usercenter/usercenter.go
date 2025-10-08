@@ -9,6 +9,7 @@ import (
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/snowflake"
+	"dashfun_gamecenter/tencentcos"
 	"dashfun_gamecenter/tgbot"
 	"dashfun_gamecenter/utils"
 	"encoding/base64"
@@ -599,18 +600,41 @@ func (uc *UserCenter) GetUsersFrom(from data.DashFunUserFrom) ([]*data.DashFunUs
 	return users, nil
 }
 
-func (uc *UserCenter) UserUpdateProfile(userId string, nickname string, avatar string) *data.DashFunUser {
+func (uc *UserCenter) UserUpdateProfile(userId string, nickname string, avatar []byte) (*data.DashFunUser, error) {
 	ou := uc.onlineUsers.FindUser(userId)
 	if ou == nil {
 		zap.S().Errorw("User Not Found", "userId", userId)
-		return nil
+		return nil, apperrors.ErrOnlineUserNotExist
 	}
 
-	if nickname != "" {
+	//只有用户没有设置昵称的时候才更新昵称
+	if ou.User.Nickname == "" && nickname != "" {
 		ou.User.Nickname = nickname
 	}
-	if avatar != "" {
-		ou.User.AvatarUrl = avatar
+
+	//avatar的存储方式是存储当前的版本号，文件路径固定是images/users/avatar_{userId}.png
+	if len(avatar) > 0 {
+		//upload avatar数据到tencent cos
+		_, err := tencentcos.Get().UploadData("images/users/avatar_"+userId+".png", avatar, "image/png")
+		if err != nil {
+			return nil, err
+		}
+
+		if ou.User.AvatarUrl == "" {
+			ou.User.AvatarUrl = "v1"
+		} else {
+			if strings.HasPrefix(ou.User.AvatarUrl, "v") {
+				numStr := ou.User.AvatarUrl[1:]
+				num, err := strconv.Atoi(numStr)
+				if err != nil {
+					ou.User.AvatarUrl = "v1"
+				} else {
+					ou.User.AvatarUrl = "v" + strconv.Itoa(num+1)
+				}
+			} else {
+				ou.User.AvatarUrl = "v1"
+			}
+		}
 	}
 
 	dao.GetUserProfileDao().SaveOrUpdate(&data.UserProfileData{
@@ -619,5 +643,5 @@ func (uc *UserCenter) UserUpdateProfile(userId string, nickname string, avatar s
 		Avatar:   ou.User.AvatarUrl,
 	})
 
-	return ou.User
+	return ou.User, nil
 }

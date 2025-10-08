@@ -134,6 +134,14 @@ func makeProdCoins() {
 		}
 	}
 
+	_, exist = c.GetCoinByName("NolanDevPoint") //DP
+	if !exist {
+		_, err := c.CreateCoin("", "NolanDevPoint", "DP", "NolanDev Point", "", false, 0, make(map[string]string))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	//_, exist = c.GetCoinByName("W3KPoint")
 	//if !exist {
 	//	_, err := c.CreateCoin("", "W3KPoint", "W3KPoint", "W3K Point", w3kt.Id, false, 0, make(map[string]string))

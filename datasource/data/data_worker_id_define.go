@@ -13,4 +13,5 @@ const (
 	WorkerSpinWheelId    = 80
 	WorkerRechargeId     = 90
 	WorkerFishingPostId  = 100
+	WorkerNolanPostId    = 101
 )

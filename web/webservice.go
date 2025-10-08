@@ -45,6 +45,8 @@ const (
 	ApiModuleRecharge     = "recharge"
 	ApiModuleAirdrop      = "airdrop"
 	ApiModuleFishingVerse = "fishingverse"
+	ApiModuleNolanDev     = "nolan"
+	ApiModuleMarkets      = "markets"
 )
 
 type ApiNode struct {

@@ -229,72 +229,7 @@ func testHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	}
 }
 
-func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	if update.Message == nil || update.Message.Chat.Type != "private" {
-		return
-	}
-
-	//member, err := b.GetChatMember(context.TODO(), &bot.GetChatMemberParams{
-	//	ChatID: "-1002198592933",
-	//	UserID: 1484579418,
-	//})
-	//
-	//if err != nil {
-	//	return
-	//}
-
-	//zap.S().Infow("member info", "", member)
-
-	//buttons := [][]models.KeyboardButton{
-	//	{
-	//		//{
-	//		//	Text: "\U0001F44FGame Center123",
-	//		//	WebApp: &models.WebAppInfo{
-	//		//		URL: "https://t.me/DashFunBot/Center",
-	//		//	},
-	//		//}, {
-	//		//	Text: "\U0001F3E6Wallet132",
-	//		//	WebApp: &models.WebAppInfo{
-	//		//		URL: "https://t.me/DashFunBot/Games",
-	//		//	},
-	//		//},
-	//	},
-	//}
-
-	//msg := &bot.SendMessageParams{
-	//	ChatID: update.Message.Chat.ID,
-	//	Text:   "Welcome to DashFun Game Center!",
-	//	ReplyMarkup: &models.ReplyKeyboardMarkup{
-	//		Keyboard:       buttons,
-	//		ResizeKeyboard: true,
-	//	},
-	//}
-	//b.SendMessage(ctx, msg)
-	//
-	//buttons1 := [][]models.InlineKeyboardButton{
-	//	{
-	//		{
-	//			Text: "Open Game Center",
-	//			WebApp: &models.WebAppInfo{
-	//				URL: appLink(),
-	//			},
-	//		},
-	//	},
-	//}
-	//msg1 := &bot.SendPhotoParams{
-	//	ChatID: update.Message.Chat.ID,
-	//	Photo: &models.InputFileUpload{
-	//		Filename: "dashfun.jpg",
-	//		Data:     bytes.NewReader(logoData),
-	//	},
-	//	Caption: "Play lots of games in DashFun Game Center!\nEarn $TON & $NEXU rewards",
-	//	ReplyMarkup: &models.InlineKeyboardMarkup{
-	//		InlineKeyboard: buttons1,
-	//	},
-	//}
-	//
-	//b.SendPhoto(ctx, msg1)
-
+func sendDashFunMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
 	msgCenter := &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
 		Text:   "Welcome! I bet you’re here for the fun—head over to the Game Center and hey, don’t forget to stack some airdrop points while you’re at it!",
@@ -341,12 +276,38 @@ func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 			log.Printf("SendPhoto: %v  ", err)
 		}
 	}
+}
 
-	//b.SendGame(context.TODO(), &bot.SendGameParams{
-	//	ChatID:       update.Message.Chat.ID,
-	//	GameShorName: "threekweb3",
-	//})
+func sendNolanDevMsg(ctx context.Context, b *bot.Bot, update *models.Update) {
+	msgCenter := &bot.SendMessageParams{
+		ChatID: update.Message.Chat.ID,
+		Text:   "Welcome! Never Out Laughing At Numbers!\nTurning market chaos into Meme-fueled profits.",
+		//ReplyMarkup: &models.InlineKeyboardMarkup{
+		//	InlineKeyboard: [][]models.InlineKeyboardButton{
+		//		{
+		//			{
+		//				Text: "Enter",
+		//				URL:  botNolanDevLink() + "/center",
+		//			},
+		//		},
+		//	},
+		//},
+	}
 
+	b.SendMessage(ctx, msgCenter)
+}
+func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.Message == nil || update.Message.Chat.Type != "private" {
+		return
+	}
+
+	switch config.RunningMode() {
+	case config.ModeDashFun:
+		sendDashFunMsg(ctx, b, update)
+	case config.ModeFishVerse:
+	case config.ModeNolanDev:
+		sendNolanDevMsg(ctx, b, update)
+	}
 }
 
 func appLink() string {
@@ -366,6 +327,16 @@ func botLink() string {
 		return "https://t.me/LocalTestBot"
 	} else {
 		return "https://t.me/DashFunBot"
+	}
+}
+
+func botNolanDevLink() string {
+	if config.IsTest() {
+		return "https://t.me/NolanDevTestBot"
+	} else if config.IsDev() {
+		return "https://t.me/NolanDevDevBot"
+	} else {
+		return "https://t.me/nolandev_bot"
 	}
 }
 

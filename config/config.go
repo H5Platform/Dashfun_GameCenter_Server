@@ -2,15 +2,25 @@ package config
 
 import (
 	"dashfun_gamecenter/datasource/data"
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
+)
+
+type Mode string
+
+const (
+	ModeDashFun   Mode = "DashFun"
+	ModeFishVerse Mode = "FishVerse"
+	ModeNolanDev  Mode = "NolanDev"
 )
 
 type BaseConfig struct {
-	Env string `yaml:"env"` // Dev or Prod
+	Env  string `yaml:"env"`  // Dev or Prod
+	Mode Mode   `yaml:"mode"` // DashFun or FishVerse or NolanDev
 }
 
 type WebConfig struct {
@@ -63,8 +73,9 @@ type RedisCfg struct {
 }
 
 type NacosCfg struct {
-	IpAddr string `yaml:"ip_addr"`
-	Port   uint64 `yaml:"port"`
+	IpAddr    string `yaml:"ip_addr"`
+	Port      uint64 `yaml:"port"`
+	Namespace string `yaml:"namespace"` //nacos命名空间,如果不填，则使用env.Env作为命名空间
 }
 
 type RewardPoint struct {
@@ -171,6 +182,19 @@ type Web3Config struct {
 	PrivateKey string `yaml:"private_key"`
 }
 
+type OpenApiConfig struct {
+	ApiKey string `yaml:"api_key"`
+}
+
+type CoinGeckoConfig struct {
+	DefaultTokenIds []string `yaml:"default_token_ids"` // 默认关注的token id列表
+	UpdateInterval  int      `yaml:"update_interval"`   // 更新间隔，单位分钟
+}
+
+type ForecastConfig struct {
+	Url string `yaml:"url"`
+}
+
 // GetStartTime 获取Airdrop开始时间的Unix时间戳，单位秒
 func (ac *AirdropConfig) GetStartTime() int64 {
 	st := ac.StartTime
@@ -219,6 +243,9 @@ type Config struct {
 	PaypalCfg         *PaypalConfig      `yaml:"paypal_cfg"`
 	AirdropCfg        *AirdropConfig     `yaml:"airdrop_cfg"`
 	Web3Config        *Web3Config        `yaml:"web3_cfg"`
+	OpenApiConfig     *OpenApiConfig     `yaml:"open_api_cfg"`
+	CoinGeckoConfig   *CoinGeckoConfig   `yaml:"coingecko_cfg"`
+	ForecastConfig    *ForecastConfig    `yaml:"forecast_cfg"`
 }
 
 var config *Config
@@ -240,7 +267,18 @@ func IsDev() bool {
 	return GetConfig().Base.Env == "Dev"
 }
 
+func RunningMode() Mode {
+	mode := GetConfig().Base.Mode
+	if mode == "" {
+		return ModeDashFun
+	}
+	return mode
+}
+
 func NacosNamespace() string {
+	if GetConfig().NacosCfg.Namespace != "" {
+		return GetConfig().NacosCfg.Namespace
+	}
 	return strings.ToLower(GetConfig().Base.Env)
 }
 

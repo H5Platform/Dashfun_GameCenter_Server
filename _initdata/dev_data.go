@@ -145,6 +145,13 @@ func makeTestCoins() {
 			log.Fatal(err)
 		}
 	}
+	_, exist = c.GetCoinByName("NolanDevPoint") //DP
+	if !exist {
+		_, err := c.CreateCoin("", "NolanDevPoint", "FP", "NolanDev Point", "", false, 0, make(map[string]string))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func makeTestTask() {

@@ -155,4 +155,14 @@ airdrop_cfg:
 web3_cfg:
   rpc_url: https://bsc-testnet-rpc.publicnode.com
   chain_id: 97
-  private_key: ${web3_op_private_key} 
+  private_key: ${web3_op_private_key}
+
+open_api_cfg:
+  api_key: ${open_api_key}
+
+coingecko_cfg:
+  default_token_ids: [ "bitcoin", "ethereum" ]
+  update_interval: 5 # minutes
+
+forecast_cfg:
+  url: http://localhost:8080/

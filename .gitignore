@@ -31,3 +31,6 @@ build/
 secret.yml
 .idea/
 .idea.bak/
+
+# Debug binaries
+__debug_*

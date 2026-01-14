@@ -16,6 +16,7 @@ const (
 	ModeDashFun   Mode = "DashFun"
 	ModeFishVerse Mode = "FishVerse"
 	ModeNolanDev  Mode = "NolanDev"
+	ModeHowardAI  Mode = "HowardAI"
 )
 
 type BaseConfig struct {
@@ -195,6 +196,19 @@ type ForecastConfig struct {
 	Url string `yaml:"url"`
 }
 
+type PricePredictConfig struct {
+	Open            bool    `yaml:"open" json:"open"`                         // 是否开启
+	Name            string  `yaml:"name" json:"name"`                         // 预测名称
+	Symbol          string  `yaml:"symbol" json:"symbol"`                     // 预测币种符号
+	BetStartTime    int     `yaml:"bet_start_time" json:"bet_start_time"`     // 下注开始时间(小时)
+	BetEndTime      int     `yaml:"bet_end_time" json:"bet_end_time"`         // 下注结束时间(小时)
+	RevealTime      int     `yaml:"reveal_time" json:"reveal_time"`           // 开奖时间(小时)
+	MaxDiffLimit    float64 `yaml:"max_diff_limit" json:"max_diff_limit"`     // 最大误差限制(%)
+	BetAmounts      []int64 `yaml:"bet_amounts" json:"bet_amounts"`           // 可选下注金额列表
+	ConsolationRate float64 `yaml:"consolation_rate" json:"consolation_rate"` // 阳光普照奖比例，下注额度的百分比
+	MaxBotCount     int     `yaml:"max_bot_count"`                            // 机器人最大数量
+}
+
 // GetStartTime 获取Airdrop开始时间的Unix时间戳，单位秒
 func (ac *AirdropConfig) GetStartTime() int64 {
 	st := ac.StartTime
@@ -222,30 +236,31 @@ func (ac *AirdropConfig) GetLockXpTime() int64 {
 }
 
 type Config struct {
-	Base              *BaseConfig        `yaml:"base"`
-	Mongo             *MongoConfig       `yaml:"mongo"`
-	Web               *WebConfig         `yaml:"web"`
-	TG                *TelegramConfig    `yaml:"telegram"`
-	Log               *Log               `yaml:"log"`
-	PinPoint          *AwsPinPoint       `yaml:"aws_pinpoint"`
-	AdminCfg          *AdminConfig       `yaml:"admin_cfg"`
-	TencentCosCfg     *TencentCosConfig  `yaml:"tencent_cos"`
-	TonCfg            *TonConfig         `yaml:"ton_cfg"`
-	RedisCfg          *RedisCfg          `yaml:"redis_cfg"`
-	InviteCfg         *InviteCfg         `yaml:"invite_cfg"`
-	RechargeCfg       *RechargeCfg       `yaml:"recharge_cfg"`
-	CoinCfg           []*CoinCfg         `yaml:"coin_cfg"`
-	SpinWheelCfg      *SpinWheelCfg      `yaml:"spin_wheel_cfg"`
-	LeaderboardCfg    []*LeaderboardCfg  `yaml:"leaderboard_cfg"` //排行榜配置
-	LeaderboardBotCfg *LeaderboardBotCfg `yaml:"leaderboard_bot_cfg"`
-	StripeCfg         *StripeConfig      `yaml:"stripe_cfg"`
-	NacosCfg          *NacosCfg          `yaml:"nacos_cfg"`
-	PaypalCfg         *PaypalConfig      `yaml:"paypal_cfg"`
-	AirdropCfg        *AirdropConfig     `yaml:"airdrop_cfg"`
-	Web3Config        *Web3Config        `yaml:"web3_cfg"`
-	OpenApiConfig     *OpenApiConfig     `yaml:"open_api_cfg"`
-	CoinGeckoConfig   *CoinGeckoConfig   `yaml:"coingecko_cfg"`
-	ForecastConfig    *ForecastConfig    `yaml:"forecast_cfg"`
+	Base               *BaseConfig         `yaml:"base"`
+	Mongo              *MongoConfig        `yaml:"mongo"`
+	Web                *WebConfig          `yaml:"web"`
+	TG                 *TelegramConfig     `yaml:"telegram"`
+	Log                *Log                `yaml:"log"`
+	PinPoint           *AwsPinPoint        `yaml:"aws_pinpoint"`
+	AdminCfg           *AdminConfig        `yaml:"admin_cfg"`
+	TencentCosCfg      *TencentCosConfig   `yaml:"tencent_cos"`
+	TonCfg             *TonConfig          `yaml:"ton_cfg"`
+	RedisCfg           *RedisCfg           `yaml:"redis_cfg"`
+	InviteCfg          *InviteCfg          `yaml:"invite_cfg"`
+	RechargeCfg        *RechargeCfg        `yaml:"recharge_cfg"`
+	CoinCfg            []*CoinCfg          `yaml:"coin_cfg"`
+	SpinWheelCfg       *SpinWheelCfg       `yaml:"spin_wheel_cfg"`
+	LeaderboardCfg     []*LeaderboardCfg   `yaml:"leaderboard_cfg"` //排行榜配置
+	LeaderboardBotCfg  *LeaderboardBotCfg  `yaml:"leaderboard_bot_cfg"`
+	StripeCfg          *StripeConfig       `yaml:"stripe_cfg"`
+	NacosCfg           *NacosCfg           `yaml:"nacos_cfg"`
+	PaypalCfg          *PaypalConfig       `yaml:"paypal_cfg"`
+	AirdropCfg         *AirdropConfig      `yaml:"airdrop_cfg"`
+	Web3Config         *Web3Config         `yaml:"web3_cfg"`
+	OpenApiConfig      *OpenApiConfig      `yaml:"open_api_cfg"`
+	CoinGeckoConfig    *CoinGeckoConfig    `yaml:"coingecko_cfg"`
+	PricePredictConfig *PricePredictConfig `yaml:"price_predict_cfg"`
+	ForecastConfig     *ForecastConfig     `yaml:"forecast_cfg"`
 }
 
 var config *Config

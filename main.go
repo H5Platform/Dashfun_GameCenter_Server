@@ -11,19 +11,22 @@ import (
 	"dashfun_gamecenter/invitecenter"
 	"dashfun_gamecenter/leaderboardcenter"
 	"dashfun_gamecenter/nolandev"
-	"dashfun_gamecenter/nolandev/leaderboard"
+	nolandevleaderboard "dashfun_gamecenter/nolandev/leaderboard"
 	"dashfun_gamecenter/openai_api"
 	"dashfun_gamecenter/paymentcenter"
+	"dashfun_gamecenter/pricepredictcenter"
 	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/tgbot"
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"dashfun_gamecenter/web3center"
 	"io"
 	"os"
 	"time"
+
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func main() {
@@ -73,12 +76,24 @@ func main() {
 	paymentcenter.Get()
 	usercenter.Get()
 
-	nolandev.Get()
-	nolandevleaderboard.Get()
-	fishingleaderboard.Get()
+	switch config.RunningMode() {
+	case config.ModeNolanDev:
+		nolandev.Get()
+		nolandevleaderboard.Get()
+		openai_api.GetMarketSummarize()
+	case config.ModeFishVerse:
+		fishingleaderboard.Get()
+	case config.ModeHowardAI:
+		nolandev.Get()
+		nolandevleaderboard.Get()
+		nolandevleaderboard.Get()
+	}
+
+	web3center.Get()
+	pricepredictcenter.Get()
 
 	coingecko.Get()
-	openai_api.GetMarketSummarize()
+	//openai_api.GetMarketSummarize()
 	//prompt, err := coingecko.GetTokenPricePrompt("ethereum", "usd")
 	//if err != nil {
 	//	return

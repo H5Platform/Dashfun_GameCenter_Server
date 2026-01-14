@@ -6,13 +6,14 @@ import (
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/utils"
 	"fmt"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 type ApiModuleName string
@@ -47,6 +48,7 @@ const (
 	ApiModuleFishingVerse = "fishingverse"
 	ApiModuleNolanDev     = "nolan"
 	ApiModuleMarkets      = "markets"
+	ApiModulePricePredict = "price_predict"
 )
 
 type ApiNode struct {

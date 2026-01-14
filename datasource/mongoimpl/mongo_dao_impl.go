@@ -4,10 +4,11 @@ import (
 	"context"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/types"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"time"
 )
 
 var client *mongo.Client
@@ -32,6 +33,7 @@ type DaoImplMongo struct {
 	invitedUserDao        types.InvitedUserDao
 	rechargeDao           types.RechargeDao
 	leaderboardBotDao     types.LeaderboardBotDao
+	pricePredictDao       types.PricePredictDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
@@ -53,6 +55,7 @@ func NewDaoImplMongo() *DaoImplMongo {
 		invitedUserDao:        GetInvitedUserDaoMongo(),
 		rechargeDao:           GetRechargeDaoMongo(),
 		leaderboardBotDao:     GetLeaderboardBotDaoMongo(),
+		pricePredictDao:       GetPricePredictDaoMongo(),
 	}
 }
 
@@ -104,6 +107,10 @@ func (d *DaoImplMongo) GetNolanDevPostDao() types.NolanDevPostDao {
 }
 func (d *DaoImplMongo) GetNolanDevLeaderboardBotDao() types.NolanDevLeaderboardBotDao {
 	return GetNolanDevLeaderboardBotDaoMongo()
+}
+
+func (d *DaoImplMongo) GetPricePredictDao() types.PricePredictDao {
+	return d.pricePredictDao
 }
 
 func GetMongoDatabase() *mongo.Database {

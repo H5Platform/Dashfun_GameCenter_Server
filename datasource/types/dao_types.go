@@ -29,6 +29,7 @@ type DaoImpl interface {
 	GetFishingLeaderboardBotDao() FishingLeaderboardBotDao
 	GetNolanDevPostDao() NolanDevPostDao
 	GetNolanDevLeaderboardBotDao() NolanDevLeaderboardBotDao
+	GetPricePredictDao() PricePredictDao
 }
 
 type UserDao interface {

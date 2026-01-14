@@ -7,14 +7,15 @@ import (
 	"dashfun_gamecenter/gamecenter"
 	"encoding/base64"
 	"fmt"
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
-	"go.uber.org/zap"
 	"log"
 	"net/url"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
+	"go.uber.org/zap"
 )
 
 var logoData []byte
@@ -307,6 +308,8 @@ func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	case config.ModeFishVerse:
 	case config.ModeNolanDev:
 		sendNolanDevMsg(ctx, b, update)
+	case config.ModeHowardAI:
+		
 	}
 }
 

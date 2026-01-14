@@ -6,11 +6,12 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/snowflake"
 	"dashfun_gamecenter/usercenter"
-	"github.com/pkg/errors"
 	"math/rand"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 var once sync.Once
@@ -91,7 +92,7 @@ func (f *NolanDevCenter) Post(userId, post, location, fish string) (*data.NolanP
 		c, existed := coincenter.Get().GetCoinByName("NolanDevPoint")
 		if existed {
 			point := f.GetPostPointReward(p)
-			coincenter.Get().AddUserCoinAmount(userId, c.Id, int32(point), "fishing post reward", postId)
+			coincenter.Get().AddUserCoinAmount(userId, c.Id, int32(point), "nolandev post reward", postId)
 		}
 	}
 

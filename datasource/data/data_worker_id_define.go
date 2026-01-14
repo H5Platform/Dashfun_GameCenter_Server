@@ -14,4 +14,5 @@ const (
 	WorkerRechargeId     = 90
 	WorkerFishingPostId  = 100
 	WorkerNolanPostId    = 101
+	WorkerPredictBotId   = 102
 )

@@ -5,6 +5,10 @@ import (
 	"dashfun_gamecenter/config"
 	"errors"
 	"fmt"
+	"log"
+	"sync"
+	"time"
+
 	asv1 "github.com/dashfun_web3/api_proto/gen/accountservice/v1"
 	hsv1 "github.com/dashfun_web3/api_proto/gen/healthservice/v1"
 	lbv1 "github.com/dashfun_web3/api_proto/gen/leaderboardservice/v1"
@@ -18,9 +22,6 @@ import (
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	"log"
-	"sync"
-	"time"
 )
 
 var onceNacosCenter sync.Once
@@ -80,7 +81,7 @@ func (n *NacosCenter) newNacosClient() naming_client.INamingClient {
 
 	logLevel := "debug"
 	if config.IsProd() {
-		logLevel = "info"
+		logLevel = "fatal"
 	}
 
 	clientConfig := constant.ClientConfig{

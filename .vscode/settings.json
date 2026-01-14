@@ -1,0 +1,9 @@
+{
+	"go.goroot": "/opt/homebrew/Cellar/go/1.25.5/libexec",
+	"go.gopath": "/Users/marco/go",
+	"go.toolsGopath": "/Users/marco/go",
+	"go.alternateTools": {
+		"go": "/opt/homebrew/bin/go",
+		"dlv": "/Users/marco/go/bin/dlv"
+	}
+}

@@ -20,10 +20,9 @@ require (
 	github.com/gomarkdown/markdown v0.0.0-20250311123330-531bef5e742b
 	github.com/google/uuid v1.6.0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
-	github.com/nacos-group/nacos-sdk-go/v2 v2.2.9
+	github.com/nacos-group/nacos-sdk-go/v2 v2.3.5
 	github.com/openai/openai-go/v2 v2.3.1
 	github.com/pkg/errors v0.9.1
-	github.com/sashabaranov/go-openai v1.41.1
 	github.com/stripe/stripe-go/v81 v81.4.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0

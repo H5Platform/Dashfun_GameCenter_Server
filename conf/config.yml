@@ -165,4 +165,16 @@ coingecko_cfg:
   update_interval: 5 # minutes
 
 forecast_cfg:
-  url: http://localhost:8080/
+  url: "http://localhost:8080/"
+
+price_predict_cfg:
+  open: true
+  name: BNB
+  symbol: BNB
+  bet_start_time: 0
+  bet_end_time: 46
+  reveal_time: 51
+  max_diff_limit: 3.0
+  consolation_rate: 0.1
+  max_bot_count: 500
+  bet_amounts: [100, 200, 500, 1000]

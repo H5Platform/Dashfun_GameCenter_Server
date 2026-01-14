@@ -79,3 +79,7 @@ func GetNolanDevPostDao() types.NolanDevPostDao {
 func GetNolanDevLeaderboardBotDao() types.NolanDevLeaderboardBotDao {
 	return daoImpl.GetNolanDevLeaderboardBotDao()
 }
+
+func GetPricePredictDao() types.PricePredictDao {
+	return daoImpl.GetPricePredictDao()
+}

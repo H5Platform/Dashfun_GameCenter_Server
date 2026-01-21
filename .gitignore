@@ -34,3 +34,7 @@ secret.yml
 
 # Debug binaries
 __debug_*
+
+# Logs
+log/
+logs/

@@ -1,12 +1,17 @@
 package nolandata
 
 import (
+	"context"
+	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
+	"dashfun_gamecenter/exchangecenter"
 	"dashfun_gamecenter/nolandev"
 	"dashfun_gamecenter/usercenter"
 	"math/rand"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type NolanDevBot struct {
@@ -58,6 +63,9 @@ func RandomBot() *NolanDevBot {
 		bot.RandomNextActiveTime()
 	}
 
+	//⑥ 随机钱包地址
+	bot.WalletAddr = Wallets[rand.Intn(len(Wallets))]
+
 	// 激活bot
 	bot.Status = data.BotStatus_Active
 
@@ -71,6 +79,8 @@ func (b *NolanDevBot) DoTodayBehaviour() {
 	region := GetPostRegionByID(bot.RegionId)
 	post := RandomPostByRegion(region)
 
+	bot.RandomNextActiveTime() // 更新下次活跃时间
+
 	//随机发帖是否带位置
 	withLocation := rand.Intn(2) == 0
 	location := ""
@@ -83,8 +93,35 @@ func (b *NolanDevBot) DoTodayBehaviour() {
 		point := nolandev.Get().GetPostPointReward(postData)
 		// 更新bot的分数
 		bot.Score += int64(point)
-
 	}
 
-	bot.RandomNextActiveTime() // 更新下次活跃时间
+	// bot随机购买token
+	if config.GetConfig().PointExchangeConfig.IsActive() {
+		ec := exchangecenter.Get()
+		cfg := config.GetConfig().PointExchangeConfig
+		maxPoint := int64(cfg.DailyUserLimit * cfg.ExchangeRate) // 最多可以兑换的点数
+		if bot.Score < maxPoint {
+			maxPoint = bot.Score
+		}
+
+		// 取一个最小10，最大maxPoint的随机数，要求是10的倍数
+		minPoint := int64(10)
+		if maxPoint >= minPoint {
+			minMult := int(minPoint / 10)
+			maxMult := int(maxPoint / 10)
+			if maxMult >= minMult {
+				randMult := rand.Intn(maxMult-minMult+1) + minMult
+				exchangePoint := int64(randMult * 10)
+				if bot.WalletAddr == "" || rand.Intn(2) == 0 {
+					bot.WalletAddr = Wallets[rand.Intn(len(Wallets))]
+				}
+				tokenAmount, err := ec.Exchange(context.Background(), bot.Id, exchangePoint, bot.WalletAddr, true)
+				if err == nil {
+					bot.Score -= exchangePoint
+					bot.TokenAmount += tokenAmount
+					zap.S().Infow("Bot Exchange", "botId", bot.Id, "exchangePoint", exchangePoint, "walletAddr", bot.WalletAddr, "remainingScore", bot.Score)
+				}
+			}
+		}
+	}
 }

@@ -209,6 +209,39 @@ type PricePredictConfig struct {
 	MaxBotCount     int     `yaml:"max_bot_count"`                            // 机器人最大数量
 }
 
+type PointExchangeConfig struct {
+	PointName        string  `yaml:"point_name" json:"point_name"`                 // 消耗积分名称
+	TokenName        string  `yaml:"token_name" json:"token_name"`                 // 兑换Token名称
+	TokenAddress     string  `yaml:"token_address" json:"token_address"`           // Token合约地址
+	StartTime        string  `yaml:"start_time" json:"start_time"`                 // 开始时间 YYYY-MM-DD-HH
+	DurationDays     int     `yaml:"duration_days" json:"duration_days"`           // 持续天数
+	DailyGlobalLimit float64 `yaml:"daily_global_limit" json:"daily_global_limit"` // 每日全网限额
+	DailyUserLimit   float64 `yaml:"daily_user_limit" json:"daily_user_limit"`     // 每日单人限额
+	ExchangeRate     float64 `yaml:"exchange_rate" json:"exchange_rate"`           // 兑换比例 (1 Token = X Point)
+}
+
+// GetStartTimeUnix converts StartTime string to Unix timestamp
+func (c *PointExchangeConfig) GetStartTimeUnix() int64 {
+	// Parse YYYY-MM-DD-HH (Local/Configured Timezone? Usually UTC in this system)
+	// System uses UTC generally.
+	t, err := time.Parse("2006-01-02-15", c.StartTime)
+	if err != nil {
+		return 0
+	}
+	return t.Unix()
+}
+
+func (c *PointExchangeConfig) IsActive() bool {
+	startUnix := c.GetStartTimeUnix()
+	if startUnix == 0 {
+		return false
+	}
+	startTime := time.Unix(startUnix, 0).UTC()
+	endTime := startTime.AddDate(0, 0, c.DurationDays)
+	now := time.Now().UTC()
+	return now.After(startTime) && now.Before(endTime)
+}
+
 // GetStartTime 获取Airdrop开始时间的Unix时间戳，单位秒
 func (ac *AirdropConfig) GetStartTime() int64 {
 	st := ac.StartTime
@@ -236,31 +269,32 @@ func (ac *AirdropConfig) GetLockXpTime() int64 {
 }
 
 type Config struct {
-	Base               *BaseConfig         `yaml:"base"`
-	Mongo              *MongoConfig        `yaml:"mongo"`
-	Web                *WebConfig          `yaml:"web"`
-	TG                 *TelegramConfig     `yaml:"telegram"`
-	Log                *Log                `yaml:"log"`
-	PinPoint           *AwsPinPoint        `yaml:"aws_pinpoint"`
-	AdminCfg           *AdminConfig        `yaml:"admin_cfg"`
-	TencentCosCfg      *TencentCosConfig   `yaml:"tencent_cos"`
-	TonCfg             *TonConfig          `yaml:"ton_cfg"`
-	RedisCfg           *RedisCfg           `yaml:"redis_cfg"`
-	InviteCfg          *InviteCfg          `yaml:"invite_cfg"`
-	RechargeCfg        *RechargeCfg        `yaml:"recharge_cfg"`
-	CoinCfg            []*CoinCfg          `yaml:"coin_cfg"`
-	SpinWheelCfg       *SpinWheelCfg       `yaml:"spin_wheel_cfg"`
-	LeaderboardCfg     []*LeaderboardCfg   `yaml:"leaderboard_cfg"` //排行榜配置
-	LeaderboardBotCfg  *LeaderboardBotCfg  `yaml:"leaderboard_bot_cfg"`
-	StripeCfg          *StripeConfig       `yaml:"stripe_cfg"`
-	NacosCfg           *NacosCfg           `yaml:"nacos_cfg"`
-	PaypalCfg          *PaypalConfig       `yaml:"paypal_cfg"`
-	AirdropCfg         *AirdropConfig      `yaml:"airdrop_cfg"`
-	Web3Config         *Web3Config         `yaml:"web3_cfg"`
-	OpenApiConfig      *OpenApiConfig      `yaml:"open_api_cfg"`
-	CoinGeckoConfig    *CoinGeckoConfig    `yaml:"coingecko_cfg"`
-	PricePredictConfig *PricePredictConfig `yaml:"price_predict_cfg"`
-	ForecastConfig     *ForecastConfig     `yaml:"forecast_cfg"`
+	Base                *BaseConfig          `yaml:"base"`
+	Mongo               *MongoConfig         `yaml:"mongo"`
+	Web                 *WebConfig           `yaml:"web"`
+	TG                  *TelegramConfig      `yaml:"telegram"`
+	Log                 *Log                 `yaml:"log"`
+	PinPoint            *AwsPinPoint         `yaml:"aws_pinpoint"`
+	AdminCfg            *AdminConfig         `yaml:"admin_cfg"`
+	TencentCosCfg       *TencentCosConfig    `yaml:"tencent_cos"`
+	TonCfg              *TonConfig           `yaml:"ton_cfg"`
+	RedisCfg            *RedisCfg            `yaml:"redis_cfg"`
+	InviteCfg           *InviteCfg           `yaml:"invite_cfg"`
+	RechargeCfg         *RechargeCfg         `yaml:"recharge_cfg"`
+	CoinCfg             []*CoinCfg           `yaml:"coin_cfg"`
+	SpinWheelCfg        *SpinWheelCfg        `yaml:"spin_wheel_cfg"`
+	LeaderboardCfg      []*LeaderboardCfg    `yaml:"leaderboard_cfg"` //排行榜配置
+	LeaderboardBotCfg   *LeaderboardBotCfg   `yaml:"leaderboard_bot_cfg"`
+	StripeCfg           *StripeConfig        `yaml:"stripe_cfg"`
+	NacosCfg            *NacosCfg            `yaml:"nacos_cfg"`
+	PaypalCfg           *PaypalConfig        `yaml:"paypal_cfg"`
+	AirdropCfg          *AirdropConfig       `yaml:"airdrop_cfg"`
+	Web3Config          *Web3Config          `yaml:"web3_cfg"`
+	OpenApiConfig       *OpenApiConfig       `yaml:"open_api_cfg"`
+	CoinGeckoConfig     *CoinGeckoConfig     `yaml:"coingecko_cfg"`
+	PricePredictConfig  *PricePredictConfig  `yaml:"price_predict_cfg"`
+	PointExchangeConfig *PointExchangeConfig `yaml:"point_exchange_cfg"`
+	ForecastConfig      *ForecastConfig      `yaml:"forecast_cfg"`
 }
 
 var config *Config

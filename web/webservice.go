@@ -49,6 +49,7 @@ const (
 	ApiModuleNolanDev     = "nolan"
 	ApiModuleMarkets      = "markets"
 	ApiModulePricePredict = "price_predict"
+	ApiModuleExchange     = "exchange"
 )
 
 type ApiNode struct {

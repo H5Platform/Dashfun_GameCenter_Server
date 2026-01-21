@@ -1,6 +1,7 @@
 base:
   #  env: Dev or Test or Prod
   env: Dev
+  mode: HowardAI
 
 web:
   port: 8088
@@ -172,9 +173,19 @@ price_predict_cfg:
   name: BNB
   symbol: BNB
   bet_start_time: 0
-  bet_end_time: 46
-  reveal_time: 51
+  bet_end_time: 20
+  reveal_time: 22
   max_diff_limit: 3.0
   consolation_rate: 0.1
   max_bot_count: 500
-  bet_amounts: [100, 200, 500, 1000]
+  bet_amounts: [100, 500, 1000, 2000]
+
+point_exchange_cfg:
+  point_name: "NolanDevPoint"
+  token_name: "HHA"
+  token_address: "0x9DB1ac6a2E8a10A095318ED15B3221E79539BF54"
+  start_time: "2026-01-21-07"
+  duration_days: 30
+  daily_global_limit: 20000.0
+  daily_user_limit: 500.0
+  exchange_rate: 20 # 1 Token = 20 Point

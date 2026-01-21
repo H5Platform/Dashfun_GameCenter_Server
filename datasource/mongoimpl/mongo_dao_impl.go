@@ -34,6 +34,7 @@ type DaoImplMongo struct {
 	rechargeDao           types.RechargeDao
 	leaderboardBotDao     types.LeaderboardBotDao
 	pricePredictDao       types.PricePredictDao
+	exchangeDao           types.ExchangeDao
 }
 
 func NewDaoImplMongo() *DaoImplMongo {
@@ -56,6 +57,7 @@ func NewDaoImplMongo() *DaoImplMongo {
 		rechargeDao:           GetRechargeDaoMongo(),
 		leaderboardBotDao:     GetLeaderboardBotDaoMongo(),
 		pricePredictDao:       GetPricePredictDaoMongo(),
+		exchangeDao:           NewExchangeDaoMongo(GetMongoDatabase()),
 	}
 }
 
@@ -111,6 +113,10 @@ func (d *DaoImplMongo) GetNolanDevLeaderboardBotDao() types.NolanDevLeaderboardB
 
 func (d *DaoImplMongo) GetPricePredictDao() types.PricePredictDao {
 	return d.pricePredictDao
+}
+
+func (d *DaoImplMongo) GetExchangeDao() types.ExchangeDao {
+	return d.exchangeDao
 }
 
 func GetMongoDatabase() *mongo.Database {

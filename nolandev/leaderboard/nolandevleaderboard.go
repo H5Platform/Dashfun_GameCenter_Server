@@ -8,18 +8,19 @@ import (
 	"dashfun_gamecenter/nolandev/nolandata"
 	"dashfun_gamecenter/rediscenter"
 	"dashfun_gamecenter/usercenter"
-	"github.com/go-redis/redis/v8"
-	"go.uber.org/zap"
 	"log"
 	"math/rand"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	"go.uber.org/zap"
 )
 
 const leaderboardKey = "nolan_dp_leaderboard"
 const leaderboardLoadKey = "nolan_dp_leaderboard_load"
-const LeaderboardMinCount = 1234
+const LeaderboardMinCount = 2234
 
 var onceLeaderboardCenter sync.Once
 var instLeaderboardCenter *NolanDevLeaderboardCenter
@@ -58,12 +59,17 @@ func (l *NolanDevLeaderboardCenter) init() {
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				l.botBehaviour()
-			}
+
+		for range ticker.C {
+			l.botBehaviour()
 		}
+
+		// for {
+		// 	select {
+		// 	case <-ticker.C:
+		// 		l.botBehaviour()
+		// 	}
+		// }
 	}()
 
 }

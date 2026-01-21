@@ -86,7 +86,6 @@ func main() {
 	case config.ModeHowardAI:
 		nolandev.Get()
 		nolandevleaderboard.Get()
-		nolandevleaderboard.Get()
 	}
 
 	web3center.Get()

@@ -13,8 +13,10 @@ type NolanBotData struct {
 	MaxPostIntervalDays int64     `json:"max_post_interval_days" bson:"max_post_interval_days"` // Maximum post interval in days
 	MinPostIntervalDays int64     `json:"min_post_interval_days" bson:"min_post_interval_days"` // Minimum post interval in days
 	RegionId            int       `json:"region_id" bson:"region_id"`                           // Region ID FishingRegions
-	ActiveTime          int64     `json:"active_time" bson:"active_time"`                       // bot的活跃时间，单位毫秒，到这个时间后活跃发帖，然后随机等待一个天数(MinPostIntervalDays, MaxPostIntervalDays)后再次活跃
-	Status              BotStatus `json:"status" bson:"status"`                                 // Bot Status
+	ActiveTime          int64     `json:"active_time" bson:"active_time"`
+	WalletAddr          string    `json:"wallet_addr" bson:"wallet_addr"`   // bot的活跃时间，单位毫秒，到这个时间后活跃发帖，然后随机等待一个天数(MinPostIntervalDays, MaxPostIntervalDays)后再次活跃
+	TokenAmount         float64   `json:"token_amount" bson:"token_amount"` // Bot Token Amount
+	Status              BotStatus `json:"status" bson:"status"`             // Bot Status
 }
 
 func (b *NolanBotData) RandomNextActiveTime() {

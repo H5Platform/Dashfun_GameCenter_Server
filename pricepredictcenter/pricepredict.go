@@ -431,7 +431,17 @@ func (p *PricePredictCenter) CreateOrUpdateUserPredict(userId string, price floa
 				targetRecord = record
 				isNewRound = false // Not new, just update
 			} else {
-				return nil, fmt.Errorf("previous round pending, please wait for result")
+				// Previous round pending but date advanced. System issue or missed settle.
+				// Treat as new round (overwrite old stuck record).
+				targetRecord = record
+				targetRecord.PredictDate = date
+				targetRecord.PredictPrice = price
+				targetRecord.Status = data.PricePredictStatusPending
+				targetRecord.BetAmount = betAmount
+				targetRecord.RewardPoints = 0
+				targetRecord.CreateTime = now.Unix()
+				targetRecord.UpdateTime = now.Unix()
+				isNewRound = true
 			}
 		case data.PricePredictStatusUnsubmitted:
 			// Should act as new

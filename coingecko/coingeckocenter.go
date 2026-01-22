@@ -2,9 +2,10 @@ package coingecko
 
 import (
 	"dashfun_gamecenter/config"
-	"go.uber.org/zap"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 var once sync.Once

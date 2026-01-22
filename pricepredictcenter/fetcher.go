@@ -100,30 +100,41 @@ func (f *PriceFetcher) fetchBinance(symbol string) (float64, error) {
 	// API: https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT
 	// Note: Binance requires specific pair format. Assuming USDT pair for now.
 	pair := symbol + "USDT"
-	url := fmt.Sprintf("https://api.binance.com/api/v3/ticker/price?symbol=%s", pair)
-
-	resp, err := f.client.Get(url)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("binance status %d", resp.StatusCode)
+	urls := []string{
+		fmt.Sprintf("https://api.binance.com/api/v3/ticker/price?symbol=%s", pair),
+		fmt.Sprintf("https://api.binance.us/api/v3/ticker/price?symbol=%s", pair),
 	}
 
-	var result struct {
-		Price string `json:"price"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return 0, err
-	}
+	var lastErr error
+	for _, url := range urls {
+		resp, err := f.client.Get(url)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		defer resp.Body.Close()
 
-	var price float64
-	if _, err := fmt.Sscanf(result.Price, "%f", &price); err != nil {
-		return 0, err
+		if resp.StatusCode != http.StatusOK {
+			lastErr = fmt.Errorf("binance status %d from %s", resp.StatusCode, url)
+			continue
+		}
+
+		var result struct {
+			Price string `json:"price"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			lastErr = err
+			continue
+		}
+
+		var price float64
+		if _, err := fmt.Sscanf(result.Price, "%f", &price); err != nil {
+			lastErr = err
+			continue
+		}
+		return price, nil
 	}
-	return price, nil
+	return 0, lastErr
 }
 
 func (f *PriceFetcher) fetchCoinGecko(symbol string) (float64, error) {

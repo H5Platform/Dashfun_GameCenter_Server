@@ -20,7 +20,7 @@ import (
 
 const leaderboardKey = "nolan_dp_leaderboard"
 const leaderboardLoadKey = "nolan_dp_leaderboard_load"
-const LeaderboardMinCount = 2234
+const LeaderboardMinCount = 12234
 
 var onceLeaderboardCenter sync.Once
 var instLeaderboardCenter *NolanDevLeaderboardCenter

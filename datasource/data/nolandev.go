@@ -15,6 +15,7 @@ type NolanBotData struct {
 	RegionId            int       `json:"region_id" bson:"region_id"`                           // Region ID FishingRegions
 	ActiveTime          int64     `json:"active_time" bson:"active_time"`
 	WalletAddr          string    `json:"wallet_addr" bson:"wallet_addr"`   // bot的活跃时间，单位毫秒，到这个时间后活跃发帖，然后随机等待一个天数(MinPostIntervalDays, MaxPostIntervalDays)后再次活跃
+	WalletIndex         int       `json:"wallet_index" bson:"wallet_index"` // Wallet Index
 	TokenAmount         float64   `json:"token_amount" bson:"token_amount"` // Bot Token Amount
 	Status              BotStatus `json:"status" bson:"status"`             // Bot Status
 }

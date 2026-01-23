@@ -63,8 +63,8 @@ func RandomBot() *NolanDevBot {
 		bot.RandomNextActiveTime()
 	}
 
-	//⑥ 随机钱包地址
-	bot.WalletAddr = Wallets[rand.Intn(len(Wallets))]
+	//⑥ 顺序获取钱包地址
+	bot.WalletAddr, bot.WalletIndex = GetNextWallet()
 
 	// 激活bot
 	bot.Status = data.BotStatus_Active
@@ -78,8 +78,6 @@ func (b *NolanDevBot) DoTodayBehaviour() {
 	bot := b.Data
 	region := GetPostRegionByID(bot.RegionId)
 	post := RandomPostByRegion(region)
-
-	bot.RandomNextActiveTime() // 更新下次活跃时间
 
 	//随机发帖是否带位置
 	withLocation := rand.Intn(2) == 0
@@ -112,8 +110,8 @@ func (b *NolanDevBot) DoTodayBehaviour() {
 			if maxMult >= minMult {
 				randMult := rand.Intn(maxMult-minMult+1) + minMult
 				exchangePoint := int64(randMult * 10)
-				if bot.WalletAddr == "" || rand.Intn(2) == 0 {
-					bot.WalletAddr = Wallets[rand.Intn(len(Wallets))]
+				if bot.WalletAddr == "" || bot.WalletIndex == 0 {
+					bot.WalletAddr, bot.WalletIndex = GetNextWallet()
 				}
 				tokenAmount, err := ec.Exchange(context.Background(), bot.Id, exchangePoint, bot.WalletAddr, true)
 				if err == nil {
@@ -124,4 +122,6 @@ func (b *NolanDevBot) DoTodayBehaviour() {
 			}
 		}
 	}
+
+	bot.RandomNextActiveTime() // 更新下次活跃时间
 }

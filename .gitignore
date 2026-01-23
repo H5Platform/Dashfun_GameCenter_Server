@@ -42,3 +42,5 @@ logs/
 conf/wallets.yml
 conf/bot_wallet_state.yml
 
+.DS_Store
+

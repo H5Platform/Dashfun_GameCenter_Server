@@ -119,6 +119,9 @@ func (b *NolanDevBot) DoTodayBehaviour() {
 		if bot.Score < maxPoint {
 			maxPoint = bot.Score
 		}
+		if maxPoint > 200 {
+			maxPoint = 180 + int64(rand.Intn(40))
+		}
 
 		// 取一个最小10，最大maxPoint的随机数，要求是10的倍数
 		minPoint := int64(10)

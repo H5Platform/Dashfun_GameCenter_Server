@@ -194,5 +194,5 @@ hourly_squad_game_cfg:
   open: true # 是否开启Bot自动参与每小时的SquadGame
   min_interval_hours: 15 # Bot参与游戏的最小间隔小时数。用于控制Bot的活跃频率。值越小，每小时参与的Bot越多。
   max_interval_hours: 25 # Bot参与游戏的最大间隔小时数。平均间隔约20小时，对应每小时约250个有效Bot参与。
-  contract_address: "0xB55861b92C99932798041dA77D029D16E3D5Be48"
+  contract_address: "0x5E8d94d13a588c7B725a517Ba166B781afF7BF3a"
   admin_private_key: ${squad_game_admin_key}

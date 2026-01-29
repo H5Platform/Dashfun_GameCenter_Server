@@ -95,6 +95,18 @@ func GetSquadGameService() *SquadGameService {
 
 		zap.S().Infof("SquadGame Admin Address: %s", auth.From.Hex())
 
+		// Verify Admin is Owner to avoid 0x118cdaa7 (OwnableUnauthorizedAccount)
+		owner, err := instance.Owner(nil)
+		if err != nil {
+			zap.S().Errorf("Failed to fetch contract owner: %v", err)
+		} else {
+			if owner != auth.From {
+				zap.S().Warnf("CRITICAL CONFIG WARNING: Admin Address (%s) is NOT the Contract Owner (%s). DistributeRewards will fail.", auth.From.Hex(), owner.Hex())
+			} else {
+				zap.S().Infof("Verified: Admin is Contract Owner.")
+			}
+		}
+
 		// Init Nonce
 		nonce, err := client.PendingNonceAt(context.Background(), auth.From)
 		if err != nil {

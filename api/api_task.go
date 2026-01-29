@@ -4,8 +4,9 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/web"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary	用户请求任务奖励
@@ -84,13 +85,10 @@ func apiGetUserTaskCount(c *gin.Context, user *data.DashFunUser) {
 		switch ud.Status {
 		case data.TaskStatus_Verify_Pending, data.TaskStatus_InProgress:
 			r[int(data.TaskStatus_InProgress)] += 1
-			break
 		case data.TaskStatus_Completed:
 			r[int(data.TaskStatus_Completed)] += 1
-			break
 		case data.TaskStatus_Claimed:
 			r[int(data.TaskStatus_Claimed)] += 1
-			break
 		}
 	}
 

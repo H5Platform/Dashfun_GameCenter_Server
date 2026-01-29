@@ -9,11 +9,12 @@ import (
 	"dashfun_gamecenter/datasource/types"
 	game "dashfun_gamecenter/nolandev/squadgame/binding"
 	"fmt"
-	"log"
 	"math/big"
 	"strings"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 
 	"dashfun_gamecenter/nolandev/nolandata"
 	"math/rand"
@@ -48,25 +49,25 @@ func GetSquadGameService() *SquadGameService {
 	once.Do(func() {
 		cfg := config.GetConfig()
 		if cfg.HourlySquadGameCfg == nil {
-			log.Println("HourlySquadGameCfg is missing")
+			zap.S().Info("HourlySquadGameCfg is missing")
 			return
 		}
 
 		squadGameConfig := cfg.HourlySquadGameCfg
 		if squadGameConfig.ContractAddress == "" {
-			log.Println("HourlySquadGame ContractAddress is empty")
+			zap.S().Info("HourlySquadGame ContractAddress is empty")
 			return
 		}
 
 		client, err := ethclient.Dial(cfg.Web3Config.RpcUrl)
 		if err != nil {
-			log.Fatalf("Failed to connect to the Ethereum client: %v", err)
+			zap.S().Fatalf("Failed to connect to the Ethereum client: %v", err)
 		}
 
 		address := common.HexToAddress(squadGameConfig.ContractAddress)
 		instance, err := game.NewHourlySquadGame(address, client)
 		if err != nil {
-			log.Fatalf("Failed to instantiate contract: %v", err)
+			zap.S().Fatalf("Failed to instantiate contract: %v", err)
 		}
 
 		// Setup Auth
@@ -83,21 +84,21 @@ func GetSquadGameService() *SquadGameService {
 
 		privateKey, err := crypto.HexToECDSA(privateKeyStr)
 		if err != nil {
-			log.Fatalf("Failed to load private key: %v", err)
+			zap.S().Fatalf("Failed to load private key: %v", err)
 		}
 
 		chainId := big.NewInt(int64(cfg.Web3Config.ChainId))
 		auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainId)
 		if err != nil {
-			log.Fatalf("Failed to create transactor: %v", err)
+			zap.S().Fatalf("Failed to create transactor: %v", err)
 		}
 
-		log.Printf("SquadGame Admin Address: %s", auth.From.Hex())
+		zap.S().Infof("SquadGame Admin Address: %s", auth.From.Hex())
 
 		// Init Nonce
 		nonce, err := client.PendingNonceAt(context.Background(), auth.From)
 		if err != nil {
-			log.Fatalf("Failed to retrieve account nonce: %v", err)
+			zap.S().Fatalf("Failed to retrieve account nonce: %v", err)
 		}
 
 		squadGameService = &SquadGameService{
@@ -125,20 +126,20 @@ func (s *SquadGameService) startEventListeners() {
 		// Try load from DB
 		lastBlock, err := s.dao.GetLastBlockNumber()
 		if err != nil {
-			log.Printf("Failed to get last block from DB: %v", err)
+			zap.S().Infof("Failed to get last block from DB: %v", err)
 		}
 		if lastBlock > 0 {
 			startBlock = uint64(lastBlock) + 1
-			log.Printf("Resuming event scanning from block %d", startBlock)
+			zap.S().Infof("Resuming event scanning from block %d", startBlock)
 		} else {
 			// Fallback to latest
 			header, err := s.client.HeaderByNumber(context.Background(), nil)
 			if err != nil {
-				log.Printf("Failed to get latest header: %v", err)
+				zap.S().Infof("Failed to get latest header: %v", err)
 				return
 			}
 			startBlock = header.Number.Uint64()
-			log.Printf("Starting event scanning from latest block %d", startBlock)
+			zap.S().Infof("Starting event scanning from latest block %d", startBlock)
 		}
 
 		ticker := time.NewTicker(10 * time.Second)
@@ -148,7 +149,7 @@ func (s *SquadGameService) startEventListeners() {
 			// Get latest block
 			header, err := s.client.HeaderByNumber(context.Background(), nil)
 			if err != nil {
-				log.Printf("Failed to get latest header: %v", err)
+				zap.S().Infof("Failed to get latest header: %v", err)
 				continue
 			}
 			endBlock := header.Number.Uint64()
@@ -170,7 +171,7 @@ func (s *SquadGameService) startEventListeners() {
 
 			// Provide persistence
 			if err := s.dao.SetLastBlockNumber(int64(endBlock)); err != nil {
-				log.Printf("Failed to save last block number: %v", err)
+				zap.S().Infof("Failed to save last block number: %v", err)
 			}
 
 			// Move startBlock pointer
@@ -188,7 +189,7 @@ func (s *SquadGameService) pollBetPlaced(start, end uint64) {
 
 	iter, err := s.game.FilterBetPlaced(filterOpts, nil, nil)
 	if err != nil {
-		log.Printf("Failed to filter BetPlaced: %v", err)
+		zap.S().Infof("Failed to filter BetPlaced: %v", err)
 		return
 	}
 	defer iter.Close()
@@ -197,7 +198,7 @@ func (s *SquadGameService) pollBetPlaced(start, end uint64) {
 		s.handleBetPlaced(iter.Event)
 	}
 	if iter.Error() != nil {
-		log.Printf("BetPlaced iterator error: %v", iter.Error())
+		zap.S().Infof("BetPlaced iterator error: %v", iter.Error())
 	}
 }
 
@@ -210,7 +211,7 @@ func (s *SquadGameService) pollRoundSettled(start, end uint64) {
 
 	iter, err := s.game.FilterRoundSettled(filterOpts, nil)
 	if err != nil {
-		log.Printf("Failed to filter RoundSettled: %v", err)
+		zap.S().Infof("Failed to filter RoundSettled: %v", err)
 		return
 	}
 	defer iter.Close()
@@ -219,12 +220,12 @@ func (s *SquadGameService) pollRoundSettled(start, end uint64) {
 		s.handleRoundSettled(iter.Event)
 	}
 	if iter.Error() != nil {
-		log.Printf("RoundSettled iterator error: %v", iter.Error())
+		zap.S().Infof("RoundSettled iterator error: %v", iter.Error())
 	}
 }
 
 func (s *SquadGameService) handleBetPlaced(event *game.HourlySquadGameBetPlaced) {
-	log.Printf("BetPlaced: Round %d, User %s, Faction %d, Amount %s",
+	zap.S().Infof("BetPlaced: Round %d, User %s, Faction %d, Amount %s",
 		event.RoundId, event.User.Hex(), event.Faction, event.Amount.String())
 
 	bet := &data.SquadGameBet{
@@ -238,12 +239,12 @@ func (s *SquadGameService) handleBetPlaced(event *game.HourlySquadGameBetPlaced)
 	}
 
 	if err := s.dao.SaveBet(bet); err != nil {
-		log.Printf("Error saving bet: %v", err)
+		zap.S().Infof("Error saving bet: %v", err)
 	}
 }
 
 func (s *SquadGameService) handleRoundSettled(event *game.HourlySquadGameRoundSettled) {
-	log.Printf("RoundSettled: Round %d, Winner %d", event.RoundId, event.WinningFaction)
+	zap.S().Infof("RoundSettled: Round %d, Winner %d", event.RoundId, event.WinningFaction)
 
 	factionPools := make([]string, len(event.FactionPools))
 	for i, pool := range event.FactionPools {
@@ -263,7 +264,7 @@ func (s *SquadGameService) handleRoundSettled(event *game.HourlySquadGameRoundSe
 	}
 
 	if err := s.dao.SaveRound(round); err != nil {
-		log.Printf("Error saving round: %v", err)
+		zap.S().Infof("Error saving round: %v", err)
 	}
 
 	// Trigger Reward Distribution
@@ -292,12 +293,12 @@ func (s *SquadGameService) TrySettleRound() {
 	// We can check contract state for previous round
 	roundInfo, err := s.game.Rounds(nil, prevRoundId)
 	if err != nil {
-		log.Printf("Error checking round info: %v", err)
+		zap.S().Infof("Error checking round info: %v", err)
 		return
 	}
 
 	if !roundInfo.IsSettled {
-		log.Printf("Attempting to settle round %s", prevRoundId.String())
+		zap.S().Infof("Attempting to settle round %s", prevRoundId.String())
 
 		// Refresh nonce/gas price if needed, but go-ethereum handles nonce.
 		// Gas price is suggested by client.
@@ -306,15 +307,15 @@ func (s *SquadGameService) TrySettleRound() {
 			return s.game.SettleRound(opts, prevRoundId)
 		})
 		if err != nil {
-			log.Printf("Failed to settle round: %v", err)
+			zap.S().Infof("Failed to settle round: %v", err)
 			return
 		}
-		log.Printf("SettleRound sent: %s", tx.Hash().Hex())
+		zap.S().Infof("SettleRound sent: %s", tx.Hash().Hex())
 	}
 }
 
 func (s *SquadGameService) ClaimUserRewards(userAddress string) (string, error) {
-	log.Printf("Claiming rewards for User %s", userAddress)
+	zap.S().Infof("Claiming rewards for User %s", userAddress)
 	userAddr := common.HexToAddress(userAddress)
 
 	// 1. Get user's unclaimed bets
@@ -346,7 +347,7 @@ func (s *SquadGameService) ClaimUserRewards(userAddress string) (string, error) 
 	// 3. Check Win/Loss
 	if round.WinningFaction == bet.Faction {
 		// Winner: Call contract to distribute
-		log.Printf("User %s won round %d (Faction %d). Distributing rewards...", userAddress, bet.RoundId, bet.Faction)
+		zap.S().Infof("User %s won round %d (Faction %d). Distributing rewards...", userAddress, bet.RoundId, bet.Faction)
 
 		winningRoundIds := []*big.Int{big.NewInt(bet.RoundId)}
 
@@ -354,23 +355,23 @@ func (s *SquadGameService) ClaimUserRewards(userAddress string) (string, error) 
 			return s.game.DistributeRewards(opts, userAddr, winningRoundIds)
 		})
 		if err != nil {
-			log.Printf("Failed to distribute to %s: %v", userAddress, err)
+			zap.S().Infof("Failed to distribute to %s: %v", userAddress, err)
 			return "", err
 		}
 
-		log.Printf("DistributeRewards tx sent for %s: %s", userAddress, tx.Hash().Hex())
+		zap.S().Infof("DistributeRewards tx sent for %s: %s", userAddress, tx.Hash().Hex())
 
 		// Update DB
 		if err := s.dao.UpdateBetClaimed(bet.Id); err != nil {
-			log.Printf("Failed to mark bet as claimed for %s: %v", userAddress, err)
+			zap.S().Infof("Failed to mark bet as claimed for %s: %v", userAddress, err)
 		}
 
 		return tx.Hash().Hex(), nil
 	} else {
 		// Loser: Just mark as claimed so they can bet again
-		log.Printf("User %s lost round %d. Marking as claimed.", userAddress, bet.RoundId)
+		zap.S().Infof("User %s lost round %d. Marking as claimed.", userAddress, bet.RoundId)
 		if err := s.dao.UpdateBetClaimed(bet.Id); err != nil {
-			log.Printf("Failed to mark bet as claimed for %s: %v", userAddress, err)
+			zap.S().Infof("Failed to mark bet as claimed for %s: %v", userAddress, err)
 			return "", err // If DB update fails, return error so they can retry
 		}
 		return "claimed_no_reward", nil
@@ -473,14 +474,14 @@ func (s *SquadGameService) GetUserBetInfo(userAddress string) (*data.SquadGameUs
 		// Try DB first
 		round, err := s.dao.GetRound(activeBet.RoundId)
 		if err != nil {
-			log.Printf("Error getting round %d from DB: %v", activeBet.RoundId, err)
+			zap.S().Infof("Error getting round %d from DB: %v", activeBet.RoundId, err)
 		}
 
 		if round != nil {
 			res.Round = round
 		} else {
 			// If not in DB (maybe not settled yet or not synced), try contract
-			log.Printf("Round %d not found in DB, fetching from contract...", activeBet.RoundId)
+			zap.S().Infof("Round %d not found in DB, fetching from contract...", activeBet.RoundId)
 			rInfo, err := s.game.GetRoundState(nil, big.NewInt(activeBet.RoundId))
 			if err != nil {
 				return nil, fmt.Errorf("failed to fetch round %d from contract: %v", activeBet.RoundId, err)
@@ -562,16 +563,16 @@ func (s *SquadGameService) BotAutoPlay(bot *data.NolanBotData) error {
 
 	// 0.5 Check Time (Don't bet if > 58th minute)
 	if time.Now().Minute() >= 58 {
-		log.Printf("Bot %s skipping bet: too close to end of hour (minute %d)", bot.Name, time.Now().Minute())
+		zap.S().Infof("Bot %s skipping bet: too close to end of hour (minute %d)", bot.Name, time.Now().Minute())
 		return nil
 	}
 
 	// 1. Check Rewards (via DB unclaimed bets)
 	unclaimed, err := s.dao.GetUserUnclaimedBets(strings.ToLower(bot.WalletAddr))
 	if err == nil && len(unclaimed) > 0 {
-		log.Printf("Bot %s has %d unclaimed bets. Claiming...", bot.Name, len(unclaimed))
+		zap.S().Infof("Bot %s has %d unclaimed bets. Claiming...", bot.Name, len(unclaimed))
 		if _, err := s.ClaimUserRewards(bot.WalletAddr); err != nil {
-			log.Printf("Failed to claim rewards for bot %s: %v", bot.Name, err)
+			zap.S().Infof("Failed to claim rewards for bot %s: %v", bot.Name, err)
 		} else {
 			time.Sleep(2 * time.Second)
 		}
@@ -655,7 +656,7 @@ func (s *SquadGameService) BotAutoPlay(bot *data.NolanBotData) error {
 		FromAddress: bot.WalletAddr,
 	}
 
-	log.Printf("Bot %s placing bet: Faction=%d, Amount=%f", bot.Name, faction, amountVal)
+	zap.S().Infof("Bot %s placing bet: Faction=%d, Amount=%f", bot.Name, faction, amountVal)
 	_, err = s.RelayBet(req)
 	return err
 }

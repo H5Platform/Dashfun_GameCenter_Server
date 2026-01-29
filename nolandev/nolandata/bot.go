@@ -50,9 +50,11 @@ func RandomBot() *NolanDevBot {
 	bot.Score = int64(score)
 	bot.Rank = 0
 
-	//④ 随机发帖间隔天数
-	bot.MinPostIntervalDays = int64(rand.Intn(3) + 1)                       //1-3天
-	bot.MaxPostIntervalDays = bot.MinPostIntervalDays + int64(rand.Intn(3)) //1-6天
+	//④ 随机发帖间隔天数，这个不用了，现在固定一天一发帖
+	// bot.MinPostIntervalDays = int64(rand.Intn(3) + 1)                       //1-3天
+	// bot.MaxPostIntervalDays = bot.MinPostIntervalDays + int64(rand.Intn(3)) //1-6天
+	bot.MinPostIntervalDays = 1
+	bot.MaxPostIntervalDays = 1
 
 	//⑤ 随机活跃时间
 
@@ -79,13 +81,29 @@ func (b *NolanDevBot) DoTodayBehaviour() {
 	region := GetPostRegionByID(bot.RegionId)
 	post := RandomPostByRegion(region)
 
+	//20%几率发帖，减少帖子数量
+	doPost := rand.Intn(5) == 0
+
 	//随机发帖是否带位置
 	withLocation := rand.Intn(2) == 0
 	location := ""
 	if withLocation {
 		location = region.Region + ", " + region.Country
 	}
-	postData, _ := nolandev.Get().BotPost(bot.Id, bot.Name, post.Content, location, bot.ActiveTime)
+	var postData *data.NolanPostData
+	if doPost {
+		postData, _ = nolandev.Get().BotPost(bot.Id, bot.Name, post.Content, location, bot.ActiveTime)
+	} else {
+		//没发帖，但是也给bot加点分
+		postData = &data.NolanPostData{
+			UserId:     bot.Id,
+			PostId:     "",
+			PosterName: bot.Name,
+			Content:    post.Content,
+			CreatedAt:  bot.ActiveTime,
+			Location:   location,
+		}
+	}
 
 	if postData != nil {
 		point := nolandev.Get().GetPostPointReward(postData)
@@ -124,4 +142,50 @@ func (b *NolanDevBot) DoTodayBehaviour() {
 	}
 
 	bot.RandomNextActiveTime() // 更新下次活跃时间
+}
+
+// Update next squad game active time
+func (b *NolanDevBot) RandomNextSquadGameActiveTime() {
+	cfg := config.GetConfig().HourlySquadGameCfg
+	minHours := 15
+	maxHours := 25
+	if cfg != nil && cfg.MinIntervalHours > 0 {
+		minHours = cfg.MinIntervalHours
+	}
+	if cfg != nil && cfg.MaxIntervalHours > 0 {
+		maxHours = cfg.MaxIntervalHours
+	}
+
+	randomHours := rand.Intn(maxHours-minHours+1) + minHours
+
+	// Randomize minute to spread out distribution (current minute to 60)
+	currentMinute := time.Now().Minute()
+	randomMinutes := 0
+	if currentMinute < 60 {
+		randomMinutes = rand.Intn(60 - currentMinute)
+	}
+
+	b.Data.SquadGameActiveTime = time.Now().Add(time.Duration(randomHours)*time.Hour + time.Duration(randomMinutes)*time.Minute).UnixMilli()
+}
+
+// Initialize for the first time if 0
+func (b *NolanDevBot) InitSquadGameActiveTime() {
+	if b.Data.SquadGameActiveTime == 0 {
+		cfg := config.GetConfig().HourlySquadGameCfg
+		maxHours := 25
+		if cfg != nil && cfg.MaxIntervalHours > 0 {
+			maxHours = cfg.MaxIntervalHours
+		}
+
+		randomHours := rand.Intn(maxHours + 1)
+
+		// Randomize minute
+		currentMinute := time.Now().Minute()
+		randomMinutes := 0
+		if currentMinute < 60 {
+			randomMinutes = rand.Intn(60 - currentMinute)
+		}
+
+		b.Data.SquadGameActiveTime = time.Now().Add(time.Duration(randomHours)*time.Hour + time.Duration(randomMinutes)*time.Minute).UnixMilli()
+	}
 }

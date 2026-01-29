@@ -87,3 +87,7 @@ func GetPricePredictDao() types.PricePredictDao {
 func GetExchangeDao() types.ExchangeDao {
 	return daoImpl.GetExchangeDao()
 }
+
+func GetSquadGameDao() types.SquadGameDao {
+	return daoImpl.GetSquadGameDao()
+}

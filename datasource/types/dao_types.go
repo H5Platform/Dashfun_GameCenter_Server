@@ -31,6 +31,7 @@ type DaoImpl interface {
 	GetNolanDevLeaderboardBotDao() NolanDevLeaderboardBotDao
 	GetPricePredictDao() PricePredictDao
 	GetExchangeDao() ExchangeDao
+	GetSquadGameDao() SquadGameDao
 }
 
 type UserDao interface {

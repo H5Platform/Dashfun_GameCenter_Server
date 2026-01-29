@@ -6,6 +6,7 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/events"
 	"dashfun_gamecenter/nolandev/nolandata"
+	"dashfun_gamecenter/nolandev/squadgame"
 	"dashfun_gamecenter/rediscenter"
 	"dashfun_gamecenter/usercenter"
 	"log"
@@ -20,7 +21,7 @@ import (
 
 const leaderboardKey = "nolan_dp_leaderboard"
 const leaderboardLoadKey = "nolan_dp_leaderboard_load"
-const LeaderboardMinCount = 12234
+const LeaderboardMinCount = 14567
 
 var onceLeaderboardCenter sync.Once
 var instLeaderboardCenter *NolanDevLeaderboardCenter
@@ -147,6 +148,51 @@ func (l *NolanDevLeaderboardCenter) botBehaviour() {
 			rank := l.UploadScore(bot.Data)
 			bot.Data.Rank = rank
 			botDao.SaveOrUpdate(bot.Data)
+		}
+
+		// SquadGame Bot Logic
+		if bd.Status == data.BotStatus_Active {
+			// Initialize if needed (spread out initial load)
+			bot.InitSquadGameActiveTime()
+
+			if now > bd.SquadGameActiveTime {
+				// Hourly Gate Mechanism for Fluctuation
+				// 1. Calculate Pass Rate for this hour (Deterministic for all bots)
+				// 模拟每小时的流量波动。使用小时时间戳作为种子，生成该小时的固定随机因子。
+				nowTime := time.Now()
+				hourSeed := nowTime.Truncate(time.Hour).Unix()
+				r := rand.New(rand.NewSource(hourSeed))
+				// Pass Rate between 0.2 and 1.2 (clamped to 1.0).
+				// 0.2: 极低通过率 (形成活动低谷)，堆积 Bot。
+				// 1.0+: 高通过率 (形成活动高峰)，释放堆积 Bot。
+				passRate := 0.2 + r.Float64() // Range: 0.2 - 1.2
+
+				// 2. Check if this bot passes
+				// Use bot ID hash or random as consistent check? Random is fine if independent.
+				botDice := rand.Float64()
+
+				if botDice > passRate {
+					// Blocked! Snooze for 1 hour to accumulate.
+					// Add 30-60 mins delay to retry in next hour block or spread out
+					bot.Data.SquadGameActiveTime = nowTime.Add(time.Minute * time.Duration(30+rand.Intn(30))).UnixMilli()
+					botDao.SaveOrUpdate(bot.Data)
+					bot.Unlock()
+					continue
+				}
+
+				// Execute SquadGame Logic
+				func(b *data.NolanBotData) {
+					// Use a separate goroutine to avoid blocking the main loop
+					err := squadgame.GetSquadGameService().BotAutoPlay(b)
+					if err != nil {
+						zap.S().Errorw("BotAutoPlay failed", "bot", b.Name, "error", err)
+					}
+				}(bot.Data)
+
+				// Update Next Time
+				bot.RandomNextSquadGameActiveTime()
+				botDao.SaveOrUpdate(bot.Data)
+			}
 		}
 		bot.Unlock()
 	}

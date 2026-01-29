@@ -12,6 +12,7 @@ import (
 	"dashfun_gamecenter/leaderboardcenter"
 	"dashfun_gamecenter/nolandev"
 	nolandevleaderboard "dashfun_gamecenter/nolandev/leaderboard"
+	"dashfun_gamecenter/nolandev/squadgame"
 	"dashfun_gamecenter/openai_api"
 	"dashfun_gamecenter/paymentcenter"
 	"dashfun_gamecenter/pricepredictcenter"
@@ -86,6 +87,7 @@ func main() {
 	case config.ModeHowardAI:
 		nolandev.Get()
 		nolandevleaderboard.Get()
+		squadgame.GetSquadGameService()
 	}
 
 	web3center.Get()

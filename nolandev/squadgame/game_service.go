@@ -293,6 +293,11 @@ func (s *SquadGameService) startScheduler() {
 }
 
 func (s *SquadGameService) TrySettleRound() {
+	cfg := config.GetConfig().HourlySquadGameCfg
+	if cfg == nil || !cfg.Open {
+		return
+	}
+
 	now := time.Now().Unix()
 	// Round duration is 3600 seconds
 	currentRoundStart := (now / 3600) * 3600

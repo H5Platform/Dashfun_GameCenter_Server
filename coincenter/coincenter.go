@@ -44,7 +44,7 @@ func (c *CoinCenter) initDefaultCoins() {
 	for _, cfg := range config.GetConfig().CoinCfg {
 		_, exist := c.GetCoinByName(cfg.Name)
 		if !exist {
-			_, err := c.CreateCoin("", cfg.Name, cfg.Symbol, cfg.Desc, "", true, 100, make(map[string]string))
+			_, err := c.CreateCoin("", cfg.Name, cfg.Symbol, cfg.Desc, "", cfg.CanWithdraw, cfg.MinWithdraw, make(map[string]string))
 			if err != nil {
 				log.Fatal(err)
 			}

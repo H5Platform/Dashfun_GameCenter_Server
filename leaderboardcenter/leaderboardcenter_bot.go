@@ -6,8 +6,6 @@ import (
 	"dashfun_gamecenter/datasource/dao"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/rediscenter"
-	"dashfun_gamecenter/spinwheelcenter"
-	"dashfun_gamecenter/taskcenter"
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"math/rand"
@@ -236,22 +234,7 @@ func (b *LeaderboardBot) InitScore() {
 	b.data.Status = data.LeaderboardBotStatus_Active
 }
 
-func (b *LeaderboardBot) Spin() int {
-	cfg := config.GetConfig().LeaderboardBotCfg.BotLevels[b.data.Level-1]
-	finalScore := 0
-	for i := 0; i < cfg.SpinWheelDailyCount; i++ {
-		spinWheelHit := spinwheelcenter.Get().RandomSpinWheel()
-		if spinWheelHit != nil && spinWheelHit.RewardType == data.SpinWheelReward_DashFunPoint {
-			finalScore += spinWheelHit.RewardValue
-		}
-	}
-
-	finalScore = int(float64(finalScore) * (1 + 0.2*rand.Float64()))
-	return finalScore
-}
-
 func (b *LeaderboardBot) DoTodayBehaviour() {
-	spinScore := b.Spin()
 	cfg := config.GetConfig().LeaderboardBotCfg.BotLevels[b.data.Level-1]
 	dailyIndex := b.data.ActiveDays
 	if dailyIndex >= len(cfg.DailyTop) {
@@ -259,41 +242,15 @@ func (b *LeaderboardBot) DoTodayBehaviour() {
 	}
 	oldScore := b.data.Score
 	dailyScore := cfg.DailyTop[dailyIndex]
-	b.data.Score += int64(dailyScore + spinScore)
+	b.data.Score += int64(dailyScore)
 	b.data.Status = data.LeaderboardBotStatus_DoneToday
 	b.data.ActiveDate = time.Now().UTC().Format("20060102")
 	b.data.ActiveDays++
 
-	oldRank := b.data.Rank
-	if oldRank == 0 {
-		oldRank = 9999999
-	}
-
 	delta := b.data.Score - oldScore
-
 	rank := b.UploadScore(delta)
-
-	tasks := taskcenter.Get().GetLeaderboardTasks(oldRank, int(rank))
-
-	oldScore = b.data.Score
-	scoreChanged := false
-	if len(tasks) > 0 {
-		for _, task := range tasks {
-			for _, r := range task.Rewards {
-				if r.RewardType == data.TaskRewardType_DashFunPoint {
-					b.data.Score += int64(r.Amount)
-					scoreChanged = true
-				}
-			}
-		}
-	}
-
-	if scoreChanged {
-		delta = b.data.Score - oldScore
-		rank = b.UploadScore(delta)
-		if rank > 0 {
-			b.data.Rank = int(rank)
-		}
+	if rank > 0 {
+		b.data.Rank = int(rank)
 	}
 
 	dao.GetLeaderboardBotDao().SaveOrUpdate(b.data)

@@ -157,8 +157,5 @@ func apiLeaderboardMe(c *gin.Context, user *data.DashFunUser) {
 }
 
 func init() {
-	web.GetService().RegisterApi(web.ApiModuleLeaderboard, web.GET, "/xp_top", userHandlerAuthWrapper(apiLeaderboardTop20))
-	web.GetService().RegisterApi(web.ApiModuleLeaderboard, web.GET, "/fp_top", userHandlerAuthWrapper(apiFishingLeaderboardTop20))
 	web.GetService().RegisterApi(web.ApiModuleLeaderboard, web.GET, "/ndp_top", userHandlerAuthWrapper(apiNolanDevLeaderboardTop20))
-	web.GetService().RegisterApi(web.ApiModuleLeaderboard, web.GET, "/me", userHandlerAuthWrapper(apiLeaderboardMe))
 }

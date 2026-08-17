@@ -92,7 +92,4 @@ func apiGetPosts(c *gin.Context, user *data.DashFunUser) {
 
 func init() {
 	web.GetService().RegisterApi(web.ApiModuleFishingVerse, web.POST, "profile/update", userHandlerAuthWrapper(apiUserUpdateProfile))
-	web.GetService().RegisterApi(web.ApiModuleFishingVerse, web.GET, "remaining", userHandlerAuthWrapper(apiGetUserDailyCheckInRemaining))
-	web.GetService().RegisterApi(web.ApiModuleFishingVerse, web.POST, "post", userHandlerAuthWrapper(apiUserPost))
-	web.GetService().RegisterApi(web.ApiModuleFishingVerse, web.GET, "posts", userHandlerAuthWrapper(apiGetPosts))
 }

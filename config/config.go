@@ -64,13 +64,6 @@ type TencentCosConfig struct {
 	SecretKey  string `yaml:"secret_key"`
 }
 
-type TonConfig struct {
-	ApiKey         string `yaml:"api_key"`
-	WalletMnemonic string `yaml:"wallet_mnemonic"`
-	WalletVersion  string `yaml:"wallet_version"`
-	IsTest         bool   `yaml:"is_test"`
-}
-
 type RedisCfg struct {
 	Address  string `yaml:"address"`
 	Password string `yaml:"password"`
@@ -89,59 +82,26 @@ type InviteCfg struct {
 	PointReward   []RewardPoint `yaml:"point_reward"`   //每个成功被邀请的用户奖励的分数
 }
 
-type RechargeOption struct {
-	Price        int `yaml:"price"`         //价格，单位美分，浏览器统一价格
-	PriceIos     int `yaml:"price_ios"`     //价格，单位美分，AppStore价格
-	PriceAndroid int `yaml:"price_android"` //价格，单位美分，AndroidStore价格
-	PriceOff     int `yaml:"price_off"`     //折扣(100 = 10% off, 500 = 50% off)
-	TGStar       int `yaml:"tg_star"`       //对应TG星星数量
-	Diamond      int `yaml:"diamond"`       //对应钻石数量
-}
-
-type RechargePlayStoreCfg struct {
-	PlayStoreKeyFile   string `yaml:"play_store_key_file"`  //Google Play Store的公钥文件路径，Json
-	ProductPackageName string `yaml:"product_package_name"` //Google Play Store的产品包名
-}
-
-type RechargeCfg struct {
-	Open       bool             `yaml:"open"`        //是否开启充值
-	EnableStar bool             `yaml:"enable_star"` //是否开启星星充值
-	Options    []RechargeOption `yaml:"options"`     //充值选项
-
-	PlayStore RechargePlayStoreCfg `yaml:"play_store"` // Google Play Store的配置
-}
-
-type StripeConfig struct {
-	PublicKey  string `yaml:"public_key"`
-	SecretKey  string `yaml:"secret_key"`
-	ReturnHost string `yaml:"return_host"`
-	WebhookKey string `yaml:"webhook_key"`
-}
-
 // CoinCfg 代币配置,DashFunXp, DashFunCoin, DashFunDiamond,DashFunTicket 这些必须代币的配置
 type CoinCfg struct {
-	Name   string `yaml:"name"`   //代币名称
-	Desc   string `yaml:"desc"`   //代币描述
-	Symbol string `yaml:"symbol"` //代币符号
+	Name        string  `yaml:"name"`         //代币名称
+	Desc        string  `yaml:"desc"`         //代币描述
+	Symbol      string  `yaml:"symbol"`       //代币符号
+	CanWithdraw bool    `yaml:"can_withdraw"` //是否允许提现
+	MinWithdraw float32 `yaml:"min_withdraw"` //最低提现数量
 }
 
-type SpinWheelCfg struct {
-	TicketPrice   int                    `yaml:"ticket_price"`                          //每张票的价格，DashFunDiamond
-	TicketsNeeded []int                  `yaml:"tickets_needed"`                        //每次抽奖需要的票数，能抽的次数就是数组的长度，次数每日重置
-	Rewards       []data.SpinWheelReward `json:"rewards" bson:"rewards" yaml:"rewards"` //轮盘每个区域的奖励
-}
 type LeaderboardBotCfg struct {
 	RecordScoreMin int                    `yaml:"record_score_min"` //上榜分数的最小值
 	BotLevels      []*LeaderboardBotLevel `yaml:"bot_levels"`       //等级配置
 }
 
 type LeaderboardBotLevel struct {
-	Level               int   `yaml:"level"`                  //等级
-	Weight              int   `yaml:"weight"`                 //权重
-	MinScore            int   `yaml:"min_score"`              //初始化最小分数
-	FixedTaskTop        int   `yaml:"fixed_task_top"`         //固定任务分数上限
-	SpinWheelDailyCount int   `yaml:"spin_wheel_daily_count"` //每日转盘次数
-	DailyTop            []int `yaml:"daily_top"`              //日常任务分数上限，根据激活天数递减，最后一个数据作为每天的分数
+	Level        int   `yaml:"level"`          //等级
+	Weight       int   `yaml:"weight"`         //权重
+	MinScore     int   `yaml:"min_score"`      //初始化最小分数
+	FixedTaskTop int   `yaml:"fixed_task_top"` //固定任务分数上限
+	DailyTop     []int `yaml:"daily_top"`      //日常任务分数上限，根据激活天数递减，最后一个数据作为每天的分数
 }
 
 type LeaderboardCfg struct {
@@ -150,29 +110,6 @@ type LeaderboardCfg struct {
 	PeriodType data.LeaderboardPeriodType `yaml:"period_type"` //排行榜周期类型
 	GameId     string                     `yaml:"game_id"`     //绑定的游戏ID，空或者DashFun表示DashFun平台
 	TopCount   int                        `yaml:"top_count"`   //排行榜显示前多少名
-}
-
-type PayPalApiBase string
-
-const (
-	PayPalApiBaseLive    PayPalApiBase = "live"
-	PayPalApiBaseSandbox PayPalApiBase = "sandbox"
-)
-
-type PaypalConfig struct {
-	ApiBase   PayPalApiBase `yaml:"api_base"`
-	ClientId  string        `yaml:"client_id"`
-	SecretKey string        `yaml:"secret_key"`
-}
-
-type AirdropConfig struct {
-	StartTime       string `yaml:"start_time"`       // TGE开始时间，格式为YYYY-MM-DD HH:MM:SS , 温哥华时间
-	LockXpTime      int    `yaml:"lock_xp_time"`     // TGE开始之前多久锁定积分，单位小时
-	ClaimTime       int    `yaml:"claim_time"`       // TGE后多久可以领取，单位秒
-	TotalScore      int    `yaml:"total_score"`      // Airdrop 使用的总分数，作为token分配的分母
-	TotalToken      int    `yaml:"total_token"`      // Airdrop 的总token数量，单位Ether
-	VestingContract string `yaml:"vesting_contract"` // 代币锁仓合约地址
-	TokenContract   string `yaml:"token_contract"`   // 代币合约地址
 }
 
 type Web3Config struct {
@@ -248,32 +185,6 @@ func (c *PointExchangeConfig) IsActive() bool {
 	return now.After(startTime) && now.Before(endTime)
 }
 
-// GetStartTime 获取Airdrop开始时间的Unix时间戳，单位秒
-func (ac *AirdropConfig) GetStartTime() int64 {
-	st := ac.StartTime
-
-	loc, err := time.LoadLocation("America/Vancouver")
-	if err != nil {
-		log.Printf("failed to load Vancouver timezone: %v", err)
-		return 0
-	}
-	t, err := time.ParseInLocation("2006-1-02 15:04:05", st, loc)
-	if err != nil {
-		log.Printf("failed to parse start time: %v", err)
-		return 0
-	}
-	return t.Unix()
-}
-
-// GetLockXpTime 获取锁定积分的时间，单位秒
-func (ac *AirdropConfig) GetLockXpTime() int64 {
-	startTime := ac.GetStartTime()
-	if startTime == 0 {
-		return 0
-	}
-	return startTime - int64(ac.LockXpTime*3600) // 转换为秒
-}
-
 type Config struct {
 	Base                *BaseConfig            `yaml:"base"`
 	Mongo               *MongoConfig           `yaml:"mongo"`
@@ -284,17 +195,11 @@ type Config struct {
 	AdminCfg            *AdminConfig           `yaml:"admin_cfg"`
 	AccountCfg          *AccountConfig         `yaml:"account_cfg"`
 	TencentCosCfg       *TencentCosConfig      `yaml:"tencent_cos"`
-	TonCfg              *TonConfig             `yaml:"ton_cfg"`
 	RedisCfg            *RedisCfg              `yaml:"redis_cfg"`
 	InviteCfg           *InviteCfg             `yaml:"invite_cfg"`
-	RechargeCfg         *RechargeCfg           `yaml:"recharge_cfg"`
 	CoinCfg             []*CoinCfg             `yaml:"coin_cfg"`
-	SpinWheelCfg        *SpinWheelCfg          `yaml:"spin_wheel_cfg"`
 	LeaderboardCfg      []*LeaderboardCfg      `yaml:"leaderboard_cfg"` //排行榜配置
 	LeaderboardBotCfg   *LeaderboardBotCfg     `yaml:"leaderboard_bot_cfg"`
-	StripeCfg           *StripeConfig          `yaml:"stripe_cfg"`
-	PaypalCfg           *PaypalConfig          `yaml:"paypal_cfg"`
-	AirdropCfg          *AirdropConfig         `yaml:"airdrop_cfg"`
 	Web3Config          *Web3Config            `yaml:"web3_cfg"`
 	OpenApiConfig       *OpenApiConfig         `yaml:"open_api_cfg"`
 	CoinGeckoConfig     *CoinGeckoConfig       `yaml:"coingecko_cfg"`

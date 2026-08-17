@@ -13,12 +13,6 @@ func GetGameDao() types.GameDao {
 func GetPaymentDao() types.PaymentDao {
 	return daoImpl.GetPaymentDao()
 }
-func GetTaskDao() types.TaskDao {
-	return daoImpl.GetTaskDao()
-}
-func GetTaskUserDao() types.TaskUserDao {
-	return daoImpl.GetTaskUserDao()
-}
 func GetCoinDao() types.CoinDao {
 	return daoImpl.GetCoinDao()
 }
@@ -32,13 +26,6 @@ func GetAdminUserDao() types.AdminUserDao { return daoImpl.GetAdminUserDao() }
 func GetAdminUserLoginInfoDao() types.AdminUserLoginInfoDao {
 	return daoImpl.GetAdminUserLoginInfoDao()
 }
-func GetSpinWheelDao() types.SpinWheelDao {
-	return daoImpl.GetSpinWheelDao()
-}
-func GetSpinWheelUserDao() types.SpinWheelUserDao {
-	return daoImpl.GetSpinWheelUserDao()
-}
-
 func GetUserSaveDataDao() types.DashFunUserSaveDataDao {
 	return daoImpl.GetUserSaveDataDao()
 }
@@ -49,15 +36,8 @@ func GetUserPlayRecordDao() types.DashFunUserPlayRecordDao {
 
 func GetInvitedUserDao() types.InvitedUserDao { return daoImpl.GetInvitedUserDao() }
 
-func GetRechargeDao() types.RechargeDao {
-	return daoImpl.GetRechargeDao()
-}
 func GetLeaderboardBotDao() types.LeaderboardBotDao {
 	return daoImpl.GetLeaderboardBotDao()
-}
-
-func GetAirdropDao() types.AirdropDao {
-	return daoImpl.GetAirdropDao()
 }
 
 func GetUserProfileDao() types.UserProfileDao {

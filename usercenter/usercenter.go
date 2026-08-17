@@ -84,6 +84,25 @@ func (uc *UserCenter) RequestUserId() string {
 	return uc.newUserId()
 }
 
+// restoreUserProfile keeps compatibility with profiles created before nickname
+// and avatar fields were persisted directly on user_data.
+func (uc *UserCenter) restoreUserProfile(user *data.DashFunUser) error {
+	if user == nil || (user.Nickname != "" && user.AvatarUrl != "") {
+		return nil
+	}
+	profile, err := dao.GetUserProfileDao().GetUserProfile(user.Id)
+	if err != nil || profile == nil {
+		return err
+	}
+	if user.Nickname == "" {
+		user.Nickname = profile.Nickname
+	}
+	if user.AvatarUrl == "" {
+		user.AvatarUrl = profile.Avatar
+	}
+	return nil
+}
+
 func (uc *UserCenter) GetDashFunUserChannelId(userId string, from data.DashFunUserFrom) (string, error) {
 	user, err := uc.GetDashFunUser(userId)
 	if err != nil {
@@ -192,6 +211,9 @@ func (uc *UserCenter) UserLogin(authData *utils.AuthData, referrerId string, aut
 		//update avatar info
 		uc.updateUserAvatar(user)
 	}
+	if err = uc.restoreUserProfile(user); err != nil {
+		return nil, err
+	}
 
 	var playRecord []*data.PlayGameRecord
 	var favorites []string
@@ -273,6 +295,9 @@ func (uc *UserCenter) accountUserLogin(token, referrerId string, autoCreate bool
 		user.LoginTime = time.Now().UnixMilli()
 		user.DisplayName = account.DisplayName
 		user.UserName = account.Username
+	}
+	if err = uc.restoreUserProfile(user); err != nil {
+		return nil, err
 	}
 
 	var records []*data.PlayGameRecord
@@ -719,11 +744,16 @@ func (uc *UserCenter) UserUpdateProfile(userId string, nickname string, avatar [
 		}
 	}
 
-	dao.GetUserProfileDao().SaveOrUpdate(&data.UserProfileData{
+	if _, err := dao.GetUserDao().SaveOrUpdate(ou.User); err != nil {
+		return nil, err
+	}
+	if _, err := dao.GetUserProfileDao().SaveOrUpdate(&data.UserProfileData{
 		UserId:   userId,
 		Nickname: ou.User.Nickname,
 		Avatar:   ou.User.AvatarUrl,
-	})
+	}); err != nil {
+		return nil, err
+	}
 
 	return ou.User, nil
 }

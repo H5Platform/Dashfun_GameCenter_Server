@@ -9,21 +9,15 @@ type DaoImpl interface {
 	GetUserDao() UserDao
 	GetGameDao() GameDao
 	GetPaymentDao() PaymentDao
-	GetTaskDao() TaskDao
-	GetTaskUserDao() TaskUserDao
 	GetCoinDao() CoinDao
 	GetCoinUserDao() CoinUserDao
 	GetCoinRecordDao() CoinRecordDao
 	GetAdminUserDao() AdminUserDao
 	GetAdminUserLoginInfoDao() AdminUserLoginInfoDao
-	GetSpinWheelDao() SpinWheelDao
-	GetSpinWheelUserDao() SpinWheelUserDao
 	GetUserSaveDataDao() DashFunUserSaveDataDao
 	GetUserPlayRecordDao() DashFunUserPlayRecordDao
 	GetInvitedUserDao() InvitedUserDao
-	GetRechargeDao() RechargeDao
 	GetLeaderboardBotDao() LeaderboardBotDao
-	GetAirdropDao() AirdropDao
 	GetUserProfileDao() UserProfileDao
 	GetFishingPostDao() FishingPostDao
 	GetFishingLeaderboardBotDao() FishingLeaderboardBotDao
@@ -56,29 +50,6 @@ type PaymentDao interface {
 	CreatePayment(id, userId, gameId, paymentId, title, desc, payload string, currency data.PaymentCurrency, from data.PaymentFrom, price int, extraData string) (*data.DashFunPaymentData, error)
 }
 
-type RechargeDao interface {
-	SaveOrUpdate(recharge *data.DashFunRechargeData) (*data.DashFunRechargeData, error)
-	FindRechargeById(rechargeId string) (*data.DashFunRechargeData, error)
-	CreateRecharge(id, userId string, from data.RechargeFrom, gameId string, price int, priceType data.RechargePlatformOptionPriceType, diamond int, payload, message string, createAt int64) (*data.DashFunRechargeData, error)
-	GetOrdersByStatus(status data.RechargeStatus) ([]*data.DashFunRechargeData, error)
-}
-
-type TaskDao interface {
-	FindTaskById(id string) (*data.DashFunTaskData, error)
-	FindTaskByName(name string) (*data.DashFunTaskData, error)
-	FindAllTasks() []*data.DashFunTaskData
-	SearchTask(gameId, keyword string, size, page int64) (tasks []*data.DashFunTaskData, totalPages int, err error)
-	FindTaskByGameId(gameId string) ([]*data.DashFunTaskData, error)
-	SaveOrUpdate(task *data.DashFunTaskData) (*data.DashFunTaskData, error)
-	CreateTask(id, name, gameId string, showInGame bool, priority int, taskType data.DashFunTaskType, category data.DashFunTaskCategory, condition data.DashFunTaskCondition, rewards []data.DashFunTaskReward) (*data.DashFunTaskData, error)
-}
-
-type TaskUserDao interface {
-	FindTaskUserData(taskId string, userId string) (*data.DashFunTaskUserData, error)
-	FindAllTaskUserData(taskId string) ([]*data.DashFunTaskUserData, error)
-	SaveOrUpdate(user *data.DashFunTaskUserData) (*data.DashFunTaskUserData, error)
-}
-
 type CoinDao interface {
 	SaveOrUpdate(task *data.CoinData) (*data.CoinData, error)
 	FindCoinById(coinId string) (*data.CoinData, error)
@@ -97,17 +68,6 @@ type CoinUserDao interface {
 type CoinRecordDao interface {
 	AddRecord(user *data.CoinUserRecordData) (*data.CoinUserRecordData, error)
 	GetAllUserCoinRecords(userId, coinId string) ([]*data.CoinUserRecordData, error)
-}
-
-type SpinWheelDao interface {
-	CreateSpinWheel(id, name, gameId string, rewards []data.SpinWheelReward) (*data.SpinWheelData, error)
-	GetGameSpinWheel(gameId string) (*data.SpinWheelData, error)
-	GetSpinWheelById(spinWheelId string) (*data.SpinWheelData, error)
-}
-
-type SpinWheelUserDao interface {
-	SaveOrUpdate(userData *data.SpinWheelUserData) (*data.SpinWheelUserData, error)
-	GetUserSpinWheelData(userId, gameId string) (*data.SpinWheelUserData, error)
 }
 
 type DashFunUserSaveDataDao interface {
@@ -135,12 +95,6 @@ type Cursor[T any] interface {
 type LeaderboardBotDao interface {
 	SaveOrUpdate(bot *data.LeaderboardBotData) (*data.LeaderboardBotData, error)
 	LoadAllBots() ([]*data.LeaderboardBotData, error)
-}
-
-type AirdropDao interface {
-	SaveOrUpdate(airDrop *data.AirdropData) (*data.AirdropData, error)
-	GetAirdropData(userId string) (*data.AirdropData, error)
-	GetAllAirdropData() ([]*data.AirdropData, error)
 }
 
 type UserProfileDao interface {

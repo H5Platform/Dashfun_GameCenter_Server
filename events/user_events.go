@@ -15,12 +15,6 @@ type EventUserPayment struct {
 	Payment *data.DashFunPaymentData
 }
 
-type EventUserRecharge struct {
-	User     *data.DashFunUser
-	Game     *data.DashFunGame
-	Recharge *data.DashFunRechargeData
-}
-
 type EventUserBindWallet struct {
 	User    *data.DashFunUser
 	Chain   string
@@ -49,5 +43,4 @@ var UserReferSuccessEvents = NewEvent[*data.InvitedUserData]()
 var UserPaymentEvents = NewEvent[*EventUserPayment]()
 var UserTGPaymentEvents = NewEvent[*EventUserPayment]()
 var UserBindAddressEvents = NewEvent[*EventUserBindWallet]()
-var UserRechargeEvents = NewEvent[*EventUserRecharge]()
 var UserLeaderboardEvents = NewEvent[*UserLeaderboardEvent]()

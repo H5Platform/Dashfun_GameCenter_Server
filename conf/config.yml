@@ -33,12 +33,6 @@ tencent_cos:
   secret_id: ${tencent_cos_secret_id}
   secret_key: ${tencent_cos_secret_key}
 
-ton_cfg:
-  api_key: ${ton_sdk_api_key}
-  wallet_mnemonic: ${ton_op_wallet}
-  wallet_version: ${ton_op_wallet_version}
-  is_test: true
-
 redis_cfg:
   address: 127.0.0.1:6379
   password:
@@ -68,51 +62,12 @@ invite_cfg:
       reward_coin: 0,
     }
 
-recharge_cfg:
-  open: true
-  options:
-    # price: 价格，单位美分，必须整数, diamond: 钻石数量，基本汇率 100美分=50 Diamond，-1表示指定平台不支持
-    # price_off: 折扣，100 = 10% off, 1=0.1% off
-    - { price: 199, price_ios: 249, price_android: 249, tg_star: 140, diamond: 100, price_off: 0 }
-    - { price: 299, price_ios: 399, price_android: 399, tg_star: 210, diamond: 150, price_off: 0 }
-    - { price: 499, price_ios: 649, price_android: 649, tg_star: 350, diamond: 250, price_off: 2 }
-    - { price: 699, price_ios: 899, price_android: 899, tg_star: 490, diamond: 350, price_off: 3 }
-    - { price: 999, price_ios: 1299, price_android: 1299, tg_star: 700, diamond: 500, price_off: 5 }
-    - { price: 1999, price_ios: 2599, price_android: 2599, tg_star: 1400, diamond: 1000, price_off: 10 }
-    - { price: 2999, price_ios: 3899, price_android: 3899, tg_star: 2100, diamond: 1500, price_off: 15 }
-    - { price: 4999, price_ios: 6499, price_android: 6499, tg_star: 3500, diamond: 2500, price_off: 20 }
-    - { price: 9999, price_ios: 12999, price_android: 12999, tg_star: 7000, diamond: 5000, price_off: 30 }
-    - { price: 19999, price_ios: 25999, price_android: 25999, tg_star: 14000, diamond: 10000, price_off: 45 }
-    - { price: 49999, price_ios: -1, price_android: -1, tg_star: 35000, diamond: 25000, price_off: 60 }
-    - { price: 99999, price_ios: -1, price_android: -1, tg_star: 70000, diamond: 50000, price_off: 75 }
-    - { price: 199999, price_ios: -1, price_android: -1, tg_star: 140000, diamond: 100000, price_off: 90 }
-    - { price: 299999, price_ios: -1, price_android: -1, tg_star: 210000, diamond: 150000, price_off: 100 }
-  play_store:
-    play_store_key_file: "./conf/dashfunweb3-58962a65eb6a.json"
-    product_package_name: "com.dashfun.app"
-
 coin_cfg:
+  - { name: NolanDevPoint, symbol: DP, desc: NolanDev Point }
   - { name: DashFunPoint, symbol: DXP, desc: DashFun Point }
-  - { name: DashFunCoin, symbol: DFC, desc: DashFun Coin }
+  - { name: DashFunCoin, symbol: DFC, desc: DashFun Coin, can_withdraw: true, min_withdraw: 100 }
   - { name: DashFunDiamond, symbol: Diamond, desc: DashFun Diamond }
   - { name: DashFunTicket, symbol: DFT, desc: DashFun Ticket }
-
-spin_wheel_cfg:
-  # 每张票50Diamond
-  ticket_price: 50
-  # 每天能抽4次，每次需要的票数
-  tickets_needed: [ 1, 2, 4, 10 ]
-  rewards:
-    - { reward_index: 0, reward_type: 1, reward_value: 500, weight: 15 }
-    - { reward_index: 1, reward_type: 1, reward_value: 500, weight: 15 }
-    - { reward_index: 2, reward_type: 1, reward_value: 500, weight: 15 }
-    - { reward_index: 3, reward_type: 1, reward_value: 500, weight: 15 }
-    - { reward_index: 4, reward_type: 1, reward_value: 1000, weight: 10 }
-    - { reward_index: 5, reward_type: 1, reward_value: 1000, weight: 10 }
-    - { reward_index: 6, reward_type: 1, reward_value: 1000, weight: 10 }
-    - { reward_index: 7, reward_type: 1, reward_value: 3000, weight: 4 }
-    - { reward_index: 8, reward_type: 1, reward_value: 3000, weight: 4 }
-    - { reward_index: 9, reward_type: 1, reward_value: 10000, weight: 2 }
 
 leaderboard_cfg:
   - { name: "lb_gamecenter_xp_forever", score_type: "dashfun_point_total", period_type: 1, game_id: "dashfun", top_count: 20 }
@@ -121,36 +76,15 @@ leaderboard_cfg:
 leaderboard_bot_cfg:
   record_score_min: 10000
   bot_levels:
-    - { level: 1, weight: 50, min_score: 5000, fixed_task_top: 10000, spin_wheel_daily_count: 1, daily_top: [ 3200 ] }
-    - { level: 2, weight: 20, min_score: 5000, fixed_task_top: 15000, spin_wheel_daily_count: 2, daily_top: [ 6200,6200,6200,3200 ] }
-    - { level: 3, weight: 15, min_score: 10000, fixed_task_top: 20000, spin_wheel_daily_count: 2, daily_top: [ 6200,6200,6200,6200,6200,6200,3200 ] }
-    - { level: 4, weight: 10, min_score: 10000, fixed_task_top: 20000, spin_wheel_daily_count: 3, daily_top: [ 27200,27200,27200,6200,6200,6200,3200 ] }
-    - { level: 5 , weight: 4, min_score: 30000, fixed_task_top: 27500, spin_wheel_daily_count: 3, daily_top: [ 38200,38200,27200,6200,6200,6200,6200,6200,6200 ] }
-    - { level: 6, weight: 1, min_score: 50000, fixed_task_top: 27500, spin_wheel_daily_count: 4, daily_top: [ 51200,38200,38200,38200,27200,27200,27200,6200,6200,6200,6200,6200,6200 ] }
-
-stripe_cfg:
-  public_key: pk_test_51R19FGGEcpOcso4vBV8InQCt5HA1b7iHihKMXaUBIisdMHybfTyFvxQEW6qnmOrvzahoPRiwwFPOcUoP7cRaLmOs00iYMIL3nK
-  secret_key: ${stripe_secret_key}
-  webhook_key: ${stripe_webhook_key}
-  return_host: http://localhost:5175/
+    - { level: 1, weight: 50, min_score: 5000, fixed_task_top: 10000, daily_top: [ 3200 ] }
+    - { level: 2, weight: 20, min_score: 5000, fixed_task_top: 15000, daily_top: [ 6200,6200,6200,3200 ] }
+    - { level: 3, weight: 15, min_score: 10000, fixed_task_top: 20000, daily_top: [ 6200,6200,6200,6200,6200,6200,3200 ] }
+    - { level: 4, weight: 10, min_score: 10000, fixed_task_top: 20000, daily_top: [ 27200,27200,27200,6200,6200,6200,3200 ] }
+    - { level: 5 , weight: 4, min_score: 30000, fixed_task_top: 27500, daily_top: [ 38200,38200,27200,6200,6200,6200,6200,6200,6200 ] }
+    - { level: 6, weight: 1, min_score: 50000, fixed_task_top: 27500, daily_top: [ 51200,38200,38200,38200,27200,27200,27200,6200,6200,6200,6200,6200,6200 ] }
 
 account_cfg:
   token_secret: ${account_token_secret}
-
-paypal_cfg:
-  #api_base : sandbox or live
-  api_base: sandbox
-  client_id: ${paypal_client_id}
-  secret_key: ${paypal_client_secret}
-
-airdrop_cfg:
-  start_time: 2025-07-09 21:00:00 # TGE时间
-  lock_xp_time: 48 # TGE之前48小时锁定积分
-  claim_time: 43200  # TGE之后12小时可以领取token
-  total_score: 1000000
-  total_token: 1000000
-  vesting_contract: 0x8bFbb0b157D60756F54Eb1C95E6B08331d1cB95E
-  token_contract: 0xac5389256b5fcA25849E3896137BDd8287743f28
 
 web3_cfg:
   rpc_url: https://bsc-testnet-rpc.publicnode.com
@@ -190,7 +124,7 @@ point_exchange_cfg:
   exchange_rate: 20 # 1 Token = 20 Point
   
 hourly_squad_game_cfg:
-  open: false # 是否开启Bot自动参与每小时的SquadGame
+  open: false # 是否启用每小时的SquadGame；关闭后客户端显示为INACTIVE，用户无法进入或下注，Bot也不会参与
   min_interval_hours: 15 # Bot参与游戏的最小间隔小时数。用于控制Bot的活跃频率。值越小，每小时参与的Bot越多。
   max_interval_hours: 25 # Bot参与游戏的最大间隔小时数。平均间隔约20小时，对应每小时约250个有效Bot参与。
   contract_address: "0x5E8d94d13a588c7B725a517Ba166B781afF7BF3a"

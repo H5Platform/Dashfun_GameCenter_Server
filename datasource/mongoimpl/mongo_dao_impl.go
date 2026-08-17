@@ -19,19 +19,14 @@ type DaoImplMongo struct {
 	userDao               types.UserDao
 	gameDao               types.GameDao
 	paymentDao            types.PaymentDao
-	taskDao               types.TaskDao
-	taskUserDao           types.TaskUserDao
 	coinDao               types.CoinDao
 	coinUserDao           types.CoinUserDao
 	coinRecordDao         types.CoinRecordDao
 	adminUserDao          types.AdminUserDao
 	adminUserLoginInfoDao types.AdminUserLoginInfoDao
-	spinWheelDao          types.SpinWheelDao
-	spinWheelUserDao      types.SpinWheelUserDao
 	userSaveDataDao       types.DashFunUserSaveDataDao
 	userPlayRecordDao     types.DashFunUserPlayRecordDao
 	invitedUserDao        types.InvitedUserDao
-	rechargeDao           types.RechargeDao
 	leaderboardBotDao     types.LeaderboardBotDao
 	pricePredictDao       types.PricePredictDao
 	exchangeDao           types.ExchangeDao
@@ -43,19 +38,14 @@ func NewDaoImplMongo() *DaoImplMongo {
 		userDao:               GetUserDaoMongo(),
 		gameDao:               GetGameDaoMongo(),
 		paymentDao:            GetPaymentDaoMongo(),
-		taskDao:               GetTaskDaoMongo(),
-		taskUserDao:           GetTaskUserDaoMongo(),
 		coinDao:               GetCoinDaoMongo(),
 		coinUserDao:           GetCoinUserDaoMongo(),
 		coinRecordDao:         GetCoinRecordDaoMongo(),
 		adminUserDao:          GetAdminUserDaoMongo(),
 		adminUserLoginInfoDao: GetAdminUserLoginInfoDaoMongo(),
-		spinWheelDao:          GetSpinWheelDaoMongo(),
-		spinWheelUserDao:      GetSpinWheelUserDaoMongo(),
 		userSaveDataDao:       GetUserSaveDataDaoMongo(),
 		userPlayRecordDao:     GetUserPlayRecordDaoMongo(),
 		invitedUserDao:        GetInvitedUserDaoMongo(),
-		rechargeDao:           GetRechargeDaoMongo(),
 		leaderboardBotDao:     GetLeaderboardBotDaoMongo(),
 		pricePredictDao:       GetPricePredictDaoMongo(),
 		exchangeDao:           NewExchangeDaoMongo(GetMongoDatabase()),
@@ -68,8 +58,6 @@ func (d *DaoImplMongo) GetUserDao() types.UserDao {
 }
 func (d *DaoImplMongo) GetGameDao() types.GameDao             { return d.gameDao }
 func (d *DaoImplMongo) GetPaymentDao() types.PaymentDao       { return d.paymentDao }
-func (d *DaoImplMongo) GetTaskDao() types.TaskDao             { return d.taskDao }
-func (d *DaoImplMongo) GetTaskUserDao() types.TaskUserDao     { return d.taskUserDao }
 func (d *DaoImplMongo) GetCoinDao() types.CoinDao             { return d.coinDao }
 func (d *DaoImplMongo) GetCoinUserDao() types.CoinUserDao     { return d.coinUserDao }
 func (d *DaoImplMongo) GetCoinRecordDao() types.CoinRecordDao { return d.coinRecordDao }
@@ -79,8 +67,6 @@ func (d *DaoImplMongo) GetAdminUserDao() types.AdminUserDao {
 func (d *DaoImplMongo) GetAdminUserLoginInfoDao() types.AdminUserLoginInfoDao {
 	return d.adminUserLoginInfoDao
 }
-func (d *DaoImplMongo) GetSpinWheelDao() types.SpinWheelDao              { return d.spinWheelDao }
-func (d *DaoImplMongo) GetSpinWheelUserDao() types.SpinWheelUserDao      { return d.spinWheelUserDao }
 func (d *DaoImplMongo) GetUserSaveDataDao() types.DashFunUserSaveDataDao { return d.userSaveDataDao }
 func (d *DaoImplMongo) GetUserPlayRecordDao() types.DashFunUserPlayRecordDao {
 	return d.userPlayRecordDao
@@ -88,14 +74,8 @@ func (d *DaoImplMongo) GetUserPlayRecordDao() types.DashFunUserPlayRecordDao {
 func (d *DaoImplMongo) GetInvitedUserDao() types.InvitedUserDao {
 	return d.invitedUserDao
 }
-func (d *DaoImplMongo) GetRechargeDao() types.RechargeDao {
-	return d.rechargeDao
-}
 func (d *DaoImplMongo) GetLeaderboardBotDao() types.LeaderboardBotDao {
 	return d.leaderboardBotDao
-}
-func (d *DaoImplMongo) GetAirdropDao() types.AirdropDao {
-	return GetAirdropDaoMongo()
 }
 func (d *DaoImplMongo) GetUserProfileDao() types.UserProfileDao {
 	return GetUserProfileDaoMongo()

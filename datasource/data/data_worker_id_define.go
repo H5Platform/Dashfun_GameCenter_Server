@@ -6,13 +6,10 @@ const (
 	WorkerGameId         = 20
 	WorkerApiSecret      = 25
 	WorkerPaymentId      = 30
-	WorkerTaskId         = 40
 	WorkerCoinId         = 50
 	WorkerAdminUserId    = 60
 	WorkerAdminUserPwd   = 61
 	WorkerTencentCosName = 70
-	WorkerSpinWheelId    = 80
-	WorkerRechargeId     = 90
 	WorkerFishingPostId  = 100
 	WorkerNolanPostId    = 101
 	WorkerPredictBotId   = 102

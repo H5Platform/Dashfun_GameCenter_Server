@@ -1,22 +1,17 @@
 package main
 
 import (
-	"dashfun_gamecenter/RechargeCenter"
-	_ "dashfun_gamecenter/_initdata"
 	_ "dashfun_gamecenter/api"
 	"dashfun_gamecenter/coincenter"
 	"dashfun_gamecenter/coingecko"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/fishingverse/fishingleaderboard"
 	"dashfun_gamecenter/invitecenter"
-	"dashfun_gamecenter/leaderboardcenter"
 	"dashfun_gamecenter/nolandev"
 	nolandevleaderboard "dashfun_gamecenter/nolandev/leaderboard"
 	"dashfun_gamecenter/nolandev/squadgame"
 	"dashfun_gamecenter/openai_api"
-	"dashfun_gamecenter/paymentcenter"
 	"dashfun_gamecenter/pricepredictcenter"
-	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/tgbot"
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
@@ -70,11 +65,7 @@ func main() {
 	zap.ReplaceGlobals(logger)
 	tgbot.Get()
 	coincenter.Get()
-	taskcenter.Get()
 	invitecenter.Get()
-	leaderboardcenter.Get()
-	RechargeCenter.Get()
-	paymentcenter.Get()
 	usercenter.Get()
 
 	switch config.RunningMode() {

@@ -11,7 +11,6 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/gamecenter"
 	"dashfun_gamecenter/invitecenter"
-	"dashfun_gamecenter/taskcenter"
 	"dashfun_gamecenter/tgbot"
 	"dashfun_gamecenter/usercenter"
 	"dashfun_gamecenter/web"
@@ -29,8 +28,7 @@ type GameResult struct {
 }
 
 type UserResult struct {
-	User     *data.DashFunUser
-	TaskInfo *data.UserTaskInfo
+	User *data.DashFunUser
 }
 
 type CreateDFUserRequest struct {
@@ -94,10 +92,8 @@ func apiAdminGetUserInfo(c *gin.Context) {
 		return
 	}
 
-	userTaskInfo := taskcenter.Get().GetUserTaskInfo(user, "all")
 	c.JSON(http.StatusOK, RSuccess(&UserResult{
-		User:     user,
-		TaskInfo: userTaskInfo,
+		User: user,
 	}))
 }
 

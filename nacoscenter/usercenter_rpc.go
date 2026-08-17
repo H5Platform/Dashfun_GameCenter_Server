@@ -5,10 +5,11 @@ import (
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/utils"
 	"errors"
+	"time"
+
 	"github.com/dashfun_web3/api_proto/gen/common"
 	v1 "github.com/dashfun_web3/api_proto/gen/userservice/v1"
 	"go.uber.org/zap"
-	"time"
 )
 
 type UserCenterRpc struct {
@@ -49,7 +50,7 @@ func (u *UserCenterRpc) UserLogin(authData *utils.AuthData, referrerId string, a
 		return nil, false, err
 	}
 
-	ctx, cancel := NewAuthDataOutgoingContext(authData.Method, authData.Token, 5*time.Second)
+	ctx, cancel := NewAuthDataOutgoingContext(authData.Method, authData.Token, 35*time.Second)
 	defer cancel()
 
 	result, err := userServiceClient.Login(ctx, &v1.LoginRequest{
@@ -68,7 +69,7 @@ func (u *UserCenterRpc) GetDashFunUserByAuthData(authData *utils.AuthData, onlin
 		return nil, err
 	}
 
-	ctx, cancel := NewAuthDataOutgoingContext(authData.Method, authData.Token, 5*time.Second)
+	ctx, cancel := NewAuthDataOutgoingContext(authData.Method, authData.Token, 35*time.Second)
 	defer cancel()
 
 	r, err := userServiceClient.GetUserByAuth(ctx, &v1.GetUserByAuthRequest{OnlineOnly: onlineUserOnly})

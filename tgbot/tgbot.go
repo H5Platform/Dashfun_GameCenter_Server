@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -30,6 +31,7 @@ func Get() *TGBot {
 	once.Do(func() {
 		opts := []bot.Option{
 			bot.WithDefaultHandler(defaultHandler),
+			bot.WithCheckInitTimeout(30 * time.Second),
 		}
 
 		d, err := os.ReadFile("./assets/dashfun.jpg")
@@ -309,7 +311,7 @@ func startHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	case config.ModeNolanDev:
 		sendNolanDevMsg(ctx, b, update)
 	case config.ModeHowardAI:
-		
+
 	}
 }
 

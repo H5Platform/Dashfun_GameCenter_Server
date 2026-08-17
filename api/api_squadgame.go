@@ -1,6 +1,7 @@
 package api
 
 import (
+	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/data"
 	"dashfun_gamecenter/nolandev/squadgame"
 	"dashfun_gamecenter/web"
@@ -148,7 +149,16 @@ func apiGetSquadGameRound(c *gin.Context, user *data.DashFunUser) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, RError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, RSuccess(round))
+
+	cfg := config.GetConfig().HourlySquadGameCfg
+	isOpen := false
+	if cfg != nil {
+		isOpen = cfg.Open
+	}
+	c.JSON(http.StatusOK, RSuccess(gin.H{
+		"round":          round,
+		"is_game_active": isOpen,
+	}))
 }
 
 func init() {

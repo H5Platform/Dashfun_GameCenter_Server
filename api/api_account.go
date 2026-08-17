@@ -2,32 +2,31 @@ package api
 
 import (
 	"dashfun_gamecenter/accountcenter"
-	"dashfun_gamecenter/nacoscenter"
 	"dashfun_gamecenter/web"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type AccountCreateRequest struct {
-	Username string                         `json:"username" form:"username" binding:"required"`
-	Password string                         `json:"password" form:"password" binding:"required"`
-	AccType  nacoscenter.DashFunAccountType `json:"acc_type" form:"acc_type" binding:"required"` //账号类型，默认是email
+	Username string                           `json:"username" form:"username" binding:"required"`
+	Password string                           `json:"password" form:"password" binding:"required"`
+	AccType  accountcenter.DashFunAccountType `json:"acc_type" form:"acc_type" binding:"required"` //账号类型，默认是email
 }
 
 type AccountCreateResponse struct {
-	AccountId string                           `json:"account_id"` //账号Id
-	Username  string                           `json:"username"`
-	Type      nacoscenter.DashFunAccountType   `json:"type"`   //账号类型，默认是email
-	Status    nacoscenter.DashFunAccountStatus `json:"status"` //账号状态
+	AccountId string                             `json:"account_id"` //账号Id
+	Username  string                             `json:"username"`
+	Type      accountcenter.DashFunAccountType   `json:"type"`   //账号类型，默认是email
+	Status    accountcenter.DashFunAccountStatus `json:"status"` //账号状态
 }
 
 type AccountLoginResponse struct {
-	AccountId   string                           `json:"account_id"` //账号Id
-	Username    string                           `json:"username"`
-	Type        nacoscenter.DashFunAccountType   `json:"type"`   //账号类型，默认是email
-	Status      nacoscenter.DashFunAccountStatus `json:"status"` //账号状态
-	Token       string                           `json:"token"`  //登录token
-	DisplayName string                           `json:"display_name"`
+	AccountId   string                             `json:"account_id"` //账号Id
+	Username    string                             `json:"username"`
+	Type        accountcenter.DashFunAccountType   `json:"type"`   //账号类型，默认是email
+	Status      accountcenter.DashFunAccountStatus `json:"status"` //账号状态
+	Token       string                             `json:"token"`  //登录token
+	DisplayName string                             `json:"display_name"`
 }
 
 type AccountVerifyEmailRequest struct {
@@ -36,9 +35,9 @@ type AccountVerifyEmailRequest struct {
 }
 
 type CheckTokenRequest struct {
-	AccountId string                         `json:"account_id" form:"account_id" binding:"required"`
-	Token     string                         `json:"token" form:"token" binding:"required"`
-	AccType   nacoscenter.DashFunAccountType `json:"acc_type" form:"acc_type" binding:"required"`
+	AccountId string                           `json:"account_id" form:"account_id" binding:"required"`
+	Token     string                           `json:"token" form:"token" binding:"required"`
+	AccType   accountcenter.DashFunAccountType `json:"acc_type" form:"acc_type" binding:"required"`
 }
 
 type RequestResetPasswordRequest struct {

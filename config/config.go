@@ -53,6 +53,10 @@ type AdminConfig struct {
 	ActiveUrl       string `yaml:"active_url"` //账户激活链接
 }
 
+type AccountConfig struct {
+	TokenSecret string `yaml:"token_secret"`
+}
+
 type TencentCosConfig struct {
 	BucketUrl  string `yaml:"bucket_url"`
 	ServiceUrl string `yaml:"service_url"`
@@ -71,12 +75,6 @@ type RedisCfg struct {
 	Address  string `yaml:"address"`
 	Password string `yaml:"password"`
 	DB       int    `yaml:"db"`
-}
-
-type NacosCfg struct {
-	IpAddr    string `yaml:"ip_addr"`
-	Port      uint64 `yaml:"port"`
-	Namespace string `yaml:"namespace"` //nacos命名空间,如果不填，则使用env.Env作为命名空间
 }
 
 type RewardPoint struct {
@@ -284,6 +282,7 @@ type Config struct {
 	Log                 *Log                   `yaml:"log"`
 	PinPoint            *AwsPinPoint           `yaml:"aws_pinpoint"`
 	AdminCfg            *AdminConfig           `yaml:"admin_cfg"`
+	AccountCfg          *AccountConfig         `yaml:"account_cfg"`
 	TencentCosCfg       *TencentCosConfig      `yaml:"tencent_cos"`
 	TonCfg              *TonConfig             `yaml:"ton_cfg"`
 	RedisCfg            *RedisCfg              `yaml:"redis_cfg"`
@@ -294,7 +293,6 @@ type Config struct {
 	LeaderboardCfg      []*LeaderboardCfg      `yaml:"leaderboard_cfg"` //排行榜配置
 	LeaderboardBotCfg   *LeaderboardBotCfg     `yaml:"leaderboard_bot_cfg"`
 	StripeCfg           *StripeConfig          `yaml:"stripe_cfg"`
-	NacosCfg            *NacosCfg              `yaml:"nacos_cfg"`
 	PaypalCfg           *PaypalConfig          `yaml:"paypal_cfg"`
 	AirdropCfg          *AirdropConfig         `yaml:"airdrop_cfg"`
 	Web3Config          *Web3Config            `yaml:"web3_cfg"`
@@ -331,13 +329,6 @@ func RunningMode() Mode {
 		return ModeDashFun
 	}
 	return mode
-}
-
-func NacosNamespace() string {
-	if GetConfig().NacosCfg.Namespace != "" {
-		return GetConfig().NacosCfg.Namespace
-	}
-	return strings.ToLower(GetConfig().Base.Env)
 }
 
 func init() {

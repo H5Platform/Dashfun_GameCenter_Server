@@ -134,9 +134,8 @@ stripe_cfg:
   webhook_key: ${stripe_webhook_key}
   return_host: http://localhost:5175/
 
-nacos_cfg:
-  ip_addr: localhost
-  port: 8848
+account_cfg:
+  token_secret: ${account_token_secret}
 
 paypal_cfg:
   #api_base : sandbox or live

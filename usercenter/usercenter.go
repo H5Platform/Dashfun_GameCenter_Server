@@ -2,6 +2,7 @@ package usercenter
 
 import (
 	"context"
+	"dashfun_gamecenter/accountcenter"
 	"dashfun_gamecenter/apperrors"
 	"dashfun_gamecenter/config"
 	"dashfun_gamecenter/datasource/dao"
@@ -125,6 +126,12 @@ func (uc *UserCenter) UserEnterGame(authData *utils.AuthData, gameId string) (*d
 // UserLogin 用户登录, 通过tgAuthData获取用户信息, autoCreate表示是否自动创建用户
 // 目前在只支持tma
 func (uc *UserCenter) UserLogin(authData *utils.AuthData, referrerId string, autoCreate bool) (*data.OnlineUser, error) {
+	if isAccountAuth(authData.Method) {
+		return uc.accountUserLogin(authData.Token, referrerId, autoCreate)
+	}
+	if !isTelegramAuth(authData.Method) {
+		return nil, errors.New("unsupported authorization method")
+	}
 	tgAuthData := authData.Token
 	initData, err := parseInitData(tgAuthData, 0)
 	if err != nil {
@@ -228,10 +235,69 @@ func (uc *UserCenter) UserLogin(authData *utils.AuthData, referrerId string, aut
 
 	zap.S().Infow("User from Telegram Login Successful", "userId", user.Id, "tgUserId", user.ChannelId, "name", user.UserName)
 
-	if !config.IsProd() {
-		zap.S().Info("user tg token:", tgAuthData)
+	return ou, nil
+}
+
+func isTelegramAuth(method string) bool {
+	method = strings.ToLower(strings.TrimSpace(method))
+	return method == "tma" || method == "telegram"
+}
+
+func isAccountAuth(method string) bool {
+	method = strings.ToLower(strings.TrimSpace(method))
+	return method == "bearer" || method == "account" || method == "duc"
+}
+
+func (uc *UserCenter) accountUserLogin(token, referrerId string, autoCreate bool) (*data.OnlineUser, error) {
+	account, err := accountcenter.Get().AuthenticateToken(token)
+	if err != nil {
+		return nil, err
+	}
+	ud := dao.GetUserDao()
+	user, err := ud.GetUserByChannelId(account.AccountId)
+	if err != nil {
+		return nil, err
+	}
+	newCreated := false
+	if user == nil {
+		if !autoCreate {
+			return nil, apperrors.ErrUserDoesNotExist
+		}
+		now := time.Now().UnixMilli()
+		user = &data.DashFunUser{Id: uc.newUserId(), ChannelId: account.AccountId, DisplayName: account.DisplayName, UserName: account.Username, From: data.DF_UserFrom_UserCenter, CreateData: now, LoginTime: now, WalletAddress: make(map[string]string)}
+		if _, err = ud.SaveOrUpdate(user); err != nil {
+			return nil, err
+		}
+		newCreated = true
+	} else {
+		user.LoginTime = time.Now().UnixMilli()
+		user.DisplayName = account.DisplayName
+		user.UserName = account.Username
 	}
 
+	var records []*data.PlayGameRecord
+	var favorites []string
+	if record, _ := dao.GetUserPlayRecordDao().GetUserPlayRecord(user.Id); record != nil {
+		records, favorites = record.Records, record.Favorites
+	}
+	if records == nil {
+		records = make([]*data.PlayGameRecord, 0)
+	}
+	if favorites == nil {
+		favorites = make([]string, 0)
+	}
+	ou := uc.onlineUsers.TGUserLogin(user, &data.TGInfo{AuthData: ""}, records, favorites)
+
+	if referrerId != "" && referrerId != user.Id && user.ReferrerId == "" {
+		if referrer, refErr := uc.GetDashFunUser(referrerId); refErr == nil {
+			user.ReferrerId = referrerId
+			events.UserReferrerEvents.Emit(&events.UserReferrerEvent{User: user, Referrer: referrer, IsNewCreate: newCreated})
+		}
+	}
+	if _, err = ud.SaveOrUpdate(user); err != nil {
+		return nil, err
+	}
+	events.UserLoginEvents.Emit(ou)
 	return ou, nil
 }
 
@@ -257,6 +323,22 @@ func (uc *UserCenter) getUserAvatarUrl(user *data.DashFunUser) string {
 // GetDashFunUserByAuthData 根据用户的tgAuthData，找到对应的DashFunUser
 // onlineUserOnly -- 是否只检查在线用户
 func (uc *UserCenter) GetDashFunUserByAuthData(authData *utils.AuthData, onlineUserOnly bool) (*data.DashFunUser, error) {
+	if isAccountAuth(authData.Method) {
+		account, err := accountcenter.Get().AuthenticateToken(authData.Token)
+		if err != nil {
+			return nil, err
+		}
+		if ou := uc.onlineUsers.FindUserByChannelId(account.AccountId); ou != nil {
+			return ou.User, nil
+		}
+		if onlineUserOnly {
+			return nil, apperrors.ErrUserDoesNotExist
+		}
+		return dao.GetUserDao().GetUserByChannelId(account.AccountId)
+	}
+	if !isTelegramAuth(authData.Method) {
+		return nil, errors.New("unsupported authorization method")
+	}
 	initData, err := parseInitData(authData.Token, 0)
 	if err != nil {
 		return nil, err

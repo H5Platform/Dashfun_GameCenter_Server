@@ -67,7 +67,7 @@ func (p *Pinpoint) SendEmail(subject string, to string, content string) error {
 
 	result, err := p.client.SendEmail(context.Background(), input)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	fmt.Printf("Email sent successfully! Message ID: %s\n", *result.MessageId)
 	return err

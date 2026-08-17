@@ -57,12 +57,12 @@ func (auth *AuthData) ToString() string {
 // CheckAuthorize 检查请求中的authorization header，返回验证信息
 func CheckAuthorize(c *gin.Context) (*AuthData, error) {
 	tgAuthData := c.GetHeader("authorization")
-	authParts := strings.Split(tgAuthData, " ")
-	if len(authParts) < 2 {
+	authParts := strings.SplitN(strings.TrimSpace(tgAuthData), " ", 2)
+	if len(authParts) != 2 || strings.TrimSpace(authParts[1]) == "" {
 		return nil, errors.New("unauthorized")
 	}
 	return &AuthData{
-		Method: authParts[0],
-		Token:  authParts[1],
+		Method: strings.ToLower(strings.TrimSpace(authParts[0])),
+		Token:  strings.TrimSpace(authParts[1]),
 	}, nil
 }

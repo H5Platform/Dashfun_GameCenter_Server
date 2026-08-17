@@ -2,6 +2,7 @@ package data
 
 const (
 	WorkerUserId         = 10
+	WorkerAccountId      = 11
 	WorkerGameId         = 20
 	WorkerApiSecret      = 25
 	WorkerPaymentId      = 30

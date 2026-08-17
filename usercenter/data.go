@@ -110,7 +110,7 @@ type IUserCenter interface {
 
 func Get() IUserCenter {
 	onceUserCenter.Do(func() {
-		uc := &UserCenterRpc{}
+		uc := &UserCenter{}
 		uc.init()
 		instUserCenter = uc
 	})
